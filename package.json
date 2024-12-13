@@ -17,8 +17,7 @@
 		"test": "npm run test:unit -- --run && npm run test:e2e",
 		"test:e2e": "playwright test",
 		"model-pipeline:run": "node scripts/model-pipeline.js",
-		"seed": "node src/lib/server/seed.js",
-		"render": "PORT=10000 tsm ./prodServer.ts"
+		"seed": "node src/lib/server/seed.js"
 	},
 	"devDependencies": {
 		"@internationalized/date": "^3.5.6",
@@ -85,6 +84,7 @@
 		"@prisma/client": "^5.22.0",
 		"@stripe/stripe-js": "latest",
 		"@sveltejs/adapter-node": "^5.2.9",
+		"@sveltejs/adapter-vercel": "^5.5.2",
 		"@theatre/core": "^0.7.2",
 		"@threlte/core": "^8.0.0-next.30",
 		"@threlte/extras": "^9.0.0-next.39",
