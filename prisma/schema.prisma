@@ -1,0 +1,166 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// _______________________________________________________________________________________________________
+// CRUD DEMO 
+model Director {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String    @unique
+  age       Int
+  createdAt DateTime  @default(now())
+  isActive  Boolean   @default(true)
+  agencies  Agence[]
+}
+
+model Agence {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  street     String
+  city       String
+  state      String
+  zip        String
+  country    String
+  createdAt  DateTime  @default(now())
+  director   Director  @relation(fields: [directorId], references: [id])
+  directorId String    @db.ObjectId
+  products   Product[]
+}
+
+model Product {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  stock     Int
+  price     Float
+  createdAt DateTime  @default(now())
+  agence    Agence    @relation(fields: [agenceId], references: [id])
+  agenceId  String    @db.ObjectId
+}
+
+// _______________________________________________________________________________________________________
+// AUTH LUCIA DEMO
+model User {
+  id                        String                     @id @default(auto()) @map("_id") @db.ObjectId
+  email                     String                     @unique
+  username                  String?
+  passwordHash              String?
+  recoveryCode              String?
+  emailVerified             Boolean                    @default(false)
+  totpKey                   Bytes?
+  googleId                  String?                    @unique
+  name                      String?
+  picture                   String?
+  sessions                  Session[]
+  emailVerificationRequests EmailVerificationRequest[] @relation("UserEmailVerificationRequests")
+  passwordResetSessions     PasswordResetSession[]     @relation("UserPasswordResetSessions")
+}
+
+model Session {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  user              User     @relation(fields: [userId], references: [id])
+  userId            String   @db.ObjectId
+  expiresAt         DateTime
+  twoFactorVerified Boolean  @default(false)
+  oauthProvider     String?
+}
+
+model EmailVerificationRequest {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  user      User     @relation("UserEmailVerificationRequests", fields: [userId], references: [id])
+  userId    String   @db.ObjectId
+  email     String
+  code      String
+  expiresAt DateTime
+}
+
+model PasswordResetSession {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  user              User     @relation("UserPasswordResetSessions", fields: [userId], references: [id])
+  userId            String   @db.ObjectId
+  email             String
+  code              String
+  expiresAt         DateTime
+  emailVerified     Boolean  @default(false)
+  twoFactorVerified Boolean  @default(false)
+}
+
+// _______________________________________________________________________________________________________
+// WEBSOCKET DEMO
+model Chat {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id String
+  color     String
+  message   String
+  avatar    String
+  createdAt DateTime @default(now())
+}
+
+// _______________________________________________________________________________________________________
+// BLOG DEMO
+
+// Modèle pour les articles du blog
+model Post {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  content     String
+  slug        String       @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  published   Boolean      @default(false)
+  author      Author       @relation(fields: [authorId], references: [id])
+  authorId    String       @db.ObjectId
+  category    Category     @relation(fields: [categoryId], references: [id])
+  categoryId  String       @db.ObjectId
+  comments    Comment[]
+  tags        PostTag[]
+}
+
+// Modèle pour les auteurs
+model Author {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   @unique
+  posts     Post[]
+  createdAt DateTime @default(now())
+}
+
+// Modèle pour les catégories
+model Category {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  description String?
+  posts       Post[]
+  createdAt   DateTime @default(now())
+}
+
+// Modèle pour les commentaires
+model Comment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  author    String
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String   @db.ObjectId
+  createdAt DateTime @default(now())
+}
+
+// Modèle pour les tags
+model Tag {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String    @unique
+  posts     PostTag[]
+  createdAt DateTime  @default(now())
+}
+
+model PostTag {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  post   Post   @relation(fields: [postId], references: [id])
+  postId String @db.ObjectId
+  tag    Tag    @relation(fields: [tagId], references: [id])
+  tagId  String @db.ObjectId
+
+  @@unique([postId, tagId]) // Empêche les doublons
+}
