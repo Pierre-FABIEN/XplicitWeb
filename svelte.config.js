@@ -1,4 +1,4 @@
-import adapter from '@sveltejs/adapter-node';
+import adapter from '@sveltejs/adapter-vercel';
 import { VitePWA } from 'vite-plugin-pwa';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
