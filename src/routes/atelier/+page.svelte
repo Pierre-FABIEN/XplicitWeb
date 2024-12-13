@@ -4,6 +4,6 @@
 </script>
 
 <div class="h-screen w-screen">
-	<Button href="/atelier">Je customise ma cannette</Button>
+	<Button>changer</Button>
 	<Threltre />
 </div>

@@ -5,7 +5,7 @@
 </script>
 
 <!-- Caméra avec contrôles d'orbite -->
-<T.PerspectiveCamera makeDefault position={[1, 1, 1]}>
+<T.PerspectiveCamera makeDefault position={[1, 1.5, 1]}>
 	<OrbitControls />
 </T.PerspectiveCamera>
 
