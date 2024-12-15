@@ -16,6 +16,7 @@
 	import { page } from '$app/stores';
 	import NavigationMenu from '$lib/components/navigation/NavigationMenu.svelte';
 	import Breadcrumb from '$lib/components/navigation/Breadcrumb.svelte';
+	import Cart from '$lib/components/cart/Cart.svelte';
 
 	let { children } = $props();
 
@@ -47,6 +48,7 @@
 		<ModeWatcher />
 
 		<div class="container">
+			<Cart />
 			<div class="iconeNav flex justify-end place-items-center px-5 py-2">
 				<Breadcrumb />
 				<NavigationMenu />

@@ -13,41 +13,6 @@ enum Role {
 }
 
 // _______________________________________________________________________________________________________
-// CRUD DEMO 
-model Director {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  email     String    @unique
-  age       Int
-  createdAt DateTime  @default(now())
-  isActive  Boolean   @default(true)
-  agencies  Agence[]
-}
-
-model Agence {
-  id         String    @id @default(auto()) @map("_id") @db.ObjectId
-  street     String
-  city       String
-  state      String
-  zip        String
-  country    String
-  createdAt  DateTime  @default(now())
-  director   Director  @relation(fields: [directorId], references: [id])
-  directorId String    @db.ObjectId
-  products   Product[]
-}
-
-model Product {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  stock     Int
-  price     Float
-  createdAt DateTime  @default(now())
-  agence    Agence    @relation(fields: [agenceId], references: [id])
-  agenceId  String    @db.ObjectId
-}
-
-// _______________________________________________________________________________________________________
 // AUTH LUCIA DEMO
 model User {
   id                        String                     @id @default(auto()) @map("_id") @db.ObjectId

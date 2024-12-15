@@ -5,5 +5,6 @@
 
 <div class="h-screen w-screen">
 	<Button>changer</Button>
+	<Button href="/commande">ajouter au panier</Button>
 	<Threltre />
 </div>
