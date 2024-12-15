@@ -96,7 +96,8 @@ export async function validateSessionToken(token: string): Promise<SessionValida
 			registered2FA: result.user.totpKey !== null,
 			googleId: result.user.googleId,
 			name: result.user.name,
-			picture: result.user.picture
+			picture: result.user.picture,
+			role: result.user.role
 		};
 
 		return { session, user };
@@ -175,6 +176,7 @@ export async function handleGoogleOAuth(
 				email,
 				name,
 				picture,
+				role: 'CLIENT',
 				emailVerified: true
 			}
 		});

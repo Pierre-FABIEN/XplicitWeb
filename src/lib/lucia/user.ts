@@ -29,6 +29,7 @@ export async function createUser(email: string, username: string, password: stri
 			email,
 			username,
 			passwordHash,
+			role : 'CLIENT',
 			recoveryCode: encryptedRecoveryCodeString,
 			emailVerified: false,
 			totpKey: null
@@ -51,6 +52,7 @@ export async function createUserOAuth(
 			username: name,
 			name,
 			picture,
+			role : 'CLIENT',
 			emailVerified: true,
 			passwordHash: null,
 			totpKey: null

@@ -17,7 +17,8 @@
 		"test": "npm run test:unit -- --run && npm run test:e2e",
 		"test:e2e": "playwright test",
 		"model-pipeline:run": "node scripts/model-pipeline.js",
-		"seed": "node src/lib/server/seed.js"
+		"seed": "node src/lib/server/seed.js",
+		"reset": "node src/lib/server/resetDb.js"
 	},
 	"devDependencies": {
 		"@internationalized/date": "^3.5.6",
@@ -93,7 +94,6 @@
 		"@threlte/theatre": "^3.0.0-next.9",
 		"@threlte/xr": "^1.0.0-next.13",
 		"@types/three": "^0.170.0",
-		"@unovis/svelte": "^1.5.0-beta.3",
 		"apexcharts": "^4.0.0",
 		"arctic": "^2.2.2",
 		"embla-carousel-auto-scroll": "^8.3.1",
@@ -103,7 +103,7 @@
 		"lucia-auth": "^1.8.0",
 		"mongodb": "^6.11.0",
 		"nanoid": "^4.0.2",
-		"prisma": "^5.22.0",
+		"prisma": "^6.0.0",
 		"sass": "^1.81.0",
 		"smooth-scrollbar": "^8.8.4",
 		"stripe": "latest",
