@@ -22,11 +22,14 @@ const rateLimitHandle: Handle = async ({ event, resolve }) => {
 const authHandle: Handle = async ({ event, resolve }) => {
 	const token = event.cookies.get('session') ?? null;
 
+	// Initialisation par défaut
+	event.locals.session = null;
+	event.locals.user = null;
+	event.locals.role = null;
+	event.locals.orders = [];
+
 	if (!token) {
 		// Pas de token, utilisateur non connecté
-		event.locals.user = null;
-		event.locals.session = null;
-		event.locals.role = null; // Définit le rôle comme null pour les utilisateurs non authentifiés
 		return resolve(event);
 	}
 
@@ -39,13 +42,11 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		// Ajoute les informations utilisateur et le rôle dans les locaux
 		event.locals.session = session;
 		event.locals.user = user;
-		event.locals.role = user.role; // Stocke directement le rôle depuis le user
+		event.locals.role = user.role;
+		event.locals.orders = user.orders ?? []; // Définit orders comme tableau vide si indéfini
 	} else {
 		// Token invalide ou expiré
 		deleteSessionTokenCookie(event);
-		event.locals.session = null;
-		event.locals.user = null;
-		event.locals.role = null; // Définit le rôle comme null
 	}
 
 	return resolve(event);

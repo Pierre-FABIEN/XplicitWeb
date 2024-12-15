@@ -29,10 +29,29 @@ export async function createUser(email: string, username: string, password: stri
 			email,
 			username,
 			passwordHash,
-			role : 'CLIENT',
 			recoveryCode: encryptedRecoveryCodeString,
+			role: 'CLIENT', // Rôle par défaut
 			emailVerified: false,
-			totpKey: null
+			totpKey: null,
+			// Relations initialisées à vide
+			addresses: {
+				create: [] // Pas d'adresses à l'inscription
+			},
+			orders: {
+				create: [] // Aucun ordre initial
+			},
+			transactions: {
+				create: [] // Pas de transaction initiale
+			},
+			sessions: {
+				create: [] // Pas de session initiale
+			},
+			emailVerificationRequests: {
+				create: [] // Pas de requêtes de vérification email initiale
+			},
+			passwordResetSessions: {
+				create: [] // Pas de session de réinitialisation de mot de passe initiale
+			}
 		}
 	});
 	return { ...user, registered2FA: user.totpKey !== null };
@@ -52,10 +71,29 @@ export async function createUserOAuth(
 			username: name,
 			name,
 			picture,
-			role : 'CLIENT',
+			role: 'CLIENT', // Rôle par défaut
 			emailVerified: true,
-			passwordHash: null,
-			totpKey: null
+			passwordHash: null, // Pas de mot de passe pour OAuth
+			totpKey: null,
+			// Relations initialisées à vide
+			addresses: {
+				create: [] // Pas d'adresses à l'inscription
+			},
+			orders: {
+				create: [] // Aucun ordre initial
+			},
+			transactions: {
+				create: [] // Pas de transaction initiale
+			},
+			sessions: {
+				create: [] // Pas de session initiale
+			},
+			emailVerificationRequests: {
+				create: [] // Pas de requêtes de vérification email initiale
+			},
+			passwordResetSessions: {
+				create: [] // Pas de session de réinitialisation de mot de passe initiale
+			}
 		}
 	});
 	return { ...user, registered2FA: false };

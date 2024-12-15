@@ -13,5 +13,14 @@ export const GET: RequestHandler = async ({ url }) => {
 	);
 	const data = await response.json();
 
-	return json(data);
+	if (!data.results) {
+		return json({ error: 'No results found' }, { status: 404 });
+	}
+
+	const suggestions = data.results.map((result: any) => ({
+		formatted: result.formatted,
+		components: result.components
+	}));
+
+	return json({ suggestions });
 };

@@ -17,6 +17,9 @@
 	import NavigationMenu from '$lib/components/navigation/NavigationMenu.svelte';
 	import Breadcrumb from '$lib/components/navigation/Breadcrumb.svelte';
 	import Cart from '$lib/components/cart/Cart.svelte';
+	import { setCart } from '$lib/store/Data/cartStore';
+	import { startSync } from '$lib/store/Data/cartSync';
+	import { da } from '@faker-js/faker';
 
 	let { children } = $props();
 

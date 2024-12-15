@@ -97,7 +97,8 @@ export async function validateSessionToken(token: string): Promise<SessionValida
 			googleId: result.user.googleId,
 			name: result.user.name,
 			picture: result.user.picture,
-			role: result.user.role
+			role: result.user.role,
+			order: result.user.order
 		};
 
 		return { session, user };
@@ -176,8 +177,17 @@ export async function handleGoogleOAuth(
 				email,
 				name,
 				picture,
-				role: 'CLIENT',
-				emailVerified: true
+				role: 'CLIENT', // Rôle par défaut
+				emailVerified: true,
+				addresses: {
+					create: [] // Pas d'adresses à l'inscription
+				},
+				orders: {
+					create: [] // Aucun ordre initial
+				},
+				transactions: {
+					create: [] // Pas de transaction initiale
+				}
 			}
 		});
 	}

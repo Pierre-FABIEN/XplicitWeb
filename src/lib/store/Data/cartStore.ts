@@ -12,13 +12,60 @@ export type OrderItem = {
 	price: number;
 };
 
-export const cart = writable({
-	id: '',
-	userId: '',
-	items: [] as OrderItem[],
-	total: 0,
-	lastModified: Date.now()
-});
+type CartState = {
+	id: string;
+	userId: string;
+	items: OrderItem[];
+	total: number;
+	lastModified: number;
+};
+
+function isBrowser(): boolean {
+	return typeof window !== 'undefined';
+}
+
+function loadCartFromLocalStorage(): CartState {
+	if (!isBrowser()) {
+		// Retourner un panier vide si ce n'est pas le navigateur
+		return {
+			id: '',
+			userId: '',
+			items: [],
+			total: 0,
+			lastModified: Date.now()
+		};
+	}
+
+	const savedCart = localStorage.getItem('cart');
+	if (savedCart) {
+		try {
+			return JSON.parse(savedCart);
+		} catch {
+			return {
+				id: '',
+				userId: '',
+				items: [],
+				total: 0,
+				lastModified: Date.now()
+			};
+		}
+	}
+	return {
+		id: '',
+		userId: '',
+		items: [],
+		total: 0,
+		lastModified: Date.now()
+	};
+}
+
+export const cart = writable<CartState>(loadCartFromLocalStorage());
+
+function saveCartToLocalStorage(currentCart: CartState) {
+	if (isBrowser() && !currentCart.userId) {
+		localStorage.setItem('cart', JSON.stringify(currentCart));
+	}
+}
 
 export const setCart = (id: string, userId: string, items: OrderItem[], total: number) => {
 	cart.set({
@@ -62,7 +109,6 @@ export const removeFromCart = (productId: string) => {
 			0
 		);
 		currentCart.lastModified = Date.now();
-		//console.log('Cart after removing item:', JSON.stringify(currentCart, null, 2));
 		return currentCart;
 	});
 };
@@ -81,11 +127,12 @@ export const updateCartItemQuantity = (productId: string, quantity: number) => {
 			0
 		);
 		currentCart.lastModified = Date.now();
-		//console.log('Cart after updating item quantity:', JSON.stringify(currentCart, null, 2));
 		return currentCart;
 	});
 };
 
 cart.subscribe((currentCart) => {
 	console.log('Cart:', currentCart);
+	// Sauvegarde dans localStorage si le contexte est navigateur
+	saveCartToLocalStorage(currentCart);
 });

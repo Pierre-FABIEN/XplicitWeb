@@ -6,6 +6,7 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { toast } from 'svelte-sonner';
 	import { emailSchema, passwordSchema } from '$lib/schema/auth/settingsSchemas';
+	import { hr } from '@faker-js/faker';
 
 	let { data } = $props();
 
@@ -104,6 +105,13 @@
 				<Button type="submit" class="w-full">Mettre à jour</Button>
 			</div>
 		</form>
+	</section>
+
+	<!-- Formulaire de mise à jour du mot de passe -->
+	<section class="mb-8">
+		<h2 class="text-xl font-semibold mb-4">Manager mes adresses de livraisons</h2>
+
+		<Button href="/auth/settings/address" class="w-full">Mes addresses</Button>
 	</section>
 
 	<!-- Section pour la mise à jour de l'authentification à deux facteurs -->
