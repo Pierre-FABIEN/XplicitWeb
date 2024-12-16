@@ -6,6 +6,7 @@
 	import { Input } from '$shadcn/input';
 	import * as Popover from '$shadcn/popover/index.js';
 	import * as RadioGroup from '$shadcn/radio-group/index.js';
+	import * as DropdownMenu from '$shadcn/dropdown-menu/index.js';
 	import { Label } from '$shadcn/label';
 
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
@@ -36,6 +37,14 @@
 	// Filtered and paginated items
 	let filteredItems = $state([]);
 	let paginatedItems = $state([]);
+
+	// Visibility state for columns
+	let columnsVisibility = $state(
+		columns.reduce((acc, col) => {
+			acc[col.key] = true; // All columns visible by default
+			return acc;
+		}, {})
+	);
 
 	// Function to sort items
 	const sortItems = (column: string) => {
@@ -103,40 +112,63 @@
 	<div class="w-full mt-10">
 		<div class="border rounded p-2">
 			<h2 class="text-2xl font-bold mb-5">{name}</h2>
+
 			<div class="rcb mb-5 w-full">
-				<Input
-					type="text"
-					placeholder="Cherchez dans le tableau"
-					class="max-w-xs"
-					bind:value={searchQuery}
-					oninput={updateFilteredAndPaginatedItems}
-				/>
-				<div class="rcc nowrap">
-					<div class="ccc">
-						<Popover.Root>
-							<Popover.Trigger class="border border-gray-300 rounded px-2 py-1">
-								{itemsPerPage} Items per page
-							</Popover.Trigger>
-							<Popover.Content class="p-4 border rounded w-48 bg-white shadow-lg">
-								<div class="mb-2 font-medium">Choisissez le nombre d'items :</div>
-								<RadioGroup.Root bind:value={itemsPerPageString} class="space-y-2">
-									{#each optionPage as option}
-										<div class="flex items-center space-x-2">
-											<RadioGroup.Item value={String(option.value)} id={'option' + option.value} />
-											<Label for={'option' + option.value}>{option.label}</Label>
-										</div>
-									{/each}
-								</RadioGroup.Root>
-							</Popover.Content>
-						</Popover.Root>
-					</div>
+				<div class="flex items-center space-x-4">
+					<Input
+						type="text"
+						placeholder="Cherchez dans le tableau"
+						class="max-w-xs"
+						bind:value={searchQuery}
+						oninput={updateFilteredAndPaginatedItems}
+					/>
+					<Popover.Root>
+						<Popover.Trigger class="border rounded px-2 py-1">
+							{itemsPerPage}
+						</Popover.Trigger>
+						<Popover.Content class="p-4 border rounded w-48 bg-white shadow-lg">
+							<div class="mb-2 font-medium">nombre d'items :</div>
+							<RadioGroup.Root bind:value={itemsPerPageString} class="space-y-2">
+								{#each optionPage as option}
+									<div class="flex items-center space-x-2">
+										<RadioGroup.Item value={String(option.value)} id={'option' + option.value} />
+										<Label for={'option' + option.value}>{option.label}</Label>
+									</div>
+								{/each}
+							</RadioGroup.Root>
+						</Popover.Content>
+					</Popover.Root>
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger>
+							<Button variant="outline" class="ml-auto">
+								Colonnes <ChevronDown class="ml-2 size-4" />
+							</Button>
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content align="end">
+							{#each columns as column (column.key)}
+								<DropdownMenu.CheckboxItem
+									class="capitalize"
+									checked={columnsVisibility[column.key]}
+									onCheckedChange={(value) => {
+										columnsVisibility = {
+											...columnsVisibility,
+											[column.key]: value
+										};
+									}}
+								>
+									{column.label}
+								</DropdownMenu.CheckboxItem>
+							{/each}
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
 				</div>
 			</div>
+
 			<div class="border">
 				<Table.Root>
 					<Table.Header>
 						<Table.Row>
-							{#each columns as column}
+							{#each columns.filter((col) => columnsVisibility[col.key]) as column}
 								<Table.Head class="border-r border-r-gray-800 pr-2">
 									<div class="rcb">
 										{column.label}
@@ -151,7 +183,7 @@
 					<Table.Body>
 						{#each paginatedItems as item, i (i)}
 							<TableRow>
-								{#each columns as column}
+								{#each columns.filter((col) => columnsVisibility[col.key]) as column}
 									<TableCell>{item[column.key]}</TableCell>
 								{/each}
 							</TableRow>
