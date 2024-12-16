@@ -6,11 +6,8 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { toast } from 'svelte-sonner';
 	import { emailSchema, passwordSchema } from '$lib/schema/auth/settingsSchemas';
-	import { hr } from '@faker-js/faker';
 
 	let { data } = $props();
-
-	console.log(data, 'data');
 
 	// Initialiser les formulaires Superform
 	const emailForm = superForm(data.emailForm, {

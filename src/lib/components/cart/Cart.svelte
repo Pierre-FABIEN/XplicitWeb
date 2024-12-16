@@ -31,12 +31,12 @@
 	}
 </script>
 
-<div class="absolute right-0 top-0 z-50">
+<div class="absolute right-3 top-3 z-50">
 	<Sheet.Root>
 		<Sheet.Trigger asChild>
-			<button class="m-5 text-gray-600">
-				<ShoppingCart />
-				<Badge class="absolute bottom-5 left-5">
+			<button class="m-5 text-gray-600 ccc">
+				<ShoppingCart class="z-50 absolute right-0" />
+				<Badge class="absolute bottom-5 left-0">
 					{#if $cart && $cart.items}
 						{$cart.items.length > 0 ? $cart.items.length : '0'}
 					{:else}
