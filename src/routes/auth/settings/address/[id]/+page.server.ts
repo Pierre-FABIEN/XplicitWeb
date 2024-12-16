@@ -1,6 +1,6 @@
 // src/routes/dashboard/addresses/[id]/+page.server.ts
 import type { PageServerLoad } from '../[id]/$types';
-import { redirect, type Actions } from '@sveltejs/kit';
+import { type Actions } from '@sveltejs/kit';
 import { superValidate, fail, message } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 

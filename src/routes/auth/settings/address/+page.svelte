@@ -12,31 +12,6 @@
 
 	let { data } = $props();
 
-	// Define table columns
-	let addressColumns = $state([
-		{ key: 'recipient', label: 'Destinataire' },
-		{ key: 'street', label: 'Rue' },
-		{ key: 'city', label: 'Ville' },
-		{ key: 'zip', label: 'Code postal' },
-		{ key: 'country', label: 'Pays' }
-	]);
-
-	// Define actions with icons
-	let addressActions = $state([
-		{
-			type: 'edit',
-			url: (item) => `/auth/settings/address/${item.id}`, // Dynamic URL for edit
-			confirm: false,
-			icon: Pencil // Icon for edit
-		},
-		{
-			type: 'delete',
-			url: '?/deleteAddress', // URL for delete form action
-			confirm: true, // Requires confirmation
-			icon: Trash // Icon for delete
-		}
-	]);
-
 	// Setup superform for delete action
 	const deleteAddress = superForm(data?.IdeleteAddressSchema ?? {}, {
 		validators: zodClient(deleteAddressSchema),
@@ -49,6 +24,35 @@
 		message: deleteAddressMessage
 	} = deleteAddress;
 
+	// Define table columns
+	let addressColumns = $state([
+		{ key: 'recipient', label: 'Destinataire' },
+		{ key: 'street', label: 'Rue' },
+		{ key: 'city', label: 'Ville' },
+		{ key: 'zip', label: 'Code postal' },
+		{ key: 'country', label: 'Pays' }
+	]);
+
+	console.log(data, 'data');
+
+	// Define actions with icons
+	let addressActions = $state([
+		{
+			type: 'link',
+			name: 'edit',
+			url: (item: any) => `/auth/settings/address/${item.id}`,
+			icon: Pencil
+		},
+		{
+			type: 'form',
+			name: 'delete',
+			url: '?/deleteAddress',
+			dataForm: $deleteAddressData.id,
+			enhance: deleteAddressEnhance,
+			icon: Trash
+		}
+	]);
+
 	// Show toast on form message
 	$effect(() => {
 		if ($deleteAddressMessage) {
@@ -58,5 +62,10 @@
 </script>
 
 <div class="clc w-xl m-5">
-	<Table name="Adresses" columns={addressColumns} data={data.address ?? []} />
+	<Table
+		name="Adresses"
+		columns={addressColumns}
+		data={data.address ?? []}
+		actions={addressActions}
+	/>
 </div>

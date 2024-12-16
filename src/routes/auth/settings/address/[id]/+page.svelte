@@ -13,7 +13,7 @@
 	import { Button } from '$shadcn/button';
 	import { toast } from 'svelte-sonner';
 
-	export let data../[id]/$types.js;
+	let { data } = $props();
 
 	// Initialisation du formulaire superForm
 	const updateAddress = superForm(data.IupdateAddressSchema, {
@@ -25,7 +25,8 @@
 
 	// On récupère l'ID de l'adresse à partir des paramètres de la page
 	let addressId: string;
-	onMount(() => {
+
+	$effect(() => {
 		const $page = get(page);
 		addressId = $page.params.addressId;
 	});

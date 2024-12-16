@@ -8,11 +8,12 @@
 	import * as RadioGroup from '$shadcn/radio-group/index.js';
 	import * as DropdownMenu from '$shadcn/dropdown-menu/index.js';
 	import { Label } from '$shadcn/label';
+	import * as Tooltip from '$shadcn/tooltip/index.js';
 
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 
 	// Props
-	let { columns, data, name } = $props();
+	let { columns, data, name, actions } = $props();
 
 	// State
 	let searchQuery = $state('');
@@ -37,6 +38,8 @@
 	// Filtered and paginated items
 	let filteredItems = $state([]);
 	let paginatedItems = $state([]);
+
+	console.log(actions, 'actions');
 
 	// Visibility state for columns
 	let columnsVisibility = $state(
@@ -164,7 +167,7 @@
 				</div>
 			</div>
 
-			<div class="border">
+			<div class="border rounded">
 				<Table.Root>
 					<Table.Header>
 						<Table.Row>
@@ -186,6 +189,46 @@
 								{#each columns.filter((col) => columnsVisibility[col.key]) as column}
 									<TableCell>{item[column.key]}</TableCell>
 								{/each}
+								{#if actions && actions.length > 0}
+									{#each actions as action}
+										<TableCell>
+											{#if action.type === 'link'}
+												<Tooltip.Provider>
+													<Tooltip.Root>
+														<Tooltip.Trigger>
+															<a href={action.url(item)} class="border rounded p-2">
+																{#if action.icon}
+																	<action.icon class="h-4 w-4 inline" />
+																{/if}
+															</a>
+														</Tooltip.Trigger>
+														<Tooltip.Content>
+															<p>{action.name}</p>
+														</Tooltip.Content>
+													</Tooltip.Root>
+												</Tooltip.Provider>
+											{:else if action.type === 'form'}
+												<form method="POST" action={action.url} use:action.enhance>
+													<input type="hidden" name="id" value={action.dataForm} />
+													<Tooltip.Provider>
+														<Tooltip.Root>
+															<Tooltip.Trigger>
+																<a href={action.url} class="border rounded p-2">
+																	{#if action.icon}
+																		<action.icon class="h-4 w-4 inline" />
+																	{/if}
+																</a>
+															</Tooltip.Trigger>
+															<Tooltip.Content>
+																<p>{action.name}</p>
+															</Tooltip.Content>
+														</Tooltip.Root>
+													</Tooltip.Provider>
+												</form>
+											{/if}
+										</TableCell>
+									{/each}
+								{/if}
 							</TableRow>
 						{/each}
 					</Table.Body>
