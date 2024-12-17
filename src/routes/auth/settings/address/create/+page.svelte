@@ -27,10 +27,6 @@
 	} = createAddress;
 
 	$effect(() => {
-		console.log('createAddressData:', $createAddressData);
-	});
-
-	$effect(() => {
 		if ($createAddressMessage === 'Address created successfully') {
 			goto('/auth/settings/address');
 			toast($createAddressMessage);

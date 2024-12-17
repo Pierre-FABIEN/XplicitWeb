@@ -94,7 +94,7 @@
 			data = data.filter((item: any) => item.id !== id);
 			updateFilteredAndPaginatedItems();
 			dialogOpen = false;
-		}, 100);
+		}, 10);
 	};
 
 	$effect(() => {
