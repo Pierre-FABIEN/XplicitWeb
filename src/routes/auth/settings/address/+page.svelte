@@ -1,12 +1,9 @@
 <script lang="ts">
-	// Import components and utilities
 	import Table from '$lib/components/Table.svelte';
 	import { deleteAddressSchema } from '$lib/schema/auth/addressSchema.js';
 	import { toast } from 'svelte-sonner';
-	import { superForm } from 'sveltekit-superforms';
+	import { message, superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-
-	// Import icons
 	import Pencil from 'lucide-svelte/icons/pencil';
 	import Trash from 'lucide-svelte/icons/trash';
 
@@ -33,8 +30,6 @@
 		{ key: 'country', label: 'Pays' }
 	]);
 
-	console.log(data, 'data');
-
 	// Define actions with icons
 	let addressActions = $state([
 		{
@@ -48,7 +43,7 @@
 			name: 'delete',
 			url: '?/deleteAddress',
 			dataForm: $deleteAddressData.id,
-			enhance: deleteAddressEnhance,
+			enhanceAction: deleteAddressEnhance,
 			icon: Trash
 		}
 	]);
@@ -65,6 +60,7 @@
 	<Table
 		name="Adresses"
 		columns={addressColumns}
+		addLink="/auth/settings/address/create"
 		data={data.address ?? []}
 		actions={addressActions}
 	/>

@@ -7,20 +7,20 @@
 	import * as Popover from '$shadcn/popover/index.js';
 	import * as RadioGroup from '$shadcn/radio-group/index.js';
 	import * as DropdownMenu from '$shadcn/dropdown-menu/index.js';
+	import * as AlertDialog from '$shadcn/alert-dialog/index.js';
 	import { Label } from '$shadcn/label';
 	import * as Tooltip from '$shadcn/tooltip/index.js';
 
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+	import { Plus } from 'lucide-svelte';
 
-	// Props
-	let { columns, data, name, actions } = $props();
+	let { data, columns, name, actions, addLink } = $props();
 
-	// State
+	let dialogOpen = $state(false);
 	let searchQuery = $state('');
 	let currentPage = $state(1);
 	let itemsPerPage = $state(5);
 
-	// Options for items per page
 	const optionPage = $state([
 		{ label: '5', value: 5 },
 		{ label: '10', value: 10 },
@@ -28,28 +28,18 @@
 		{ label: '20', value: 20 }
 	]);
 
-	// Convert itemsPerPage to string for the RadioGroup
 	let itemsPerPageString = $state(String(itemsPerPage));
-
-	// Sorting variables
 	let sortColumn = $state('');
 	let sortDirection = $state('asc');
-
-	// Filtered and paginated items
 	let filteredItems = $state([]);
 	let paginatedItems = $state([]);
-
-	console.log(actions, 'actions');
-
-	// Visibility state for columns
 	let columnsVisibility = $state(
 		columns.reduce((acc, col) => {
-			acc[col.key] = true; // All columns visible by default
+			acc[col.key] = true;
 			return acc;
 		}, {})
 	);
 
-	// Function to sort items
 	const sortItems = (column: string) => {
 		if (sortColumn === column) {
 			sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
@@ -58,7 +48,7 @@
 			sortDirection = 'asc';
 		}
 
-		data.sort((a: any, b: any) => {
+		data = data.sort((a: any, b: any) => {
 			let aValue = a[column];
 			let bValue = b[column];
 
@@ -73,7 +63,6 @@
 		updateFilteredAndPaginatedItems();
 	};
 
-	// Function to filter and paginate items
 	const updateFilteredAndPaginatedItems = () => {
 		filteredItems = data.filter((item: any) =>
 			Object.values(item).some((value) =>
@@ -86,23 +75,28 @@
 		paginatedItems = filteredItems.slice(start, end);
 	};
 
-	// Initialize filtered and paginated items from initial data
+	// Initialisation
 	updateFilteredAndPaginatedItems();
 
-	// Function to change page
 	const changePage = (page: number) => {
 		currentPage = page;
 		updateFilteredAndPaginatedItems();
 	};
 
-	// Function to change items per page
 	const changeItemsPerPage = (items: number) => {
 		itemsPerPage = items;
-		currentPage = 1; // Reset to first page
+		currentPage = 1;
 		updateFilteredAndPaginatedItems();
 	};
 
-	// Whenever itemsPerPageString changes, update itemsPerPage
+	const deleteItem = (id: string) => {
+		setTimeout(() => {
+			data = data.filter((item: any) => item.id !== id);
+			updateFilteredAndPaginatedItems();
+			dialogOpen = false;
+		}, 100);
+	};
+
 	$effect(() => {
 		const newItems = parseInt(itemsPerPageString, 10);
 		if (newItems !== itemsPerPage) {
@@ -125,6 +119,7 @@
 						bind:value={searchQuery}
 						oninput={updateFilteredAndPaginatedItems}
 					/>
+
 					<Popover.Root>
 						<Popover.Trigger class="border rounded px-2 py-1">
 							{itemsPerPage}
@@ -141,6 +136,7 @@
 							</RadioGroup.Root>
 						</Popover.Content>
 					</Popover.Root>
+
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger>
 							<Button variant="outline" class="ml-auto">
@@ -164,6 +160,14 @@
 							{/each}
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
+
+					{#if addLink}
+						<Button class="ml-auto">
+							<a href={addLink}>
+								<Plus class="size-4" />
+							</a>
+						</Button>
+					{/if}
 				</div>
 			</div>
 
@@ -189,6 +193,7 @@
 								{#each columns.filter((col) => columnsVisibility[col.key]) as column}
 									<TableCell>{item[column.key]}</TableCell>
 								{/each}
+
 								{#if actions && actions.length > 0}
 									{#each actions as action}
 										<TableCell>
@@ -208,23 +213,39 @@
 													</Tooltip.Root>
 												</Tooltip.Provider>
 											{:else if action.type === 'form'}
-												<form method="POST" action={action.url} use:action.enhance>
-													<input type="hidden" name="id" value={action.dataForm} />
-													<Tooltip.Provider>
-														<Tooltip.Root>
-															<Tooltip.Trigger>
-																<a href={action.url} class="border rounded p-2">
-																	{#if action.icon}
-																		<action.icon class="h-4 w-4 inline" />
-																	{/if}
-																</a>
-															</Tooltip.Trigger>
-															<Tooltip.Content>
-																<p>{action.name}</p>
-															</Tooltip.Content>
-														</Tooltip.Root>
-													</Tooltip.Provider>
-												</form>
+												<AlertDialog.Root bind:open={dialogOpen}>
+													<AlertDialog.Trigger>
+														<Button variant="outline" class="m-1 p-1 text-xs">
+															{#if action.icon}
+																<action.icon class="h-4 w-4 inline" />
+															{/if}
+														</Button>
+													</AlertDialog.Trigger>
+
+													<AlertDialog.Content>
+														<AlertDialog.Header>
+															<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
+															<AlertDialog.Description>
+																This action cannot be undone. This will permanently delete the item.
+															</AlertDialog.Description>
+														</AlertDialog.Header>
+														<AlertDialog.Footer>
+															<AlertDialog.Cancel onclick={() => (dialogOpen = false)}
+																>Cancel</AlertDialog.Cancel
+															>
+
+															<form method="POST" action={action.url} use:action.enhanceAction>
+																<input type="hidden" name="id" value={item.id} />
+																<AlertDialog.Action
+																	type="submit"
+																	onclick={() => deleteItem(item.id)}
+																>
+																	Continue
+																</AlertDialog.Action>
+															</form>
+														</AlertDialog.Footer>
+													</AlertDialog.Content>
+												</AlertDialog.Root>
 											{/if}
 										</TableCell>
 									{/each}
