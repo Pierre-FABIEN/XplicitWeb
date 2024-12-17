@@ -6,6 +6,10 @@
 	import { Trash } from 'lucide-svelte';
 	import { ShoppingCart } from 'lucide-svelte';
 
+	let { data } = $props();
+	const user = data?.user ?? null;
+	console.log(data);
+
 	// Gère la suppression d'un article du panier
 	function handleRemoveFromCart(productId: string) {
 		removeFromCart(productId);
@@ -33,7 +37,7 @@
 
 <div class="absolute right-3 top-3 z-50">
 	<Sheet.Root>
-		<Sheet.Trigger asChild>
+		<Sheet.Trigger>
 			<button class="m-5 text-gray-600 ccc">
 				<ShoppingCart class="z-50 absolute right-0" />
 				<Badge class="absolute bottom-5 left-0">
@@ -65,7 +69,7 @@
 								<div>
 									<select
 										class="border p-2 rounded"
-										on:change={(e) => changeQuantity(item.product.id, parseInt(e.target.value))}
+										onchange={(e) => changeQuantity(item.product.id, parseInt(e.target.value))}
 										bind:value={item.quantity}
 									>
 										{#each createQuantityOptions(item.product.stock) as option}
@@ -79,7 +83,7 @@
 									{(item.price * item.quantity).toFixed(1)}€
 								</p>
 								<button
-									on:click={() => handleRemoveFromCart(item.product.id)}
+									onclick={() => handleRemoveFromCart(item.product.id)}
 									class="text-red-600 hover:text-red-800"
 								>
 									<Trash />
@@ -101,6 +105,25 @@
 				</Button>
 			{:else}
 				<p>Your cart is empty.</p>
+			{/if}
+
+			{#if user}
+				<!-- Si l'utilisateur est connecté -->
+				<Button>
+					<a href="/auth">Mes paramètres</a>
+				</Button>
+			{:else}
+				<!-- Si l'utilisateur n'est pas connecté -->
+				<div class="text-center mt-4">
+					<p class=" mb-2">
+						Veuillez vous <a href="/login" class="text-blue-500 underline">connecter</a>
+						ou <a href="/signup" class="text-blue-500 underline">vous inscrire</a> pour finaliser votre
+						commande.
+					</p>
+					<Button>
+						<a href="/login">Se connecter</a>
+					</Button>
+				</div>
 			{/if}
 		</Sheet.Content>
 	</Sheet.Root>

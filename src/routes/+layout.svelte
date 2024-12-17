@@ -57,7 +57,7 @@
 		<ModeWatcher />
 
 		<div class="container">
-			<Cart />
+			<Cart {data} />
 			<div class="iconeNav flex justify-end place-items-center px-5 py-2">
 				<Breadcrumb />
 				<NavigationMenu />
