@@ -60,6 +60,8 @@ export async function validateSessionToken(token: string): Promise<SessionValida
 			include: { user: true }
 		});
 
+		console.log(result);
+
 		if (!result) {
 			return { session: null, user: null };
 		}

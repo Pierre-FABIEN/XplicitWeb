@@ -21,7 +21,7 @@
 	import { startSync } from '$lib/store/Data/cartSync';
 	import { da } from '@faker-js/faker';
 
-	let { children } = $props();
+	let { children, data } = $props();
 
 	$effect(() => {
 		const unsubscribe = page.subscribe((currentPage) => {
@@ -31,6 +31,12 @@
 
 		setFirstOpen(true);
 		setRessourceToValide(true);
+
+		const items = data.pendingOrder;
+		if (items) {
+			setCart(items.id, items.userId, items.items, items.total);
+		}
+		startSync();
 
 		return unsubscribe;
 	});

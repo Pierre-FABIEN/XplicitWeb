@@ -2,9 +2,15 @@
 	import * as THREE from 'three';
 	import { T, useTask } from '@threlte/core';
 	import { useDraco, useGltf } from '@threlte/extras';
+	import { textureStore } from '$lib/store/textureStore';
+	import { writable } from 'svelte/store';
 
 	export const ref = new THREE.Group();
 	const dracoLoader = useDraco('/draco/');
+
+	export const texturePngStore = writable<string>('/BAT/black.png');
+	let rotation = $state(0);
+	let customMaterial = $state<THREE.MeshStandardMaterial | null>(null);
 
 	// Charger le modèle GLTF
 	const gltf = useGltf('/model/modele.glb', { dracoLoader });
@@ -17,16 +23,20 @@
 		envMapIntensity: 1.5 // Accentuer les reflets
 	});
 
-	// Matériau pour Mesh_1
-	const textureLoader = new THREE.TextureLoader();
-	const customTexture = textureLoader.load('/BAT/black.png', (texture) => {
-		texture.flipY = false; // Inverser l'image verticalement
-	});
-	const customMaterial = new THREE.MeshStandardMaterial({
-		map: customTexture
+	$effect(() => {
+		textureStore.subscribe((texturePng) => {
+			const textureLoader = new THREE.TextureLoader();
+			const loadedTexture = textureLoader.load(texturePng, (texture) => {
+				texture.flipY = false;
+			});
+
+			// Mettre à jour le matériau
+			customMaterial = new THREE.MeshStandardMaterial({
+				map: loadedTexture
+			});
+		});
 	});
 
-	let rotation = 0;
 	// useTask est appelé à chaque frame, delta est le temps écoulé depuis la dernière frame
 	useTask((delta) => {
 		rotation += delta / 4; // Incrémente la rotation sur l'axe Y
@@ -48,15 +58,17 @@
 			scale={5}
 		/>
 		<!-- Mesh_1 avec texture personnalisée -->
-		<T.Mesh
-			castShadow
-			receiveShadow
-			geometry={gltf.nodes.Mesh_1.geometry}
-			material={customMaterial}
-			position={[0, 0.2, 0]}
-			rotation={[0, rotation, 0]}
-			scale={[5.005, 5, 5.005]}
-		/>
+		{#if customMaterial}
+			<T.Mesh
+				castShadow
+				receiveShadow
+				geometry={gltf.nodes.Mesh_1.geometry}
+				material={customMaterial}
+				position={[0, 0.2, 0]}
+				rotation={[0, rotation, 0]}
+				scale={[5.005, 5, 5.005]}
+			/>
+		{/if}
 	{:catch error}
 		<slot name="error" {error} />
 	{/await}

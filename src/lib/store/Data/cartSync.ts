@@ -5,6 +5,7 @@ let lastSynced = Date.now();
 
 const syncCart = async () => {
 	const currentCart = get(cart);
+	console.log(currentCart, 'currentCart');
 
 	if (currentCart.lastModified > lastSynced) {
 		//console.log(currentCart, 'currentCart');
@@ -29,7 +30,7 @@ const syncCart = async () => {
 };
 
 const startSync = () => {
-	setInterval(syncCart, 2000); // Sync every 2 seconds
+	setInterval(syncCart, 20000); // Sync every 2 seconds
 };
 
 export { startSync };
