@@ -1,9 +1,7 @@
 import { verifyTOTP } from '@oslojs/otp';
 import { getUserTOTPKey } from '$lib/lucia/user';
-import {
-	validatePasswordResetSessionRequest,
-	setPasswordResetSessionAs2FAVerified
-} from '$lib/lucia/passwordReset';
+import { validatePasswordResetSessionRequest } from '$lib/lucia/passwordReset';
+import { setPasswordResetSessionAs2FAVerified } from '$lib/prisma/passwordResetSession/passwordResetSession';
 import { totpBucket } from '$lib/lucia/2fa';
 import { fail, redirect } from '@sveltejs/kit';
 import { resetUser2FAWithRecoveryCode } from '$lib/lucia/2fa';

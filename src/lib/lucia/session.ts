@@ -1,7 +1,16 @@
-import { prisma } from '$lib/server';
 import { ObjectId } from 'mongodb'; // Import ObjectId pour MongoDB
 import type { RequestEvent } from '@sveltejs/kit';
 import type { User } from './user';
+import { findUserByGoogleId, createUserWithGoogleOAuth } from '$lib/prisma/user/user';
+import {
+	createSessionInDB,
+	deleteSession,
+	deleteSessionById,
+	deleteSessionsByUserId,
+	findSessionById,
+	updateSessionExpiry,
+	verifyTwoFactorForSession
+} from '$lib/prisma/session/sessions';
 
 export interface SessionFlags {
 	twoFactorVerified: boolean;
@@ -21,31 +30,31 @@ export function generateSessionToken(): string {
 	return new ObjectId().toString(); // Génère un ObjectId valide
 }
 
-// Crée une nouvelle session
 export async function createSession(
 	token: string,
 	userId: string,
 	flags: SessionFlags,
-	oauthProvider?: string
+	oauthProvider?: string | null
 ): Promise<Session> {
-	// Vérifie que userId est un ObjectId valide
 	if (!ObjectId.isValid(userId)) {
 		throw new Error('Invalid user ID format');
 	}
 
-	const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // Expiration dans 30 jours
+	const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
 
 	try {
-		const session = await prisma.session.create({
-			data: {
-				id: token,
-				userId, // MongoDB ObjectId
-				expiresAt,
-				twoFactorVerified: flags.twoFactorVerified,
-				oauthProvider
-			}
+		const session = await createSessionInDB({
+			id: token,
+			userId,
+			expiresAt,
+			twoFactorVerified: flags.twoFactorVerified,
+			oauthProvider: oauthProvider ?? undefined
 		});
-		return session;
+
+		return {
+			...session,
+			oauthProvider: session.oauthProvider ?? undefined
+		};
 	} catch (error) {
 		console.error('Erreur lors de la création de la session :', error);
 		throw new Error('Erreur lors de la création de la session.');
@@ -55,11 +64,7 @@ export async function createSession(
 // Valide le token de session
 export async function validateSessionToken(token: string): Promise<SessionValidationResult> {
 	try {
-		const result = await prisma.session.findUnique({
-			where: { id: token },
-			include: { user: true }
-		});
-
+		const result = await findSessionById(token);
 		console.log(result);
 
 		if (!result) {
@@ -68,17 +73,14 @@ export async function validateSessionToken(token: string): Promise<SessionValida
 
 		// Vérifie l'expiration de la session
 		if (Date.now() >= result.expiresAt.getTime()) {
-			await prisma.session.delete({ where: { id: token } });
+			await deleteSessionById(token);
 			return { session: null, user: null };
 		}
 
 		// Prolonge la session si elle est proche de l'expiration
 		if (Date.now() >= result.expiresAt.getTime() - 1000 * 60 * 60 * 24 * 15) {
 			const newExpiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
-			await prisma.session.update({
-				where: { id: token },
-				data: { expiresAt: newExpiresAt }
-			});
+			await updateSessionExpiry(token, newExpiresAt);
 			result.expiresAt = newExpiresAt;
 		}
 
@@ -113,7 +115,7 @@ export async function validateSessionToken(token: string): Promise<SessionValida
 // Invalide une session spécifique
 export async function invalidateSession(sessionId: string): Promise<void> {
 	try {
-		await prisma.session.delete({ where: { id: sessionId } });
+		await deleteSession(sessionId);
 	} catch (error) {
 		console.warn("Erreur lors de l'invalidation de la session :", error.message);
 	}
@@ -126,7 +128,7 @@ export async function invalidateUserSessions(userId: string): Promise<void> {
 	}
 
 	try {
-		await prisma.session.deleteMany({ where: { userId } });
+		await deleteSessionsByUserId(userId);
 	} catch (error) {
 		console.warn("Erreur lors de l'invalidation des sessions de l'utilisateur :", error.message);
 	}
@@ -156,10 +158,7 @@ export function deleteSessionTokenCookie(event: RequestEvent): void {
 
 // Marque la session comme vérifiée pour la 2FA
 export async function setSessionAs2FAVerified(sessionId: string): Promise<void> {
-	await prisma.session.update({
-		where: { id: sessionId },
-		data: { twoFactorVerified: true }
-	});
+	await verifyTwoFactorForSession(sessionId);
 }
 
 // Gestion des sessions OAuth pour Google
@@ -170,28 +169,10 @@ export async function handleGoogleOAuth(
 	name: string,
 	picture: string
 ): Promise<SessionValidationResult> {
-	let user = await prisma.user.findUnique({ where: { googleId } });
+	let user = await findUserByGoogleId(googleId);
 
 	if (!user) {
-		user = await prisma.user.create({
-			data: {
-				googleId,
-				email,
-				name,
-				picture,
-				role: 'CLIENT', // Rôle par défaut
-				emailVerified: true,
-				addresses: {
-					create: [] // Pas d'adresses à l'inscription
-				},
-				orders: {
-					create: [] // Aucun ordre initial
-				},
-				transactions: {
-					create: [] // Pas de transaction initiale
-				}
-			}
-		});
+		user = await createUserWithGoogleOAuth({ googleId, email, name, picture });
 	}
 
 	const token = generateSessionToken();

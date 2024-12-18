@@ -1,7 +1,5 @@
-import {
-	validatePasswordResetSessionRequest,
-	setPasswordResetSessionAsEmailVerified
-} from '$lib/lucia/passwordReset';
+import { validatePasswordResetSessionRequest } from '$lib/lucia/passwordReset';
+import { setPasswordResetSessionAsEmailVerified } from '$lib/prisma/passwordResetSession/passwordResetSession';
 import { ExpiringTokenBucket } from '$lib/lucia/rate-limit';
 import { setUserAsEmailVerifiedIfEmailMatches } from '$lib/lucia/user';
 import { fail, redirect } from '@sveltejs/kit';

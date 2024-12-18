@@ -1,11 +1,12 @@
 import { google } from '$lib/lucia/oauth';
 import { ObjectParser } from '@pilcrowjs/object-parser';
-import { createUserOAuth, getUserFromGoogleId, getUserFromEmail } from '$lib/lucia/user';
+import { getUserFromGoogleId, getUserFromEmail } from '$lib/lucia/user';
 import { createSession, generateSessionToken, setSessionTokenCookie } from '$lib/lucia/session';
 import { decodeIdToken } from 'arctic';
 
 import type { RequestEvent } from './$types';
 import type { OAuth2Tokens } from 'arctic';
+import { createUserWithGoogleOAuth } from '$lib/prisma/user/user';
 
 export async function GET(event: RequestEvent): Promise<Response> {
 	const storedState = event.cookies.get('google_oauth_state') ?? null;
@@ -39,7 +40,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
 		user = await getUserFromEmail(email);
 		if (!user) {
 			// Créer un nouvel utilisateur OAuth
-			user = await createUserOAuth(googleId, email, name, picture);
+			user = await createUserWithGoogleOAuth(googleId, email, name, picture);
 		}
 	}
 

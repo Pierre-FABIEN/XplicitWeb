@@ -1,3 +1,4 @@
+import { findUserWithRecoveryCode } from '$lib/prisma/user/user';
 import { prisma } from '$lib/server';
 import { decryptToString, encryptString } from './encryption';
 import { ExpiringTokenBucket } from './rate-limit';
@@ -17,10 +18,7 @@ export async function resetUser2FAWithRecoveryCode(
 	}
 
 	// Récupérer le code de récupération chiffré
-	const user = await prisma.user.findUnique({
-		where: { id: userId },
-		select: { recoveryCode: true }
-	});
+	const user = await findUserWithRecoveryCode(userId);
 
 	if (!user || !user.recoveryCode) {
 		return false;

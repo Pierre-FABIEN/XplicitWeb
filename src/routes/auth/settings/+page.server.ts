@@ -5,7 +5,7 @@ import {
 	setEmailVerificationRequestCookie
 } from '$lib/lucia/email-verification';
 import { fail, redirect } from '@sveltejs/kit';
-import { checkEmailAvailability } from '$lib/lucia/email';
+import { checkEmailAvailability } from '$lib/prisma/email/email';
 import { verifyPasswordHash } from '$lib/lucia/password';
 import { getUserPasswordHash, getUserRecoverCode, updateUserPassword } from '$lib/lucia/user';
 import {

@@ -64,17 +64,6 @@
 		<SmoothScrollBar>
 			<header class="flex items-center gap-2 px-4 h-16">
 				<Sidebar.Trigger />
-				<Breadcrumb.Root>
-					<Breadcrumb.List>
-						<Breadcrumb.Item>
-							<Breadcrumb.Link href="#">Building Your Application</Breadcrumb.Link>
-						</Breadcrumb.Item>
-						<Breadcrumb.Separator />
-						<Breadcrumb.Item>
-							<Breadcrumb.Page>Data Fetching</Breadcrumb.Page>
-						</Breadcrumb.Item>
-					</Breadcrumb.List>
-				</Breadcrumb.Root>
 			</header>
 
 			<div class="p-4">

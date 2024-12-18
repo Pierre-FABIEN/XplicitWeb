@@ -3,6 +3,11 @@ import { generateRandomOTP } from './utils';
 import { ExpiringTokenBucket } from './rate-limit';
 import { ObjectId } from 'mongodb'; // Import de ObjectId
 import type { RequestEvent } from '@sveltejs/kit';
+import {
+	createEmailVerificationRequestPrisma,
+	deleteEmailVerificationRequestsByUserId,
+	findEmailVerificationRequest
+} from '$lib/prisma/emailVerificationRequest/emailVerificationRequest';
 
 export interface EmailVerificationRequest {
 	id: string;
@@ -22,12 +27,7 @@ export async function getUserEmailVerificationRequest(
 		throw new Error('Invalid email verification request ID');
 	}
 
-	const request = await prisma.emailVerificationRequest.findUnique({
-		where: {
-			id,
-			userId
-		}
-	});
+	const request = await findEmailVerificationRequest(id, userId);
 
 	if (!request) {
 		return null;
@@ -55,14 +55,12 @@ export async function createEmailVerificationRequest(
 	const code = generateRandomOTP();
 	const expiresAt = new Date(Date.now() + 1000 * 60 * 10); // Expiration dans 10 minutes
 
-	const request = await prisma.emailVerificationRequest.create({
-		data: {
-			id,
-			userId,
-			code,
-			email,
-			expiresAt
-		}
+	const request = await createEmailVerificationRequestPrisma({
+		id,
+		userId,
+		code,
+		email,
+		expiresAt
 	});
 
 	return {
@@ -76,9 +74,7 @@ export async function createEmailVerificationRequest(
 
 // Supprime toutes les requêtes de vérification d'email pour un utilisateur
 export async function deleteUserEmailVerificationRequest(userId: string): Promise<void> {
-	await prisma.emailVerificationRequest.deleteMany({
-		where: { userId }
-	});
+	await deleteEmailVerificationRequestsByUserId(userId);
 }
 
 // Envoie un email de vérification

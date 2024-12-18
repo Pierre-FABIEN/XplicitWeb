@@ -8,7 +8,7 @@ import {
 	sendVerificationEmailBucket,
 	setEmailVerificationRequestCookie
 } from '$lib/lucia/email-verification';
-import { invalidateUserPasswordResetSessions } from '$lib/lucia/passwordReset';
+import { invalidateUserPasswordResetSessions } from '$lib/prisma/passwordResetSession/passwordResetSession';
 import { updateUserEmailAndSetEmailAsVerified } from '$lib/lucia/user';
 import { ExpiringTokenBucket } from '$lib/lucia/rate-limit';
 

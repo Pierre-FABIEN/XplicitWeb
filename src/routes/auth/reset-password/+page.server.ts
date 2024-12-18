@@ -1,9 +1,9 @@
 import {
 	deletePasswordResetSessionTokenCookie,
-	invalidateUserPasswordResetSessions,
 	validatePasswordResetSessionRequest
 } from '$lib/lucia/passwordReset';
-import { fail, redirect } from '@sveltejs/kit';
+import { invalidateUserPasswordResetSessions } from '$lib/prisma/passwordResetSession/passwordResetSession';
+import { redirect } from '@sveltejs/kit';
 import { verifyPasswordStrength } from '$lib/lucia/password';
 import {
 	createSession,

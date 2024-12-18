@@ -79,7 +79,8 @@ async function main() {
 				role: 'ADMIN',
 				name: 'Admin User',
 				totpKey: totpKeyBuffer,
-				recoveryCode: encryptedRecoveryCode
+				recoveryCode: encryptedRecoveryCode,
+				googleId: undefined
 			}
 		});
 

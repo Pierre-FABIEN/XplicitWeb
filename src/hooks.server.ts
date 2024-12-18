@@ -5,8 +5,8 @@ import {
 	deleteSessionTokenCookie
 } from '$lib/lucia/session';
 import { sequence } from '@sveltejs/kit/hooks';
-import { prisma } from '$lib/server'; // Prisma pour accéder à la BDD
 import type { Handle } from '@sveltejs/kit';
+import { createPendingOrder, findPendingOrder } from '$lib/prisma/order/prendingOrder';
 
 // Rate limiting setup
 const bucket = new RefillingTokenBucket<string>(100, 1);
@@ -46,27 +46,10 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		event.locals.role = user.role;
 
 		// Récupérer ou créer la commande en attente
-		let pendingOrder = await prisma.order.findFirst({
-			where: {
-				userId: user.id,
-				status: 'PENDING'
-			},
-			include: {
-				items: {
-					include: {
-						product: true
-					}
-				}
-			}
-		});
+		let pendingOrder = await findPendingOrder(user.id);
 
 		if (!pendingOrder) {
-			pendingOrder = await prisma.order.create({
-				data: {
-					userId: user.id,
-					status: 'PENDING'
-				}
-			});
+			pendingOrder = await createPendingOrder(user.id);
 		}
 
 		event.locals.pendingOrder = pendingOrder;

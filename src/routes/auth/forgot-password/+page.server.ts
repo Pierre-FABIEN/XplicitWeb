@@ -1,10 +1,10 @@
 import { getUserFromEmail } from '$lib/lucia/user';
 import {
-	createPasswordResetSession,
-	invalidateUserPasswordResetSessions,
 	sendPasswordResetEmail,
 	setPasswordResetSessionTokenCookie
 } from '$lib/lucia/passwordReset';
+import { invalidateUserPasswordResetSessions } from '$lib/prisma/passwordResetSession/passwordResetSession';
+import { createPasswordResetSessionPrisma } from '$lib/prisma/passwordResetSession/passwordResetSession';
 import { RefillingTokenBucket } from '$lib/lucia/rate-limit';
 import { generateSessionToken } from '$lib/lucia/session';
 import { fail, redirect } from '@sveltejs/kit';
@@ -59,7 +59,7 @@ export const actions: Actions = {
 
 		await invalidateUserPasswordResetSessions(user.id);
 		const sessionToken = generateSessionToken();
-		const session = await createPasswordResetSession(sessionToken, user.id, user.email);
+		const session = await createPasswordResetSessionPrisma(sessionToken, user.id, user.email);
 		sendPasswordResetEmail(session.email, session.code);
 		setPasswordResetSessionTokenCookie(event, sessionToken, session.expiresAt);
 		return redirect(302, '/auth/reset-password/verify-email');

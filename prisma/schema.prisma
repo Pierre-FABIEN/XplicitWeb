@@ -29,7 +29,7 @@ model User {
   recoveryCode              String?
   emailVerified             Boolean                    @default(false)
   totpKey                   Bytes?
-  googleId                  String?                    @unique
+  googleId                  String?                    
   name                      String?
   picture                   String?
   role                      Role                       @default(CLIENT)

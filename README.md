@@ -97,3 +97,7 @@ Mettre en place Nodemailer
 
 
 revoir la sécurité sur les données
+
+
+Continuer la cart
+réaliser les produits faire atention aux stock quand il sagit d'une custom (mettre une option custom dans les produit selon la selection des gouts)

@@ -1,5 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { checkEmailAvailability } from '$lib/lucia/email';
+import { checkEmailAvailability } from '$lib/prisma/email/email';
 import { createUser } from '$lib/lucia/user';
 import { RefillingTokenBucket } from '$lib/lucia/rate-limit';
 import { createSession, generateSessionToken, setSessionTokenCookie } from '$lib/lucia/session';
