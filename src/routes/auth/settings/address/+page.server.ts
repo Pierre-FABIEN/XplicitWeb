@@ -28,11 +28,9 @@ export const load = async (event) => {
 export const actions: Actions = {
 	deleteAddress: async ({ request }) => {
 		const formData = await request.formData();
-		console.log(formData, 'form data');
 
 		const form = await superValidate(formData, zod(deleteAddressSchema));
 
-		console.log(form, 'form');
 		if (!form.valid) return fail(400, { form });
 
 		try {

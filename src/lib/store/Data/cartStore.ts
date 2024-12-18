@@ -93,7 +93,7 @@ export const addToCart = (product: OrderItem) => {
 			0
 		);
 		currentCart.lastModified = Date.now();
-		console.log('Cart after adding item:', JSON.stringify(currentCart, null, 2));
+
 		return currentCart;
 	});
 };
@@ -132,7 +132,6 @@ export const updateCartItemQuantity = (productId: string, quantity: number) => {
 };
 
 cart.subscribe((currentCart) => {
-	console.log('Cart:', currentCart);
 	// Sauvegarde dans localStorage si le contexte est navigateur
 	saveCartToLocalStorage(currentCart);
 });

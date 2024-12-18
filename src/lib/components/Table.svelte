@@ -191,7 +191,13 @@
 						{#each paginatedItems as item, i (i)}
 							<TableRow>
 								{#each columns.filter((col) => columnsVisibility[col.key]) as column}
-									<TableCell>{item[column.key]}</TableCell>
+									<td class="border border-gray-300 p-2">
+										{#if column.key === 'images'}
+											{@html item[column.key]}
+										{:else}
+											{item[column.key]}
+										{/if}
+									</td>
 								{/each}
 
 								{#if actions && actions.length > 0}

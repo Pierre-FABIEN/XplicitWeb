@@ -1,5 +1,18 @@
 import { prisma } from '$lib/server';
 
+export const createProduct = async (productData: {
+	name: string;
+	description: string;
+	price: number;
+	stock: number;
+	images: string[];
+	slug: string;
+}) => {
+	return prisma.product.create({
+		data: productData
+	});
+};
+
 export const getProductById = async (productId: string) => {
 	return await prisma.product.findUnique({
 		where: { id: productId },
@@ -22,4 +35,31 @@ export const deleteProductById = async (productId: string) => {
 	return await prisma.product.delete({
 		where: { id: productId }
 	});
+};
+
+export const connectProductToCategories = async (productId: string, categoryIds: string[]) => {
+	return prisma.productCategory.createMany({
+		data: categoryIds.map((categoryId) => ({
+			productId,
+			categoryId
+		}))
+	});
+};
+
+export const getAllProducts = async () => {
+	try {
+		const products = await prisma.product.findMany({
+			include: {
+				categories: {
+					include: {
+						category: true
+					}
+				}
+			}
+		});
+		return products;
+	} catch (error) {
+		console.error('Error fetching products:', error);
+		throw new Error('Could not fetch products');
+	}
 };

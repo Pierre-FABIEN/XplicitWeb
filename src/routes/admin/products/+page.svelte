@@ -10,6 +10,27 @@
 	// Props
 	let { data } = $props();
 
+	let products = $state(data?.products || []);
+
+	let productsData = $derived.by(() =>
+		products.map((product) => ({
+			...product,
+			// Catégories : extraire les noms
+			categories:
+				product.categories?.map((cat) => cat.category?.name || 'Unknown').join(', ') ||
+				'No category',
+			// Première image ou placeholder
+			images: `<img class='w-20 h-20' src='${product.images[0]}' alt='${product.name}' />`,
+			// Description tronquée
+			description:
+				product.description?.length > 20
+					? `${product.description.slice(0, 20)}...`
+					: product.description || 'No description available'
+		}))
+	);
+
+	console.log(productsData);
+
 	// Form handling with superForm
 	const deleteProduct = superForm(data?.IdeleteProductSchema ?? {}, {
 		validators: zodClient(deleteProductSchema),
@@ -28,9 +49,8 @@
 		{ key: 'name', label: 'Nom' },
 		{ key: 'price', label: 'Prix' },
 		{ key: 'categories', label: 'Catégories' },
-		{ key: 'images', label: 'Images nb' },
-		{ key: 'description', label: 'Description' },
-		{ key: 'createdAt', label: 'Date de création' }
+		{ key: 'images', label: 'Images' },
+		{ key: 'description', label: 'Description' }
 	]);
 
 	// Define actions with icons
@@ -51,40 +71,6 @@
 		}
 	]);
 
-	// Reactive state for formatted product data
-	let formattedData = $state([]);
-
-	// Helper: Format date
-	function formatDate(dateString: string): string {
-		const date = new Date(dateString);
-		const day = String(date.getDate()).padStart(2, '0');
-		const month = String(date.getMonth() + 1).padStart(2, '0');
-		const year = date.getFullYear();
-		const hours = String(date.getHours()).padStart(2, '0');
-		const minutes = String(date.getMinutes()).padStart(2, '0');
-
-		return `${day}/${month}/${year} à ${hours}:${minutes}`;
-	}
-
-	// Format product data
-	function formatProductData(products: any[]) {
-		return products.map((product) => ({
-			...product,
-			categories: Array.isArray(product.categories)
-				? product.categories.map((cat: any) => cat.category.name).join(', ')
-				: 'N/A',
-			images: Array.isArray(product.images) ? product.images.length : 0,
-			createdAt: formatDate(product.createdAt)
-		}));
-	}
-
-	// Update formatted data when products change
-	$effect(() => {
-		if (data?.products) {
-			formattedData = formatProductData(data.products);
-		}
-	});
-
 	// Show toast on delete message
 	$effect(() => {
 		if ($deleteProductMessage) {
@@ -98,8 +84,8 @@
 	<Table
 		name="Produits"
 		columns={productColumns}
-		data={formattedData}
+		data={productsData ?? []}
 		actions={productActions}
-		addLink="/dashboard/products/create"
+		addLink="/admin/products/create"
 	/>
 </div>

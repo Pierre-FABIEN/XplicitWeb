@@ -6,7 +6,6 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		// Récupération des données envoyées par le client
 		const data = await request.json();
-		console.log('Données reçues depuis le client:', data);
 
 		const cartItems: CartItem[] = data.items;
 
@@ -36,8 +35,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			};
 		});
 
-		console.log('line_items générés pour Stripe:', lineItems);
-
 		// Création de la session Stripe
 		const session = await stripe.checkout.sessions.create({
 			line_items: lineItems,
@@ -51,8 +48,6 @@ export const POST: RequestHandler = async ({ request }) => {
 				enabled: true // Collecte des numéros de téléphone
 			}
 		});
-
-		console.log('Session Stripe créée avec succès:', session);
 
 		return new Response(
 			JSON.stringify({

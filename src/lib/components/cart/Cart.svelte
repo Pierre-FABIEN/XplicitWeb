@@ -8,7 +8,6 @@
 
 	let { data } = $props();
 	const user = data?.user ?? null;
-	console.log(data);
 
 	// Gère la suppression d'un article du panier
 	function handleRemoveFromCart(productId: string) {

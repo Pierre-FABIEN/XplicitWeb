@@ -8,7 +8,6 @@ export const load = (async (event) => {
 	const address = await getAddressById(event.params.id);
 
 	if (!address) {
-		console.log('Address not found');
 		return fail(404, { message: 'Address not found' });
 	}
 
@@ -32,13 +31,10 @@ export const load = (async (event) => {
 export const actions: Actions = {
 	updateAddress: async ({ request }) => {
 		const formData = await request.formData();
-		console.log('Received form data:', formData);
 
 		const form = await superValidate(formData, zod(updateAddressSchema));
-		console.log('Form validation result:', form);
 
 		if (!form.valid) {
-			console.log('Validation errors:', form.errors);
 			return fail(400, { form });
 		}
 
@@ -51,7 +47,6 @@ export const actions: Actions = {
 		const country = formData.get('country') as string;
 
 		await updateAddress(id, { recipient, street, city, state, zip, country });
-		console.log('Address updated successfully');
 
 		return message(form, 'Address updated successfully');
 	}

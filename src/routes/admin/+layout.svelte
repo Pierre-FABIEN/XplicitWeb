@@ -17,6 +17,7 @@
 					{ title: 'Accueil', url: '/admin' },
 					{ title: 'utilisateurs', url: '/admin/users' },
 					{ title: 'produits', url: '/admin/products' },
+					{ title: 'catégories', url: '/admin/categories' },
 					{ title: 'ventes', url: '/admin/sales' },
 					{ title: 'blog', url: '/admin/blog' }
 				]

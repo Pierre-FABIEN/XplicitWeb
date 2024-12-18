@@ -4,8 +4,6 @@
 	import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '$shadcn/card';
 
 	let { data } = $props();
-
-	console.log(data);
 </script>
 
 <main class="container mx-auto px-4 py-6">

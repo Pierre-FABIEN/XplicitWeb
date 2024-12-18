@@ -13,13 +13,14 @@ import {
 	deleteProductCategories,
 	getCategoriesById
 } from '$lib/prisma/categories/categories';
-import { deleteProductById, getProductById } from '$lib/prisma/products/products';
+import { deleteProductById, getAllProducts, getProductById } from '$lib/prisma/products/products';
 
 export const load: PageServerLoad = async () => {
 	const IdeleteProductSchema = await superValidate(zod(deleteProductSchema));
 	const IdeleteCategorySchema = await superValidate(zod(deleteCategorySchema));
-
+	const products = await getAllProducts();
 	return {
+		products,
 		IdeleteCategorySchema,
 		IdeleteProductSchema
 	};
@@ -30,18 +31,15 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const form = await superValidate(formData, zod(deleteProductSchema));
 		const id = formData.get('id') as string;
-		console.log('Received id:', id);
+
 		if (!id) {
-			console.log('No id provided');
 			return fail(400, { message: 'Product ID is required' });
 		}
 		try {
 			const existingProduct = await getProductById(id);
 			if (!existingProduct) {
-				console.log('Product not found:', id);
 				return fail(400, { message: 'Product not found' });
 			}
-			console.log('Product found:', existingProduct);
 
 			const images = existingProduct.images;
 			for (const imageUrl of images) {
@@ -49,7 +47,7 @@ export const actions: Actions = {
 				if (publicId) {
 					try {
 						const result = await cloudinary.uploader.destroy(`products/${publicId}`);
-						console.log('Delete Result:', result);
+
 						if (result.result !== 'ok' && result.result !== 'not found') {
 							console.error('Error deleting image from Cloudinary:', result);
 							return fail(500, { message: 'Failed to delete image from Cloudinary' });
@@ -61,11 +59,10 @@ export const actions: Actions = {
 				}
 			}
 
-			const deletedCategories = await deleteProductCategories(id);
-			console.log('Deleted product categories:', deletedCategories);
+			await deleteProductCategories(id);
 
-			const deletedProduct = await deleteProductById(id);
-			console.log('Deleted product:', deletedProduct);
+			await deleteProductById(id);
+
 			return message(form, 'Product deleted successfully');
 		} catch (error) {
 			console.error('Error deleting product:', error);
@@ -76,24 +73,20 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const form = await superValidate(formData, zod(deleteCategorySchema));
 		const categoryId = formData.get('categoryId') as string;
-		console.log('Received categoryId:', categoryId);
+
 		if (!categoryId) {
-			console.log('No categoryId provided');
 			return fail(400, { message: 'Category ID is required' });
 		}
 		try {
 			const existingCategory = await getCategoriesById(categoryId);
 			if (!existingCategory) {
-				console.log('Category not found:', categoryId);
 				return fail(400, { message: 'Category not found' });
 			}
-			console.log('Category found:', existingCategory);
 
-			const deletedProductCategories = await deleteProductCategories(categoryId);
-			console.log('Deleted product categories:', deletedProductCategories);
+			await deleteProductCategories(categoryId);
 
-			const deletedCategory = await deleteCategoryById(categoryId);
-			console.log('Deleted category:', deletedCategory);
+			await deleteCategoryById(categoryId);
+
 			return message(form, 'Category deleted successfully');
 		} catch (error) {
 			console.error('Error deleting category:', error);

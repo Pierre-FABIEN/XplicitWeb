@@ -141,7 +141,6 @@ export async function handleGoogleOAuth(
 }
 export async function updateUserTOTPKey(userId: string, key: Uint8Array): Promise<void> {
 	const encryptedKey = encrypt(key);
-	console.log('Encrypted TOTP Key:', encryptedKey); // Ajoutez un log
 	await updateUserTotpKey(userId, encryptedKey);
 }
 
