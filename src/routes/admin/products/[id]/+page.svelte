@@ -1,37 +1,43 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { filesFieldProxy, superForm } from 'sveltekit-superforms';
+	import { zodClient } from 'sveltekit-superforms/adapters';
+
 	import * as Form from '$shadcn/form';
 	import { Input } from '$shadcn/input';
 	import { Button } from '$shadcn/button';
 	import Checkbox from '$shadcn/checkbox/checkbox.svelte';
 	import { Label } from '$shadcn/label';
 	import { Textarea } from '$shadcn/textarea';
-	import { filesFieldProxy, superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { createProductSchema } from '$lib/schema/products/productSchema';
-	import { goto } from '$app/navigation';
+
+	import { updateProductSchema } from '$lib/schema/products/productSchema.js';
 	import { toast } from 'svelte-sonner';
 
 	let { data } = $props();
 
-	const createProduct = superForm(data.IcreateProductSchema, {
-		validators: zodClient(createProductSchema),
-		id: 'createProduct'
+	console.log(data);
+
+	const updateProduct = superForm(data.IupdateProductSchema, {
+		validators: zodClient(updateProductSchema),
+		id: 'updateProduct',
+		resetForm: false
 	});
 
 	const {
-		form: createProductData,
-		enhance: createProductEnhance,
-		message: createProductMessage
-	} = createProduct;
+		form: updateProductData,
+		enhance: updateProductEnhance,
+		message: updateProductMessage
+	} = updateProduct;
 
-	let DataPrice: number = $state(0);
-	let DataStock: number = $state(0);
+	let DataPrice: number = $state(data.IupdateProductSchema.data.price);
+	let DataStock: number = $state(data.IupdateProductSchema.data.stock);
+	let existingImages = $state(data.IupdateProductSchema.data.existingImages);
 
 	// Chargement des données
 	let categories = $state(
-		data.categories.map((category: any) => ({
+		data.categories.map((category) => ({
 			...category,
-			checked: false // Initialisation de la propriété
+			checked: data.IupdateProductSchema.data.categoryId.includes(category.id)
 		}))
 	);
 
@@ -39,27 +45,26 @@
 		categories.filter((category) => category.checked).map((category) => category.id)
 	);
 
-	const files = filesFieldProxy(createProduct, 'images');
+	const files = filesFieldProxy(updateProduct, 'images');
 	const { values } = files;
 
-	// Conversion des données en nombres
 	$effect(() => {
-		$createProductData.price = Number(DataPrice);
-		$createProductData.stock = Number(DataStock);
+		$updateProductData.price = Number(DataPrice);
+		$updateProductData.stock = Number(DataStock);
 	});
 
 	$effect(() => {
 		// Validation stricte pour au moins un élément
-		$createProductData.categoryId = selectedCategories.length
+		$updateProductData.categoryId = selectedCategories.length
 			? selectedCategories
 			: ['defaultCategoryId'];
 	});
 
-	// Redirection après succès
 	$effect(() => {
-		if ($createProductMessage === 'Product created successfully') {
+		if ($updateProductMessage === 'Product updated successfully') {
+			$updateProductData.existingImages = data.IupdateProductSchema.data.existingImages;
 			goto('/admin/products/');
-			toast.success($createProductMessage);
+			toast.success($updateProductMessage);
 		}
 	});
 </script>
@@ -69,24 +74,24 @@
 		<form
 			method="POST"
 			enctype="multipart/form-data"
-			action="?/createProduct"
-			use:createProductEnhance
+			action="?/updateProduct"
+			use:updateProductEnhance
 			class="space-y-4"
 		>
 			<div class="rtb">
 				<div class="ccc" style="width: calc(100% - 320px);">
 					<div class="w-[100%]">
-						<Form.Field name="name" form={createProduct}>
+						<Form.Field name="name" form={updateProduct}>
 							<Form.Control>
 								<Form.Label>Name</Form.Label>
-								<Input name="name" type="text" bind:value={$createProductData.name} />
+								<Input name="name" type="text" bind:value={$updateProductData.name} />
 							</Form.Control>
 							<Form.FieldErrors />
 						</Form.Field>
 					</div>
 
 					<div class="w-[100%]">
-						<Form.Field name="price" form={createProduct}>
+						<Form.Field name="price" form={updateProduct}>
 							<Form.Control>
 								<Form.Label>Price</Form.Label>
 								<Input name="price" type="number" bind:value={DataPrice} step="0.01" min="0.01" />
@@ -94,9 +99,8 @@
 							<Form.FieldErrors />
 						</Form.Field>
 					</div>
-
 					<div class="w-[100%]">
-						<Form.Field name="stock" form={createProduct}>
+						<Form.Field name="stock" form={updateProduct}>
 							<Form.Control>
 								<Form.Label>Stock</Form.Label>
 								<Input name="stock" type="number" bind:value={DataStock} />
@@ -104,12 +108,11 @@
 							<Form.FieldErrors />
 						</Form.Field>
 					</div>
-
 					<div class="w-[100%]">
-						<Form.Field name="description" form={createProduct}>
+						<Form.Field name="description" form={updateProduct}>
 							<Form.Control>
 								<Form.Label>Description</Form.Label>
-								<Textarea name="description" bind:value={$createProductData.description} />
+								<Textarea name="description" bind:value={$updateProductData.description} />
 							</Form.Control>
 							<Form.FieldErrors />
 						</Form.Field>
@@ -117,13 +120,16 @@
 
 					<div class="w-[100%]">
 						<h4 class="scroll-m-20 text-xl font-semibold tracking-tight">Categories</h4>
-						<Form.Field name="categoryId" form={createProduct}>
+						<Form.Field name="categoryId" form={updateProduct}>
 							<Form.Control>
 								{#if categories.length > 0}
 									{#each categories as category (category.id)}
 										<div class="my-3 flex items-center space-x-2">
 											<Checkbox id={category.id} bind:checked={category.checked} />
-											<Label for={category.id} class="text-sm font-medium">
+											<Label
+												for={category.id}
+												class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+											>
 												{category.name}
 											</Label>
 										</div>
@@ -148,8 +154,8 @@
 								accept="image/png, image/jpeg"
 								type="file"
 								class="absolute opacity-0 w-full h-full cursor-pointer z-10"
-								style="transform: translate(50%, 50%); left: -50%; top: -50%;"
 							/>
+
 							<div class="text-center pointer-events-none">
 								<svg
 									class="mx-auto h-12 w-12 text-gray-400"
@@ -187,14 +193,25 @@
 								</div>
 							{/each}
 						</div>
-						<Form.Field name="images" form={createProduct}>
-							<Form.FieldErrors />
-						</Form.Field>
 					</div>
+					<div class="mt-3 flex flex-wrap gap-2 flex-1 w-[300px] rts">
+						<p class="text-sm">Ces images seront suppirmées à la suite d'une modification :</p>
+						{#each $updateProductData.existingImages as imageUrl}
+							<div class="relative w-[65px] h-[65px]">
+								<img src={imageUrl} alt="" class="w-full h-full object-cover rounded" />
+							</div>
+						{/each}
+					</div>
+
+					<Form.Field name="images" form={updateProduct}>
+						<Form.FieldErrors />
+					</Form.Field>
 				</div>
 			</div>
 
-			<input type="hidden" name="categoryId" bind:value={$createProductData.categoryId} />
+			<input type="hidden" name="_id" bind:value={$updateProductData._id} />
+			<input type="hidden" name="categoryId" bind:value={$updateProductData.categoryId} />
+			<input type="hidden" name="existingImages" value={JSON.stringify(existingImages)} />
 
 			<Button type="submit">Save changes</Button>
 		</form>

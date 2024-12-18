@@ -63,3 +63,10 @@ export const getAllProducts = async () => {
 		throw new Error('Could not fetch products');
 	}
 };
+
+export const updateProductById = async (productId: string, data: any) => {
+	return await prisma.product.update({
+		where: { id: productId },
+		data: data
+	});
+};

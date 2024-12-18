@@ -58,7 +58,7 @@
 		{
 			type: 'link',
 			name: 'edit',
-			url: (item: any) => `/dashboard/products/${item.id}`,
+			url: (item: any) => `/admin/products/${item.id}`,
 			icon: Pencil
 		},
 		{

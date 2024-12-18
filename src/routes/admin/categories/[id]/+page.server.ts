@@ -8,8 +8,6 @@ import { updateCategory } from '$lib/prisma/categories/categories';
 import { getCategoriesById } from '$lib/prisma/categories/categories';
 
 export const load: PageServerLoad = async ({ params }) => {
-	console.log('Loading category data for ID:', params.id);
-
 	const category = await getCategoriesById(params.id);
 
 	if (!category) {
