@@ -4,7 +4,7 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-<h1>Accueil</h1>
+<h1>Blog</h1>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 	<div class="bg-gray-200 rounded aspect-video"></div>
 	<div class="bg-gray-200 rounded aspect-video"></div>
