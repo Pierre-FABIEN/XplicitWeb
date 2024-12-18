@@ -1,4 +1,3 @@
-import { prisma } from '$lib/server';
 import { hashPassword } from './password';
 import { encryptString } from './encryption';
 import { generateRandomRecoveryCode } from './utils';

@@ -7,7 +7,13 @@ import cloudinary from '$lib/server/cloudinary';
 
 import { deleteProductSchema } from '$lib/schema/products/productSchema';
 import { deleteCategorySchema } from '$lib/schema/categories/deleteCategorySchema';
-import { prisma } from '$lib/server';
+
+import {
+	deleteCategoryById,
+	deleteProductCategories,
+	getCategoriesById
+} from '$lib/prisma/categories/categories';
+import { deleteProductById, getProductById } from '$lib/prisma/products/products';
 
 export const load: PageServerLoad = async () => {
 	const IdeleteProductSchema = await superValidate(zod(deleteProductSchema));
@@ -96,50 +102,8 @@ export const actions: Actions = {
 	}
 };
 
-const getProductById = async (productId: string) => {
-	return await prisma.product.findUnique({
-		where: { id: productId },
-		include: { categories: true }
-	});
-};
-
-const getCategoriesById = async (categoryId: string) => {
-	return await prisma.category.findUnique({
-		where: { id: categoryId }
-	});
-};
-
-const deleteCategoryById = async (categoryId: string) => {
-	return await prisma.category.delete({
-		where: { id: categoryId }
-	});
-};
-
 const getPublicIdFromUrl = (url: string): string | null => {
 	const regex = /\/([^/]+)\.[a-z]+$/;
 	const match = url.match(regex);
 	return match ? match[1] : null;
-};
-
-const deleteProductCategories = async (productId: string) => {
-	return await prisma.productCategory.deleteMany({
-		where: { productId: productId }
-	});
-};
-
-const deleteProductById = async (productId: string) => {
-	// Supprime d'abord les OrderItems associés au produit
-	await prisma.orderItem.deleteMany({
-		where: { productId: productId }
-	});
-
-	// Ensuite, supprime les catégories associées si nécessaire
-	await prisma.productCategory.deleteMany({
-		where: { productId: productId }
-	});
-
-	// Finalement, supprime le produit lui-même
-	return await prisma.product.delete({
-		where: { id: productId }
-	});
 };

@@ -1,7 +1,6 @@
-import { PrismaClient } from '@prisma/client';
 import type { PageServerLoad } from './$types';
+import { getPaginatedPosts } from '$lib/prisma/posts/posts';
 
-const prisma = new PrismaClient();
 const ARTICLES_PER_PAGE = 6; // Nombre d'articles par page
 
 export const load = (async ({ url }) => {
@@ -9,22 +8,7 @@ export const load = (async ({ url }) => {
 	const page = parseInt(url.searchParams.get('page') || '1', 10);
 
 	// Requête pour récupérer les articles nécessaires
-	const [articles, totalArticles] = await Promise.all([
-		prisma.post.findMany({
-			skip: (page - 1) * ARTICLES_PER_PAGE,
-			take: ARTICLES_PER_PAGE,
-			include: {
-				author: true,
-				category: true,
-				tags: {
-					include: {
-						tag: true
-					}
-				}
-			}
-		}),
-		prisma.post.count() // Compte total des articles
-	]);
+	const { articles, totalArticles } = await getPaginatedPosts(page, ARTICLES_PER_PAGE);
 
 	// Calcul du nombre total de pages
 	const totalPages = Math.ceil(totalArticles / ARTICLES_PER_PAGE);

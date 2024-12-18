@@ -1,4 +1,3 @@
-import { prisma } from '$lib/server';
 import { generateRandomOTP } from './utils';
 import { ExpiringTokenBucket } from './rate-limit';
 import { ObjectId } from 'mongodb'; // Import de ObjectId

@@ -1,13 +1,14 @@
-import { prisma } from '$lib/server';
 import { superValidate, message, fail } from 'sveltekit-superforms';
 import { createPostSchema } from '$lib/schema/blog/articleSchema.js';
 import { zod } from 'sveltekit-superforms/adapters';
+import { createPost, getAllCategories, getAllTags } from '$lib/prisma/posts/posts';
+import { upsertAuthor } from '$lib/prisma/authors/authors';
+import { createCategory } from '$lib/prisma/categories/categories';
 
 export const load = async () => {
 	const form = await superValidate(zod(createPostSchema));
-
-	const category = await prisma.category.findMany({ select: { id: true, name: true } });
-	const tags = await prisma.tag.findMany({ select: { id: true, name: true } });
+	const category = await getAllCategories();
+	const tags = await getAllTags();
 
 	return { form, category, tags };
 };
@@ -27,12 +28,7 @@ export const actions = {
 
 		try {
 			// Vérifier ou créer l'auteur
-			const author = await prisma.author.upsert({
-				where: { name: authorName },
-				create: { name: authorName },
-				update: {}
-			});
-
+			const author = await upsertAuthor(authorName);
 			// Gestion des catégories
 			// Corriger le parsing du champ `category`
 
@@ -41,7 +37,10 @@ export const actions = {
 			const categoryConnect = await Promise.all(
 				parsedCategories.map(async (category) => {
 					if (!category.id) {
-						const newCategory = await prisma.category.create({ data: { name: category.name } });
+						const newCategory = await createCategory({
+							name: category.name,
+							description: category.description || 'Default description'
+						});
 						return { id: newCategory.id };
 					}
 					return { id: category.id };
@@ -58,26 +57,13 @@ export const actions = {
 			}));
 
 			// Créer le post avec les relations
-			await prisma.post.create({
-				data: {
-					title,
-					content,
-					slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-					published,
-					author: {
-						connect: { id: author.id }
-					},
-					category: {
-						connect: categoryConnect[0] // Associer une seule catégorie
-					},
-					tags: {
-						create: tagConnectOrCreate.map((tag) => ({
-							tag: {
-								connectOrCreate: tag
-							}
-						}))
-					}
-				}
+			await createPost({
+				title,
+				content,
+				published,
+				authorId: author.id,
+				categoryId: categoryConnect[0].id,
+				tagConnectOrCreate
 			});
 
 			return message(form, 'Article créé avec succès !');

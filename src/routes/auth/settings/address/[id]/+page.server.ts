@@ -1,13 +1,11 @@
 import { updateAddressSchema } from '$lib/schema/auth/addressSchema';
-import { prisma } from '$lib/server';
 import { zod } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from './$types';
 import { fail, message, superValidate } from 'sveltekit-superforms';
+import { getAddressById, updateAddress } from '$lib/prisma/addresses/addresses';
 
 export const load = (async (event) => {
-	const address = await prisma.address.findUnique({
-		where: { id: event.params.id }
-	});
+	const address = await getAddressById(event.params.id);
 
 	if (!address) {
 		console.log('Address not found');
@@ -56,29 +54,5 @@ export const actions: Actions = {
 		console.log('Address updated successfully');
 
 		return message(form, 'Address updated successfully');
-	}
-};
-
-interface UpdateAddressData {
-	recipient: string;
-	street: string;
-	city: string;
-	state: string;
-	zip: string;
-	country: string;
-}
-
-const updateAddress = async (id: string, data: UpdateAddressData) => {
-	try {
-		const updatedAddress = await prisma.address.update({
-			where: { id },
-			data
-		});
-		return updatedAddress;
-	} catch (error) {
-		console.error('Error updating address:', error);
-		throw error;
-	} finally {
-		await prisma.$disconnect();
 	}
 };

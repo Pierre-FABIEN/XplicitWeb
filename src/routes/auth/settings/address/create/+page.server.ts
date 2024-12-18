@@ -2,7 +2,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { fail, message, superValidate } from 'sveltekit-superforms';
 import { createAddressSchema } from '$lib/schema/auth/addressSchema';
 import { zod } from 'sveltekit-superforms/adapters';
-import { prisma } from '$lib/server';
+import { createAddress } from '$lib/prisma/addresses/addresses';
 
 export const load: PageServerLoad = async (event) => {
 	// Initialize superform for the createAddressSchema
@@ -31,16 +31,14 @@ export const actions: Actions = {
 		const { recipient, street, city, state, zip, country, userId } = form.data;
 
 		try {
-			await prisma.address.create({
-				data: {
-					recipient,
-					street,
-					city,
-					state,
-					zip,
-					country,
-					userId
-				}
+			await createAddress({
+				recipient,
+				street,
+				city,
+				state,
+				zip,
+				country,
+				userId
 			});
 
 			return message(form, 'Address created successfully');

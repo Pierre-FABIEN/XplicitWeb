@@ -1,5 +1,5 @@
+import { deleteAddress, getUserAddresses } from '$lib/prisma/addresses/addresses';
 import { deleteAddressSchema } from '$lib/schema/auth/addressSchema';
-import { prisma } from '$lib/server';
 import { redirect, type Actions } from '@sveltejs/kit';
 import { fail, message, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
@@ -15,9 +15,7 @@ export const load = async (event) => {
 	}
 	const userId = event.locals.user.id;
 
-	const address = await prisma.address.findMany({
-		where: { userId }
-	});
+	const address = await getUserAddresses(userId);
 
 	const IdeleteAddressSchema = await superValidate(zod(deleteAddressSchema));
 
@@ -40,9 +38,7 @@ export const actions: Actions = {
 		try {
 			const addressId = formData.get('id') as string;
 
-			await prisma.address.delete({
-				where: { id: addressId }
-			});
+			await deleteAddress(addressId);
 
 			return message(form, 'Address deleted successfully');
 		} catch (error: any) {
