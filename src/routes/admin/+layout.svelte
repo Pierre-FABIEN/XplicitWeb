@@ -1,11 +1,9 @@
 <script lang="ts">
 	// Importation des composants principaux
 	import * as Breadcrumb from '$shadcn/breadcrumb/index.js';
-	import { Separator } from '$shadcn/separator/index.js';
 	import * as Sidebar from '$shadcn/sidebar/index.js';
-	import * as DropdownMenu from '$shadcn/dropdown-menu/index.js';
-	import Search from 'lucide-svelte/icons/search';
-	import { Check, ChevronsUpDown, GalleryVerticalEnd } from 'lucide-svelte';
+	import { Search } from 'lucide-svelte';
+	import SmoothScrollBar from '$lib/components/smoothScrollBar/SmoothScrollBar.svelte';
 
 	let { children } = $props();
 
@@ -32,7 +30,7 @@
 
 <!-- Sidebar principale -->
 <Sidebar.Provider>
-	<Sidebar.Root>
+	<Sidebar.Root class="border-none">
 		<!-- En-tête avec Sélecteur de version et Recherche -->
 		<Sidebar.Header>
 			<!-- Champ de recherche -->
@@ -62,25 +60,26 @@
 	</Sidebar.Root>
 
 	<!-- Contenu principal -->
-	<Sidebar.Inset>
-		<header class="flex items-center gap-2 border-b px-4 h-16">
-			<Sidebar.Trigger />
-			<Separator orientation="vertical" class="h-4" />
-			<Breadcrumb.Root>
-				<Breadcrumb.List>
-					<Breadcrumb.Item>
-						<Breadcrumb.Link href="#">Building Your Application</Breadcrumb.Link>
-					</Breadcrumb.Item>
-					<Breadcrumb.Separator />
-					<Breadcrumb.Item>
-						<Breadcrumb.Page>Data Fetching</Breadcrumb.Page>
-					</Breadcrumb.Item>
-				</Breadcrumb.List>
-			</Breadcrumb.Root>
-		</header>
+	<Sidebar.Inset class="border rounded-[12px] m-3 max-h-[95vh] min-h-[95vh]">
+		<SmoothScrollBar>
+			<header class="flex items-center gap-2 px-4 h-16">
+				<Sidebar.Trigger />
+				<Breadcrumb.Root>
+					<Breadcrumb.List>
+						<Breadcrumb.Item>
+							<Breadcrumb.Link href="#">Building Your Application</Breadcrumb.Link>
+						</Breadcrumb.Item>
+						<Breadcrumb.Separator />
+						<Breadcrumb.Item>
+							<Breadcrumb.Page>Data Fetching</Breadcrumb.Page>
+						</Breadcrumb.Item>
+					</Breadcrumb.List>
+				</Breadcrumb.Root>
+			</header>
 
-		<div class="p-4">
-			{@render children?.()}
-		</div>
+			<div class="p-4">
+				{@render children?.()}
+			</div>
+		</SmoothScrollBar>
 	</Sidebar.Inset>
 </Sidebar.Provider>

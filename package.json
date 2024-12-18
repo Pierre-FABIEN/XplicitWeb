@@ -97,6 +97,7 @@
 		"apexcharts": "^4.0.0",
 		"arctic": "^2.2.2",
 		"argon2": "^0.41.1",
+		"cloudinary": "^2.5.1",
 		"dotenv": "^16.4.7",
 		"embla-carousel-auto-scroll": "^8.3.1",
 		"embla-carousel-autoplay": "^8.3.1",
