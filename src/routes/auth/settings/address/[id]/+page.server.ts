@@ -1,4 +1,4 @@
-import { updateAddressSchema } from '$lib/schema/auth/addressSchema';
+import { updateAddressSchema } from '$lib/schema/addresses/addressSchema';
 import { zod } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from './$types';
 import { fail, message, superValidate } from 'sveltekit-superforms';

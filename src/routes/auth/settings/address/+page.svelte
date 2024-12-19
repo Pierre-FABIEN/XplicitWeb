@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Table from '$lib/components/Table.svelte';
-	import { deleteAddressSchema } from '$lib/schema/auth/addressSchema.js';
+	import { deleteAddressSchema } from '$lib/schema/addresses/addressSchema.js';
 	import { toast } from 'svelte-sonner';
 	import { message, superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';

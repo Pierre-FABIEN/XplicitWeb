@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, message, superValidate } from 'sveltekit-superforms';
-import { createAddressSchema } from '$lib/schema/auth/addressSchema';
+import { createAddressSchema } from '$lib/schema/addresses/addressSchema';
 import { zod } from 'sveltekit-superforms/adapters';
 import { createAddress } from '$lib/prisma/addresses/addresses';
 

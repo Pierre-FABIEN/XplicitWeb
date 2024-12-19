@@ -1,13 +1,69 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import Table from '$components/Table.svelte';
+	import { deleteUserSchema } from '$lib/schema/users/userSchema.js';
+	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { superForm } from 'sveltekit-superforms';
+	import { toast } from 'svelte-sonner';
+	import Pencil from 'lucide-svelte/icons/pencil';
+	import Trash from 'lucide-svelte/icons/trash';
 
-	let { data }: { data: PageData } = $props();
+	// Props
+	let { data } = $props();
+
+	console.log(data);
+
+	// Form handling with superForm
+	const deleteUser = superForm(data?.IdeleteUserSchema ?? {}, {
+		validators: zodClient(deleteUserSchema),
+		id: 'deleteUser'
+	});
+
+	const {
+		form: deleteUserData,
+		enhance: deleteUserEnhance,
+		message: deleteUserMessage
+	} = deleteUser;
+
+	// Define table columns
+	const userColumns = $state([
+		{ key: 'username', label: 'Nom' },
+		{ key: 'email', label: 'Email' },
+		{ key: 'role', label: 'Role' }
+	]);
+
+	// Define actions with icons
+	const userActions = $state([
+		{
+			type: 'link',
+			name: 'edit',
+			url: (item: any) => `/admin/users/${item.id}`,
+			icon: Pencil
+		},
+		{
+			type: 'form',
+			name: 'delete',
+			url: '?/deleteUser',
+			dataForm: deleteUserData.id,
+			enhanceAction: deleteUserEnhance,
+			icon: Trash
+		}
+	]);
+
+	// Show toast on delete message
+	$effect(() => {
+		if ($deleteUserMessage) {
+			toast.success($deleteUserMessage);
+		}
+	});
 </script>
 
-<h1>Sales</h1>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-	<div class="bg-gray-200 rounded aspect-video"></div>
-	<div class="bg-gray-200 rounded aspect-video"></div>
-	<div class="bg-gray-200 rounded aspect-video"></div>
+<!-- UI Table -->
+<div class="ccc w-xl m-5">
+	<Table
+		name="Utilisateurs"
+		columns={userColumns}
+		data={data.allUsers ?? []}
+		actions={userActions}
+		addLink="/admin/users/create"
+	/>
 </div>
-<div class="bg-gray-200 rounded mt-4 min-h-[100vh]"></div>

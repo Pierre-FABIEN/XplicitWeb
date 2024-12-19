@@ -8,7 +8,7 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 
 	import { goto } from '$app/navigation';
-	import { updateAddressSchema } from '$lib/schema/auth/addressSchema.js';
+	import { updateAddressSchema } from '$lib/schema/addresses/addressSchema.js';
 	import { Card } from '$shadcn/card';
 	import ScrollArea from '$shadcn/scroll-area/scroll-area.svelte';
 

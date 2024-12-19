@@ -177,3 +177,71 @@ export const getUserRecoveryAndGoogleId = async (
 		}
 	});
 };
+
+export const getAllUsers = async () => {
+	try {
+		const users = await prisma.user.findMany({
+			include: {
+				addresses: true,
+				orders: {
+					include: {
+						address: true
+					}
+				}
+			}
+		});
+
+		return users;
+	} catch (error) {
+		console.error('Error fetching users:', error);
+		throw new Error('Could not fetch users');
+	} finally {
+		await prisma.$disconnect();
+	}
+};
+
+export async function deleteUser(userId: string) {
+	try {
+		// Désassocier les transactions de l'utilisateur
+		await prisma.transaction.updateMany({
+			where: { userId },
+			data: { userId: null }
+		});
+
+		// Supprimer les commandes associées à l'utilisateur
+		await prisma.order.deleteMany({
+			where: { userId }
+		});
+
+		// Supprimer l'utilisateur
+		await prisma.user.delete({
+			where: { id: userId }
+		});
+
+		return { success: true };
+	} catch (error) {
+		throw new Error('Error deleting user: ' + error.message);
+	}
+}
+
+export const updateUserRole = async (id: string, role: string) => {
+	try {
+		const updatedUser = await prisma.user.update({
+			where: { id },
+			data: { role }
+		});
+		console.log('User role updated:', updatedUser);
+		return updatedUser;
+	} catch (error) {
+		console.error('Error updating user role:', error);
+		throw error;
+	} finally {
+		await prisma.$disconnect();
+	}
+};
+
+export async function getUsersById(userId: string) {
+	return await prisma.user.findUnique({
+		where: { id: userId }
+	});
+}

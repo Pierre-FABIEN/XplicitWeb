@@ -1,6 +1,5 @@
 <script lang="ts">
 	// Importation des composants principaux
-	import * as Breadcrumb from '$shadcn/breadcrumb/index.js';
 	import * as Sidebar from '$shadcn/sidebar/index.js';
 	import { Search } from 'lucide-svelte';
 	import SmoothScrollBar from '$lib/components/smoothScrollBar/SmoothScrollBar.svelte';

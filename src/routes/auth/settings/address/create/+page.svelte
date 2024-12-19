@@ -2,7 +2,7 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 
-	import { createAddressSchema } from '$lib/schema/auth/addressSchema';
+	import { createAddressSchema } from '$lib/schema/addresses/addressSchema.js';
 
 	import * as Form from '$shadcn/form';
 	import { Button } from '$shadcn/button';
