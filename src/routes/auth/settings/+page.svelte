@@ -44,13 +44,10 @@
 		if ($passwordMessage) {
 			toast.success($passwordMessage);
 		}
-		if ($isMfaEnabledMessage) {
-			toast.success($isMfaEnabledMessage);
+		if ($isMfaEnabledMessage && $isMfaEnabledMessage.text === 'Authentication modifiée') {
+			$isMfaEnabledData.isMfaEnabled = $isMfaEnabledMessage.newStatus;
+			toast.success($isMfaEnabledMessage.text);
 		}
-	});
-
-	$effect(() => {
-		console.log($isMfaEnabledData);
 	});
 </script>
 

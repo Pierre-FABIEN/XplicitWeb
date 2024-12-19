@@ -37,16 +37,16 @@ export async function createUser(email: string, username: string, password: stri
 	const encryptedRecoveryCode = encryptString(recoveryCode);
 	const encryptedRecoveryCodeString = Buffer.from(encryptedRecoveryCode).toString('base64');
 
-	const user = await createUserInDatabase({
+	const user = await createUserInDatabase(
 		email,
 		username,
 		passwordHash,
-		recoveryCode: encryptedRecoveryCodeString,
-		role: 'CLIENT',
-		emailVerified: false,
-		totpKey: null,
-		googleId: undefined
-	});
+		encryptedRecoveryCodeString,
+		'CLIENT',
+		false,
+		null,
+		undefined
+	);
 
 	// Convertit null en undefined pour correspondre au type User
 	return {

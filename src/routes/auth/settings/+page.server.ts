@@ -46,7 +46,10 @@ export const load = async (event: RequestEvent) => {
 	// Initialiser les formulaires Superform
 	const passwordForm = await superValidate(event, zod(passwordSchema));
 	const emailForm = await superValidate(event, zod(emailSchema));
-	const isMfaEnabledForm = await superValidate(event, zod(isMfaEnabledSchema));
+	const isMfaEnabledForm = await superValidate(
+		{ isMfaEnabled: event.locals.user.isMfaEnabled }, // Passer la valeur actuelle
+		zod(isMfaEnabledSchema)
+	);
 
 	return {
 		recoveryCode,
@@ -137,18 +140,19 @@ export const actions: Actions = {
 		}
 		// Récupérer l'état actuel
 		const currentStatus = await getUserMFA(event.locals.user.id);
-		console.log(currentStatus, 'Valeur actuelle de MFA');
 
 		// Inverser la propriété isMfaEnabled
 		const newMfaStatus = !currentStatus.isMfaEnabled;
-		console.log(newMfaStatus, 'Nouvel état de MFA');
 
 		// Mettre à jour la base de données
 		await updateUserMFA(event.locals.user.id, newMfaStatus);
 
 		// Vérifier la mise à jour
 		const updatedStatus = await getUserMFA(event.locals.user.id);
-		console.log(updatedStatus, 'Valeur mise à jour de MFA');
-		return message(form, 'Authentication modifiée');
+
+		return message(form, {
+			text: 'Authentication modifiée',
+			newStatus: newMfaStatus
+		});
 	}
 };

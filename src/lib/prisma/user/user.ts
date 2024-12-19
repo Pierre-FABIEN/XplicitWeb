@@ -1,4 +1,5 @@
 import { prisma } from '$lib/server';
+import { TrendingUpIcon } from 'lucide-svelte';
 
 export const findUserWithRecoveryCode = async (userId: string) => {
 	return await prisma.user.findUnique({
@@ -13,18 +14,18 @@ export const findUserByGoogleId = async (googleId: string) => {
 	});
 };
 
-export const createUserWithGoogleOAuth = async (data: {
-	googleId: string;
-	email: string;
-	name: string;
-	picture: string;
-}) => {
+export const createUserWithGoogleOAuth = async (
+	googleId: string,
+	email: string,
+	name: string,
+	picture: string
+) => {
 	return await prisma.user.create({
 		data: {
-			googleId: data.googleId,
-			email: data.email,
-			name: data.name,
-			picture: data.picture,
+			googleId: googleId,
+			email: email,
+			name: name,
+			picture: picture,
 			role: 'CLIENT',
 			emailVerified: true,
 			addresses: {
@@ -40,19 +41,26 @@ export const createUserWithGoogleOAuth = async (data: {
 	});
 };
 
-export const createUserInDatabase = async (data: {
-	email: string;
-	username: string;
-	passwordHash: string;
-	recoveryCode: string;
-	role: string;
-	emailVerified: boolean;
-	totpKey: string | null;
-	googleId?: string;
-}) => {
+export const createUserInDatabase = async (
+	email: string,
+	username: string,
+	passwordHash: string,
+	recoveryCode: string,
+	role: string,
+	emailVerified: boolean,
+	totpKey: string | null,
+	googleId?: string
+) => {
 	return await prisma.user.create({
 		data: {
-			...data,
+			email,
+			username,
+			passwordHash,
+			recoveryCode,
+			role,
+			emailVerified,
+			totpKey,
+			googleId,
 			// Relations initialisées à vide
 			addresses: { create: [] },
 			orders: { create: [] },
@@ -75,7 +83,8 @@ export const getUserByEmailPrisma = async (email: string) => {
 			totpKey: true,
 			googleId: true,
 			name: true,
-			picture: true
+			picture: true,
+			isMfaEnabled: true
 		}
 	});
 };

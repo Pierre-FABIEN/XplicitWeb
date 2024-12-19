@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { Google } from 'arctic';
 	import * as Form from '$shadcn/form';
 	import { Input } from '$shadcn/input';
 	import { Button } from '$shadcn/button';

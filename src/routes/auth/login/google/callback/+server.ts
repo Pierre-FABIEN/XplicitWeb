@@ -38,8 +38,11 @@ export async function GET(event: RequestEvent): Promise<Response> {
 	if (!user) {
 		// Vérifier si l'utilisateur existe déjà par email
 		user = await getUserFromEmail(email);
+
 		if (!user) {
 			// Créer un nouvel utilisateur OAuth
+			console.log(googleId, email, name, picture, "Création d'un nouvel utilisateur OAuth");
+
 			user = await createUserWithGoogleOAuth(googleId, email, name, picture);
 		}
 	}
