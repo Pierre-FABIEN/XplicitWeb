@@ -21,6 +21,8 @@ import { zod } from 'sveltekit-superforms/adapters';
 
 import type { Actions, RequestEvent } from './$types';
 import type { SessionFlags } from '$lib/lucia/session';
+import { isMfaEnabledSchema } from '$lib/schema/users/MfaEnabledSchema';
+import { getUserMFA, updateUserMFA } from '$lib/prisma/user/user';
 
 const passwordUpdateBucket = new ExpiringTokenBucket<string>(5, 60 * 30);
 
@@ -30,6 +32,7 @@ export const load = async (event: RequestEvent) => {
 	if (event.locals.session === null || event.locals.user === null) {
 		return redirect(302, '/auth/login');
 	}
+
 	if (!event.locals.user.googleId) {
 		if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
 			return redirect(302, '/auth/2fa');
@@ -43,12 +46,14 @@ export const load = async (event: RequestEvent) => {
 	// Initialiser les formulaires Superform
 	const passwordForm = await superValidate(event, zod(passwordSchema));
 	const emailForm = await superValidate(event, zod(emailSchema));
+	const isMfaEnabledForm = await superValidate(event, zod(isMfaEnabledSchema));
 
 	return {
 		recoveryCode,
 		user: event.locals.user,
 		passwordForm,
-		emailForm
+		emailForm,
+		isMfaEnabledForm
 	};
 };
 
@@ -122,5 +127,28 @@ export const actions: Actions = {
 		setEmailVerificationRequestCookie(event, verificationRequest);
 
 		redirect(302, '/auth/verify-email');
+	},
+
+	isMfaEnabled: async (event: RequestEvent) => {
+		const form = await superValidate(event, zod(isMfaEnabledSchema));
+
+		if (!form.valid) {
+			return fail(400, { form });
+		}
+		// Récupérer l'état actuel
+		const currentStatus = await getUserMFA(event.locals.user.id);
+		console.log(currentStatus, 'Valeur actuelle de MFA');
+
+		// Inverser la propriété isMfaEnabled
+		const newMfaStatus = !currentStatus.isMfaEnabled;
+		console.log(newMfaStatus, 'Nouvel état de MFA');
+
+		// Mettre à jour la base de données
+		await updateUserMFA(event.locals.user.id, newMfaStatus);
+
+		// Vérifier la mise à jour
+		const updatedStatus = await getUserMFA(event.locals.user.id);
+		console.log(updatedStatus, 'Valeur mise à jour de MFA');
+		return message(form, 'Authentication modifiée');
 	}
 };

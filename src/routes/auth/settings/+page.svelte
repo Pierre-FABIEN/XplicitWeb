@@ -6,6 +6,9 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { toast } from 'svelte-sonner';
 	import { emailSchema, passwordSchema } from '$lib/schema/auth/settingsSchemas';
+	import { Switch } from '$lib/components/shadcn/ui/switch/index.js';
+	import { Label } from '$lib/components/shadcn/ui/label/index.js';
+	import { isMfaEnabledSchema } from '$lib/schema/users/MfaEnabledSchema.js';
 
 	let { data } = $props();
 
@@ -20,17 +23,34 @@
 		id: 'passwordForm'
 	});
 
+	const isMfaEnabledForm = superForm(data.isMfaEnabledForm, {
+		validators: zodClient(isMfaEnabledSchema),
+		id: 'isMfaEnabledForm'
+	});
+
 	const { form: emailData, enhance: emailEnhance, message: emailMessage } = emailForm;
 	const { form: passwordData, enhance: passwordEnhance, message: passwordMessage } = passwordForm;
+	const {
+		form: isMfaEnabledData,
+		enhance: isMfaEnabledEnhance,
+		message: isMfaEnabledMessage
+	} = isMfaEnabledForm;
 
 	// Notifications pour les messages d'erreur
 	$effect(() => {
 		if ($emailMessage) {
-			toast.error($emailMessage);
+			toast.success($emailMessage);
 		}
 		if ($passwordMessage) {
-			toast.error($passwordMessage);
+			toast.success($passwordMessage);
 		}
+		if ($isMfaEnabledMessage) {
+			toast.success($isMfaEnabledMessage);
+		}
+	});
+
+	$effect(() => {
+		console.log($isMfaEnabledData);
 	});
 </script>
 
@@ -115,7 +135,26 @@
 	{#if data.user.registered2FA}
 		<section class="mb-8">
 			<h2 class="text-xl font-semibold mb-4">Authentification à deux facteurs</h2>
-			<a href="/auth/2fa/setup" class="text-orange-700 hover:underline">Mettre à jour</a>
+			<div class="rcb">
+				<a href="/auth/2fa/setup" class="text-orange-700 hover:underline">Mettre à jour</a>
+
+				<form method="POST" action="?/isMfaEnabled" use:isMfaEnabledEnhance>
+					<Form.Field name="isMfaEnabled" form={isMfaEnabledForm}>
+						<Form.Control>
+							<div class="flex items-center space-x-2">
+								<Switch
+									name="isMfaEnabled"
+									id="mfa-switch"
+									bind:checked={$isMfaEnabledData.isMfaEnabled}
+									type="submit"
+								/>
+								<Label for="mfa-switch">Activer/Désactiver MFA</Label>
+							</div>
+						</Form.Control>
+						<Form.FieldErrors />
+					</Form.Field>
+				</form>
+			</div>
 		</section>
 	{/if}
 

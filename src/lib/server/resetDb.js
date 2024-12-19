@@ -80,7 +80,8 @@ async function main() {
 				name: 'Admin User',
 				totpKey: totpKeyBuffer,
 				recoveryCode: encryptedRecoveryCode,
-				googleId: undefined
+				googleId: undefined,
+				isMfaEnabled: true
 			}
 		});
 

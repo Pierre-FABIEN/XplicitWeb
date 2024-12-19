@@ -245,3 +245,17 @@ export async function getUsersById(userId: string) {
 		where: { id: userId }
 	});
 }
+
+export async function getUserMFA(userId: string) {
+	return await prisma.user.findUnique({
+		where: { id: userId },
+		select: { isMfaEnabled: true }
+	});
+}
+
+export async function updateUserMFA(userId: string, data: boolean) {
+	return await prisma.user.update({
+		where: { id: userId },
+		data: { isMfaEnabled: data }
+	});
+}

@@ -44,6 +44,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		event.locals.session = session;
 		event.locals.user = user;
 		event.locals.role = user.role;
+		event.locals.isMfaEnabled = user.isMfaEnabled;
 
 		// Récupérer ou créer la commande en attente
 		let pendingOrder = await findPendingOrder(user.id);
