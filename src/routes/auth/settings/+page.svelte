@@ -12,6 +12,8 @@
 
 	let { data } = $props();
 
+	console.log(data);
+
 	// Initialiser les formulaires Superform
 	const emailForm = superForm(data.emailForm, {
 		validators: zodClient(emailSchema),
@@ -54,6 +56,12 @@
 <main class="mx-auto mt-12 max-w-lg p-6 border shadow-lg rounded-lg">
 	<h1 class="text-2xl font-semibold mb-6 text-center">Paramètres</h1>
 
+	<h1>
+		{data.user.username}
+	</h1>
+	<h1>
+		{data.user.email}
+	</h1>
 	<!-- Formulaire de mise à jour de l'email -->
 	<section class="mb-8">
 		<h2 class="text-xl font-semibold mb-4">Mettre à jour l'email</h2>
@@ -129,31 +137,32 @@
 	</section>
 
 	<!-- Section pour la mise à jour de l'authentification à deux facteurs -->
-	{#if data.user.registered2FA}
-		<section class="mb-8">
-			<h2 class="text-xl font-semibold mb-4">Authentification à deux facteurs</h2>
-			<div class="rcb">
-				<a href="/auth/2fa/setup" class="text-orange-700 hover:underline">Mettre à jour</a>
 
-				<form method="POST" action="?/isMfaEnabled" use:isMfaEnabledEnhance>
-					<Form.Field name="isMfaEnabled" form={isMfaEnabledForm}>
-						<Form.Control>
-							<div class="flex items-center space-x-2">
-								<Switch
-									name="isMfaEnabled"
-									id="mfa-switch"
-									bind:checked={$isMfaEnabledData.isMfaEnabled}
-									type="submit"
-								/>
-								<Label for="mfa-switch">Activer/Désactiver MFA</Label>
-							</div>
-						</Form.Control>
-						<Form.FieldErrors />
-					</Form.Field>
-				</form>
-			</div>
-		</section>
-	{/if}
+	<section class="mb-8">
+		<h2 class="text-xl font-semibold mb-4">Authentification à deux facteurs</h2>
+		<div class="rcb">
+			{#if data.user.registered2FA}
+				<a href="/auth/2fa/setup" class="text-orange-700 hover:underline">Mettre à jour</a>
+			{/if}
+
+			<form method="POST" action="?/isMfaEnabled" use:isMfaEnabledEnhance>
+				<Form.Field name="isMfaEnabled" form={isMfaEnabledForm}>
+					<Form.Control>
+						<div class="flex items-center space-x-2">
+							<Switch
+								name="isMfaEnabled"
+								id="mfa-switch"
+								bind:checked={$isMfaEnabledData.isMfaEnabled}
+								type="submit"
+							/>
+							<Label for="mfa-switch">Activer/Désactiver MFA</Label>
+						</div>
+					</Form.Control>
+					<Form.FieldErrors />
+				</Form.Field>
+			</form>
+		</div>
+	</section>
 
 	<!-- Section pour le code de récupération -->
 	{#if data.recoveryCode !== null}

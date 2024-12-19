@@ -32,8 +32,9 @@ export const load = async (event: RequestEvent) => {
 	if (event.locals.session === null || event.locals.user === null) {
 		return redirect(302, '/auth/login');
 	}
-
-	if (!event.locals.user.googleId) {
+	console.log(event.locals.user, 'slkrjghxkgujh');
+	console.log(event.locals.user, 'slkrjghxkgujh');
+	if (!event.locals.user.googleId || !event.locals.user.isMfaEnabled) {
 		if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
 			return redirect(302, '/auth/2fa');
 		}
@@ -145,7 +146,10 @@ export const actions: Actions = {
 		const newMfaStatus = !currentStatus.isMfaEnabled;
 
 		// Mettre à jour la base de données
-		await updateUserMFA(event.locals.user.id, newMfaStatus);
+		await updateUserMFA(event.locals.user.id, {
+			isMfaEnabled: newMfaStatus,
+			registered2FA: newMfaStatus // Désactiver `registered2FA` si `isMfaEnabled` est désactivé
+		});
 
 		// Vérifier la mise à jour
 		const updatedStatus = await getUserMFA(event.locals.user.id);

@@ -8,11 +8,13 @@ export const load = async (event) => {
 	if (event.locals.session === null || event.locals.user === null) {
 		return redirect(302, '/auth/login');
 	}
-	if (!event.locals.user.googleId) {
+	console.log(event.locals.user, 'slkrjghxkgujh');
+	if (!event.locals.user.googleId || !event.locals.user.isMfaEnabled) {
 		if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
 			return redirect(302, '/auth/2fa');
 		}
 	}
+
 	const userId = event.locals.user.id;
 
 	const address = await getUserAddresses(userId);

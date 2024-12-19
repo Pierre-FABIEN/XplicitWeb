@@ -20,7 +20,9 @@ export const load = async (event: RequestEvent) => {
 	if (!event.locals.user.emailVerified) {
 		return redirect(302, '/auth/verify-email');
 	}
-	if (!event.locals.user.googleId) {
+
+	console.log(event.locals.user, 'slkrjghxkgujh');
+	if (!event.locals.user.googleId || !event.locals.user.isMfaEnabled) {
 		if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
 			return redirect(302, '/auth/2fa');
 		}
@@ -47,59 +49,84 @@ export const load = async (event: RequestEvent) => {
 
 export const actions: Actions = {
 	setuptotp: async (event: RequestEvent) => {
-		const formData = await event.request.formData();
+		console.log('Début de l’action setup TOTP');
 
+		const formData = await event.request.formData();
 		const form = await superValidate(formData, zod(totpSchema));
 
 		if (event.locals.session === null || event.locals.user === null) {
+			console.warn('Utilisateur non authentifié ou session inexistante');
 			return message(form, 'Not authenticated');
 		}
 		if (!event.locals.user.emailVerified) {
+			console.warn('Email non vérifié pour l’utilisateur:', event.locals.user.email);
 			return message(form, 'Email not verified');
 		}
 		if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
+			console.warn('2FA déjà configurée pour l’utilisateur:', event.locals.user.id);
 			return message(form, 'Two-factor already set up');
 		}
 		if (!totpUpdateBucket.check(event.locals.user.id, 1)) {
+			console.warn('Trop de tentatives pour l’utilisateur:', event.locals.user.id);
 			return message(form, 'Too many requests');
 		}
 
 		if (!form.valid) {
+			console.warn('Échec de la validation du formulaire:', form.errors);
 			return message(form, 'Form validation failed');
 		}
 
 		const { encodedTOTPKey, code } = form.data;
 
+		console.log('Données reçues:', { encodedTOTPKey, code });
+
 		if (encodedTOTPKey.length !== 28) {
+			console.warn('Longueur de la clé encodée invalide:', encodedTOTPKey.length);
 			return message(form, 'Invalid encoded key length');
 		}
 
 		let key: Uint8Array;
 		try {
 			key = decodeBase64(encodedTOTPKey);
+			console.log('Clé décodée avec succès:', key);
 		} catch (error) {
-			console.error('Erreur lors du décodage de la clé :', error);
+			console.error('Erreur lors du décodage de la clé:', error);
 			return message(form, 'Invalid encoded key format');
 		}
 
 		if (key.byteLength !== 20) {
+			console.warn('Longueur de la clé invalide:', key.byteLength);
 			return message(form, 'Invalid key length');
 		}
 
 		try {
+			console.log('Validation du code TOTP...');
 			const isValid = verifyTOTP(key, 30, 6, code);
 
 			if (!isValid) {
+				console.warn('Code TOTP invalide pour la clé:', key);
 				return message(form, 'Invalid TOTP code');
 			}
+			console.log('Code TOTP valide.');
 		} catch (error) {
+			console.error('Erreur lors de la validation du code TOTP:', error);
 			return fail(500, { message: 'Internal server error', form });
 		}
 
-		await updateUserTOTPKey(event.locals.session.userId, key);
-		await setSessionAs2FAVerified(event.locals.session.id);
+		try {
+			console.log('Mise à jour de la clé TOTP dans la base de données...');
+			await updateUserTOTPKey(event.locals.session.userId, key);
+			console.log('Clé TOTP mise à jour avec succès.');
 
-		// Utilisez `redirect` pour rediriger correctement
+			console.log('Marquage de la session comme vérifiée pour la 2FA...');
+			await setSessionAs2FAVerified(event.locals.session.id);
+			console.log('Session marquée comme vérifiée.');
+		} catch (error) {
+			console.error('Erreur lors de la mise à jour de la clé TOTP ou de la session:', error);
+			return fail(500, { message: 'Internal server error', form });
+		}
+
+		console.log('Redirection vers la page des codes de récupération.');
 		redirect(302, '/auth/recovery-code');
 	}
 };

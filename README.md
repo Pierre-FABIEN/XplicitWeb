@@ -88,6 +88,13 @@ CVC : N'importe quel nombre à 3 chiffres
 
 stripe listen --forward-to localhost:1000/api/webhooks
 
+netstat -ano | findstr :1000
+netstat -ano | findstr :8025
+
+taskkill /PID <PID> /F
+taskkill /PID 17192 /F
+
+
 
 Réaliser les stat sur la consultation
 Performances sur le server pour cache

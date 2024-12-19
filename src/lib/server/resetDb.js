@@ -81,7 +81,8 @@ async function main() {
 				totpKey: totpKeyBuffer,
 				recoveryCode: encryptedRecoveryCode,
 				googleId: undefined,
-				isMfaEnabled: true
+				isMfaEnabled: true,
+				registered2FA: false
 			}
 		});
 

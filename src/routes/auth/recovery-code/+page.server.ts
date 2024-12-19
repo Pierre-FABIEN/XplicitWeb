@@ -10,7 +10,9 @@ export const load = async (event: RequestEvent) => {
 	if (!event.locals.user.emailVerified) {
 		return redirect(302, '/auth/verify-email');
 	}
-	if (!event.locals.user.googleId) {
+
+	console.log(event.locals.user, 'slkrjghxkgujh');
+	if (!event.locals.user.googleId || !event.locals.user.isMfaEnabled) {
 		if (!event.locals.user.registered2FA) {
 			return redirect(302, '/auth/2fa/setup');
 		}
