@@ -262,9 +262,9 @@ export async function getUserMFA(userId: string) {
 	});
 }
 
-export async function updateUserMFA(userId: string, data: boolean) {
+export async function updateUserMFA(userId: string, data: { isMfaEnabled: boolean }) {
 	return await prisma.user.update({
 		where: { id: userId },
-		data: { isMfaEnabled: data }
+		data: { isMfaEnabled: data.isMfaEnabled }
 	});
 }

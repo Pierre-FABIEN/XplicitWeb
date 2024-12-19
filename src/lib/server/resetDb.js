@@ -82,7 +82,6 @@ async function main() {
 				recoveryCode: encryptedRecoveryCode,
 				googleId: undefined,
 				isMfaEnabled: true,
-				registered2FA: false
 			}
 		});
 

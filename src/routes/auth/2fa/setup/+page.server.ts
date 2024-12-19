@@ -24,7 +24,9 @@ export const load = async (event: RequestEvent) => {
 	console.log(event.locals.user, 'slkrjghxkgujh');
 	if (!event.locals.user.googleId || !event.locals.user.isMfaEnabled) {
 		if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
-			return redirect(302, '/auth/2fa');
+			if (event.locals.user.isMfaEnabled) {
+				return redirect(302, '/auth/2fa');
+			}
 		}
 	}
 

@@ -32,11 +32,12 @@ export const load = async (event: RequestEvent) => {
 	if (event.locals.session === null || event.locals.user === null) {
 		return redirect(302, '/auth/login');
 	}
-	console.log(event.locals.user, 'slkrjghxkgujh');
-	console.log(event.locals.user, 'slkrjghxkgujh');
-	if (!event.locals.user.googleId || !event.locals.user.isMfaEnabled) {
+
+	if (!event.locals.user.googleId) {
 		if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
-			return redirect(302, '/auth/2fa');
+			if (event.locals.user.isMfaEnabled) {
+				return redirect(302, '/auth/2fa');
+			}
 		}
 
 		// Récupérer le code de récupération si l'utilisateur utilise l'authentification à deux facteurs
@@ -66,8 +67,10 @@ export const actions: Actions = {
 		if (event.locals.session === null || event.locals.user === null) {
 			return fail(401, { form: { message: 'Not authenticated' } });
 		}
-		if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
-			return fail(403, { form: { message: 'Forbidden' } });
+		if (event.locals.user.isMfaEnabled) {
+			if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
+				return fail(403, { form: { message: 'Forbidden' } });
+			}
 		}
 		if (!passwordUpdateBucket.check(event.locals.session.id, 1)) {
 			return fail(429, { form: { message: 'Too many requests' } });
@@ -105,8 +108,10 @@ export const actions: Actions = {
 		if (event.locals.session === null || event.locals.user === null) {
 			return fail(401, { form: { message: 'Not authenticated' } });
 		}
-		if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
-			return fail(403, { form: { message: 'Forbidden' } });
+		if (event.locals.user.isMfaEnabled) {
+			if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
+				return fail(403, { form: { message: 'Forbidden' } });
+			}
 		}
 		if (!sendVerificationEmailBucket.check(event.locals.user.id, 1)) {
 			return fail(429, { form: { message: 'Too many requests' } });
@@ -114,6 +119,8 @@ export const actions: Actions = {
 
 		// Valider le formulaire avec Superform
 		const form = await superValidate(event, zod(emailSchema));
+		console.log(form);
+
 		if (!form.valid) {
 			return fail(400, { form });
 		}
@@ -147,12 +154,8 @@ export const actions: Actions = {
 
 		// Mettre à jour la base de données
 		await updateUserMFA(event.locals.user.id, {
-			isMfaEnabled: newMfaStatus,
-			registered2FA: newMfaStatus // Désactiver `registered2FA` si `isMfaEnabled` est désactivé
+			isMfaEnabled: newMfaStatus
 		});
-
-		// Vérifier la mise à jour
-		const updatedStatus = await getUserMFA(event.locals.user.id);
 
 		return message(form, {
 			text: 'Authentication modifiée',

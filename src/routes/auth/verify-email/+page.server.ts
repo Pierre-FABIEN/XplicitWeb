@@ -61,12 +61,14 @@ async function verifyCode(event: RequestEvent) {
 			}
 		});
 	}
-	if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
-		return fail(403, {
-			verify: {
-				message: 'Forbidden'
-			}
-		});
+	if (event.locals.user.isMfaEnabled) {
+		if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
+			return fail(403, {
+				verify: {
+					message: 'Forbidden'
+				}
+			});
+		}
 	}
 	if (!bucket.check(event.locals.user.id, 1)) {
 		return fail(429, {
@@ -130,8 +132,11 @@ async function verifyCode(event: RequestEvent) {
 	invalidateUserPasswordResetSessions(event.locals.user.id);
 	updateUserEmailAndSetEmailAsVerified(event.locals.user.id, verificationRequest.email);
 	deleteEmailVerificationRequestCookie(event);
+
 	if (!event.locals.user.registered2FA) {
-		return redirect(302, '/auth/2fa/setup');
+		if (event.locals.user.isMfaEnabled) {
+			return redirect(302, '/auth/2fa/setup');
+		}
 	}
 	return redirect(302, '/auth/');
 }

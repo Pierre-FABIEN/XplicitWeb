@@ -20,10 +20,14 @@ export const load = async (event: PageServerLoadEvent) => {
 
 		if (!event.locals.user.googleId || !event.locals.user.isMfaEnabled) {
 			if (!event.locals.user.registered2FA) {
-				return redirect(302, '/auth/2fa/setup');
+						if (event.locals.user.isMfaEnabled) {
+		return redirect(302, '/auth/2fa/setup');
+	}
 			}
 			if (!event.locals.session.twoFactorVerified) {
-				return redirect(302, '/auth/2fa');
+				if (event.locals.user.isMfaEnabled) {
+					return redirect(302, '/auth/2fa');
+				}
 			}
 		}
 		return redirect(302, '/auth/');
@@ -58,6 +62,7 @@ export const actions: Actions = {
 		}
 
 		const user = await getUserFromEmail(email);
+		console.log(user);
 
 		if (user === null) {
 			return message(form, 'Le compte nexiste pas');
@@ -92,10 +97,15 @@ export const actions: Actions = {
 		if (!user.emailVerified) {
 			return redirect(302, '/auth/verify-email');
 		}
-		if (!user.registered2FA) {
-			return redirect(302, '/auth/2fa/setup');
-		}
 
+		if (!user.registered2FA) {
+					if (event.locals.user.isMfaEnabled) {
+		return redirect(302, '/auth/2fa/setup');
+	}
+		}
+		if (!user.isMfaEnabled) {
+			return redirect(302, '/auth');
+		}
 		redirect(302, '/auth/2fa');
 	}
 };

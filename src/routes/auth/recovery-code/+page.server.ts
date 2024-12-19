@@ -11,13 +11,16 @@ export const load = async (event: RequestEvent) => {
 		return redirect(302, '/auth/verify-email');
 	}
 
-	console.log(event.locals.user, 'slkrjghxkgujh');
-	if (!event.locals.user.googleId || !event.locals.user.isMfaEnabled) {
+	if (!event.locals.user.googleId) {
 		if (!event.locals.user.registered2FA) {
-			return redirect(302, '/auth/2fa/setup');
+			if (event.locals.user.isMfaEnabled) {
+				return redirect(302, '/auth/2fa/setup');
+			}
 		}
 		if (!event.locals.session.twoFactorVerified) {
-			return redirect(302, '/auth/2fa');
+			if (event.locals.user.isMfaEnabled) {
+				return redirect(302, '/auth/2fa');
+			}
 		}
 	}
 	const recoveryCode = await getUserRecoverCode(event.locals.user.id);
