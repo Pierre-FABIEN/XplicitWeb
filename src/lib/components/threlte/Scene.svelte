@@ -3,6 +3,7 @@
 	import { ContactShadows, Float, Grid, OrbitControls, SoftShadows } from '@threlte/extras';
 	import * as THREE from 'three';
 	import Modele from './Modele.svelte';
+	import Plateform from './components/Plateform.svelte';
 
 	let directionalLightRef = $state<THREE.DirectionalLight | undefined>(undefined);
 	let directionalLightRef2 = $state<THREE.DirectionalLight | undefined>(undefined);
@@ -48,11 +49,10 @@
 </script>
 
 <T.PerspectiveCamera makeDefault position={[0, 0.3, 2]}>
-	<OrbitControls target={[0, 0.5, 0]} enableDamping />
+	<OrbitControls target={[0, 0.5, 0]} enableDamping autoRotate />
 </T.PerspectiveCamera>
 
-<!-- Première lumière directionnelle -->
-<T.DirectionalLight
+<!-- <T.DirectionalLight
 	ref={directionalLightRef}
 	position={lightPos}
 	intensity={1.5}
@@ -63,7 +63,6 @@
 	shadow.bias={0.0001}
 />
 
-<!-- Seconde lumière directionnelle opposée -->
 <T.DirectionalLight
 	ref={directionalLightRef2}
 	position={lightPos2}
@@ -73,9 +72,8 @@
 	shadow.mapSize.width={4096}
 	shadow.mapSize.height={4096}
 	shadow.bias={0.0001}
-/>
+/> -->
 
-<!-- Seconde lumière directionnelle opposée -->
 <T.DirectionalLight
 	position={[2, 2, 2]}
 	intensity={1.5}
@@ -98,6 +96,8 @@
 
 <ContactShadows opacity={1} scale={10} blur={1} far={10} resolution={256} color="#000000" />
 <SoftShadows focus={30} size={4} samples={30} />
-<Float floatIntensity={10} floatingRange={[0, 0.05]}>
+<Float floatIntensity={1} floatingRange={[0, 0.05]}>
 	<Modele />
 </Float>
+
+<Plateform />
