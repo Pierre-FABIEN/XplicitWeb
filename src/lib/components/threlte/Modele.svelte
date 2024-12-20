@@ -57,7 +57,7 @@
 			geometry={gltf.nodes.CAN_ALU.geometry}
 			material={canMaterial}
 			position={[0, 0.2, 0]}
-			rotation={[0, rotation, 0]}
+			rotation={[0, rotation, 0.2]}
 			scale={5}
 		/>
 		<!-- Mesh_1 avec texture personnalisée -->
@@ -68,7 +68,7 @@
 				geometry={gltf.nodes.Mesh_1.geometry}
 				material={customMaterial}
 				position={[0, 0.2, 0]}
-				rotation={[0, rotation, 0]}
+				rotation={[0, rotation, 0.2]}
 				scale={[5.005, 5, 5.005]}
 			/>
 		{/if}

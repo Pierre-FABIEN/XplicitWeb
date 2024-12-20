@@ -5,45 +5,83 @@
 	import Modele from './Modele.svelte';
 
 	let directionalLightRef = $state<THREE.DirectionalLight | undefined>(undefined);
+	let directionalLightRef2 = $state<THREE.DirectionalLight | undefined>(undefined);
 
-	// Position réactive de la lumière directionnelle
-	let lightPos = $state([2, 2, 0]);
+	// Positions réactives des lumières directionnelles
+	let lightPos: [number, number, number] = $state([2, 2, 0]);
+	let lightPos2: [number, number, number] = $state([-2, 2, 0]);
+
 	let rotationAngle = $state(0);
 
 	// Animation de la lumière en cercle
 	useTask((delta) => {
 		rotationAngle += delta * 0.5;
 		const radius = 2;
+
+		// Première lumière
 		lightPos[0] = Math.cos(rotationAngle) * radius;
 		lightPos[1] = 2;
 		lightPos[2] = Math.sin(rotationAngle) * radius;
+
+		// Seconde lumière (dans l'angle opposé)
+		lightPos2[0] = -Math.cos(rotationAngle) * radius;
+		lightPos2[1] = 2;
+		lightPos2[2] = -Math.sin(rotationAngle) * radius;
 	});
 
-	// Effet pour orienter la lumière vers le modèle à chaque changement de position
+	// Effet pour orienter les lumières vers le modèle
 	$effect(() => {
-		// Accès à la position pour déclencher la réactivité
 		lightPos[0];
 		lightPos[1];
-		lightPos[2];
-
+		lightPos[2]; // déclenche la réactivité
 		if (directionalLightRef) {
 			directionalLightRef.lookAt(0, 0.5, 0);
+		}
+
+		lightPos2[0];
+		lightPos2[1];
+		lightPos2[2];
+		if (directionalLightRef2) {
+			directionalLightRef2.lookAt(0, 0.5, 0);
 		}
 	});
 </script>
 
-<T.PerspectiveCamera makeDefault position={[0, 0.3, 3]}>
+<T.PerspectiveCamera makeDefault position={[0, 0.3, 2]}>
 	<OrbitControls target={[0, 0.5, 0]} enableDamping />
 </T.PerspectiveCamera>
 
-<!-- On utilise position={lightPos} pour rendre la position réactive -->
+<!-- Première lumière directionnelle -->
 <T.DirectionalLight
 	ref={directionalLightRef}
 	position={lightPos}
 	intensity={1.5}
+	color="#ffff00"
 	castShadow
-	shadow.mapSize.width={2048}
-	shadow.mapSize.height={2048}
+	shadow.mapSize.width={4096}
+	shadow.mapSize.height={4096}
+	shadow.bias={0.0001}
+/>
+
+<!-- Seconde lumière directionnelle opposée -->
+<T.DirectionalLight
+	ref={directionalLightRef2}
+	position={lightPos2}
+	intensity={1.5}
+	color="#00ffff"
+	castShadow
+	shadow.mapSize.width={4096}
+	shadow.mapSize.height={4096}
+	shadow.bias={0.0001}
+/>
+
+<!-- Seconde lumière directionnelle opposée -->
+<T.DirectionalLight
+	position={[2, 2, 2]}
+	intensity={1.5}
+	castShadow
+	shadow.mapSize.width={4096}
+	shadow.mapSize.height={4096}
 	shadow.bias={0.0001}
 />
 
@@ -60,6 +98,6 @@
 
 <ContactShadows opacity={1} scale={10} blur={1} far={10} resolution={256} color="#000000" />
 <SoftShadows focus={30} size={4} samples={30} />
-<Float floatIntensity={3} floatingRange={[0, 0.1]}>
+<Float floatIntensity={10} floatingRange={[0, 0.05]}>
 	<Modele />
 </Float>

@@ -1,104 +1,69 @@
 <script lang="ts">
+	import * as Form from '$shadcn/form';
+	import { Input } from '$shadcn/input';
 	import { Button } from '$shadcn/button';
-	import * as Sheet from '$shadcn/sheet/index.js';
-	import { buttonVariants } from '$shadcn/button/index.js';
-	import { Input } from '$shadcn/input/index.js';
-	import { Label } from '$shadcn/label/index.js';
-	import * as Tooltip from '$shadcn/tooltip/index.js';
-	import * as Popover from '$lib/components/shadcn/ui/popover/index.js';
-
-	import { Check, ChevronsUpDown, FileSliders } from 'lucide-svelte';
-	import Threltre from '$lib/components/threlte/Threltre.svelte';
-
-	import { textureStore } from '$lib/store/textureStore';
-	import { tick } from 'svelte';
-	import { Textarea } from '$lib/components/shadcn/ui/textarea/index.js';
-	import { createCustomSchema } from '$lib/schema/products/customSchema.js';
-	import { superForm } from 'sveltekit-superforms';
+	import { Textarea } from '$shadcn/textarea';
+	import * as Sheet from '$shadcn/sheet';
+	import * as Tooltip from '$shadcn/tooltip';
+	import { filesFieldProxy, superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { createCustomSchema } from '$lib/schema/products/customSchema';
+	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
+	import { buttonVariants } from '$shadcn/button';
+	import Threltre from '$lib/components/threlte/Threltre.svelte';
+	import { FileSliders } from 'lucide-svelte';
+	import { textureStore } from '$lib/store/textureStore.js';
 
+	// Props passed from the page load function
 	let { data } = $props();
+	// data: { IcreateCustomSchema: ReturnTypeOfSuperValidate, products: ArrayOfProducts }
 
-	const customForm = superForm(data.IcreateCustomSchema, {
+	// Initialize the superForm using the schema and data from the load function
+	const createCustom = superForm(data.IcreateCustomSchema, {
 		validators: zodClient(createCustomSchema),
 		id: 'createCustom'
 	});
 
-	const { form: customData, enhance: customEnhance, message: customMessage } = customForm;
-	console.log(data);
+	const {
+		form: createCustomData,
+		enhance: createCustomEnhance,
+		message: createCustomMessage
+	} = createCustom;
 
+	// Files proxy for image field
+	const fileProxy = filesFieldProxy(createCustom, 'image');
+	const { values: fileValues } = fileProxy;
+
+	// We have an array of products from the load function
+	// We will allow the user to select one productId
+	let products = $state(data.products || []);
+
+	// On success, if a message is returned, we can redirect or show a toast
 	$effect(() => {
-		console.log('dhgrdr', $customData);
-	});
-	$effect(() => {
-		$customData.image = $textureStore;
-	});
+		console.log($createCustomData);
 
-	let selectedProductId = $state('');
-	let selectedQuantity = $state(1);
-
-	let openProductPopover = $state(false);
-	let openQuantityPopover = $state(false);
-
-	let triggerProductRef = $state<HTMLButtonElement>(null!);
-	let triggerQuantityRef = $state<HTMLButtonElement>(null!);
-
-	// Fermer et recentrer le bouton produit
-	function closeAndFocusProductTrigger() {
-		openProductPopover = false;
-		tick().then(() => triggerProductRef.focus());
-	}
-
-	// Fermer et recentrer le bouton quantité
-	function closeAndFocusQuantityTrigger() {
-		openQuantityPopover = false;
-		tick().then(() => triggerQuantityRef.focus());
-	}
-
-	// Récupérer le produit sélectionné
-	const selectedProduct = $derived(
-		data.products.find((product) => product.id === selectedProductId)
-	);
-
-	// Générer les options de quantité
-	function generateQuantityOptions(stock: number) {
-		return Array.from({ length: Math.min(stock, 10) }, (_, i) => i + 1); // Max 10
-	}
-
-	/**
-	 * Gère le changement de fichier et met à jour le store global pour la texture.
-	 * @param event - Event de l'input file
-	 */
-	function handleFileUpload(event: Event) {
-		const input = event.target as HTMLInputElement;
-		if (input.files && input.files.length > 0) {
-			const file = input.files[0];
-			if (file.type === 'image/png') {
-				// Générer une URL temporaire pour l'image
-				const textureUrl = URL.createObjectURL(file);
-				console.log('textureUrl', textureUrl);
-
-				// Mettre à jour le store global
-				textureStore.set(textureUrl);
-				$customData.textureUrl = textureUrl;
-				console.log('Texture mise à jour avec succès :', file, textureUrl);
-			} else {
-				alert('Veuillez télécharger un fichier PNG.');
-			}
+		if ($createCustomMessage === 'Custom created successfully') {
+			goto('/admin/custom/');
+			toast.success($createCustomMessage);
 		}
-	}
+	});
 
 	$effect(() => {
-		if ($customMessage === 'Custom field created successfully') {
-			toast($customMessage);
+		if ($fileValues && $fileValues.length > 0) {
+			// Crée une URL locale pour l'image sélectionnée
+			const url = URL.createObjectURL($fileValues[0]);
+			// Met à jour le store avec la nouvelle texture
+			textureStore.set(url);
 		}
 	});
 </script>
 
 <div class="h-screen w-screen">
 	<Sheet.Root>
-		<Sheet.Trigger class={buttonVariants({ variant: 'outline' })}>
+		<Sheet.Trigger
+			class={`absolute z-50 bottom-2 left-2 ${buttonVariants({ variant: 'outline' })}`}
+		>
 			<Tooltip.Provider>
 				<Tooltip.Root>
 					<Tooltip.Trigger>
@@ -111,103 +76,109 @@
 			</Tooltip.Provider>
 		</Sheet.Trigger>
 		<Sheet.Content side="left">
-			<form method="POST" action="?/createCustom" use:customEnhance>
-				<Sheet.Header>
-					<Sheet.Title>Modifier la texture</Sheet.Title>
-					<Sheet.Description>
-						Uploadez une nouvelle texture PNG pour l'appliquer au modèle.
-					</Sheet.Description>
-				</Sheet.Header>
-				<div class="grid gap-4 py-4">
-					<h2>Choisissez la texture de votre boisson</h2>
+			<form
+				method="POST"
+				enctype="multipart/form-data"
+				action="?/createCustom"
+				use:createCustomEnhance
+				class="space-y-4"
+			>
+				<!-- Product selection field -->
+				<Form.Field name="productId" form={createCustom}>
+					<Form.Control>
+						<Form.Label>Product</Form.Label>
+						<select
+							name="productId"
+							class="border rounded px-3 py-2 w-full"
+							bind:value={$createCustomData.productId}
+						>
+							<option value="" disabled selected>Select a product...</option>
+							{#each products as product}
+								<option value={product.id}>{product.name}</option>
+							{/each}
+						</select>
+					</Form.Control>
+					<Form.FieldErrors />
+				</Form.Field>
 
-					<div class="grid grid-cols-4 items-center gap-4 border rounded p-1">
-						<Label for="file" class="text-right">Upload</Label>
-						<Input
-							id="file"
-							type="file"
-							accept=".png"
-							onchange={handleFileUpload}
-							class="col-span-3"
-						/>
-					</div>
-					<h2>Choisissez le gout de votre boisson</h2>
-
-					<!-- Popover pour sélectionner un produit -->
-					<Popover.Root bind:open={openProductPopover}>
-						<Popover.Trigger bind:ref={triggerProductRef}>
-							<Button
-								variant="outline"
-								class="justify-between w-full"
-								role="combobox"
-								aria-expanded={openProductPopover}
-							>
-								{selectedProduct?.name || 'Choisissez un produit'}
-								<ChevronsUpDown class="opacity-50" />
-							</Button>
-						</Popover.Trigger>
-						<Popover.Content class="w-[300px] p-2">
-							<Popover.Content class="w-[300px] p-2">
-								{#each data.products as product}
-									<Button
-										variant="ghost"
-										class="w-full justify-between"
-										onclick={() => {
-											selectedProductId = product.id;
-											closeAndFocusProductTrigger();
-										}}
-									>
-										<span>{product.name}</span>
-										<span class="text-sm text-gray-500">Stock: {product.stock}</span>
-										{#if selectedProductId === product.id}
-											<Check />
-										{/if}
-									</Button>
-								{/each}
-							</Popover.Content>
-						</Popover.Content>
-					</Popover.Root>
-
-					{#if selectedProduct}
-						<Popover.Root bind:open={openQuantityPopover}>
-							<Popover.Trigger bind:ref={triggerQuantityRef}>
-								<Button
-									variant="outline"
-									class="justify-between w-full"
-									role="combobox"
-									aria-expanded={openQuantityPopover}
+				<!-- Image upload field -->
+				<Form.Field name="image" form={createCustom}>
+					<Form.Control>
+						<Form.Label>Image</Form.Label>
+						<div
+							class="border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center relative"
+						>
+							<input
+								name="image"
+								type="file"
+								class="absolute w-full h-full opacity-0 cursor-pointer z-10"
+								accept="image/png, image/jpeg, image/webp"
+								bind:files={$fileValues}
+							/>
+							<!-- UI for dropzone -->
+							<div class="pointer-events-none text-center">
+								<svg
+									class="mx-auto h-12 w-12 text-gray-400"
+									stroke="currentColor"
+									fill="none"
+									viewBox="0 0 48 48"
+									aria-hidden="true"
 								>
-									Quantité: {selectedQuantity}
-									<ChevronsUpDown class="opacity-50" />
-								</Button>
-							</Popover.Trigger>
-							<Popover.Content class="w-[300px] p-2">
-								{#each generateQuantityOptions(selectedProduct.stock) as quantity}
-									<Button
-										variant="ghost"
-										class="w-full justify-between"
-										onclick={() => {
-											selectedQuantity = quantity;
-											closeAndFocusQuantityTrigger();
-										}}
-									>
-										<span>{quantity}</span>
-										{#if selectedQuantity === quantity}
-											<Check />
-										{/if}
-									</Button>
-								{/each}
-							</Popover.Content>
-						</Popover.Root>
-					{/if}
+									<path
+										d="M28 8H20v12H8v8h12v12h8V28h12v-8H28V8z"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									></path>
+								</svg>
+								<p class="mt-2 text-sm text-gray-600">Click or drop an image file</p>
+								<p class="text-xs text-gray-500">PNG, JPG, WEBP up to 1MB</p>
+							</div>
+						</div>
 
-					<h2>Vous voulez rajouter quelque chose ?</h2>
-					<Textarea placeholder="Type your message here." />
-				</div>
-				<Sheet.Footer>
-					<Button>Ajouter au panier</Button>
-					<Sheet.Close class={buttonVariants({ variant: 'outline' })}>Fermer</Sheet.Close>
-				</Sheet.Footer>
+						<!-- Preview selected image -->
+						{#if $fileValues?.length > 0}
+							<div class="mt-3 flex flex-wrap gap-2">
+								{#each $fileValues as image}
+									<div class="relative w-[65px] h-[65px]">
+										<img
+											src={URL.createObjectURL(image)}
+											alt=""
+											class="w-full h-full object-cover rounded"
+										/>
+									</div>
+								{/each}
+							</div>
+						{/if}
+					</Form.Control>
+					<Form.FieldErrors />
+				</Form.Field>
+
+				<!-- Quantity field -->
+				<Form.Field name="quantity" form={createCustom}>
+					<Form.Control>
+						<Form.Label>Quantity</Form.Label>
+						<Input
+							name="quantity"
+							type="number"
+							bind:value={$createCustomData.quantity}
+							step="1"
+							min="1"
+						/>
+					</Form.Control>
+					<Form.FieldErrors />
+				</Form.Field>
+
+				<!-- Message field -->
+				<Form.Field name="message" form={createCustom}>
+					<Form.Control>
+						<Form.Label>Message</Form.Label>
+						<Textarea name="message" bind:value={$createCustomData.message} />
+					</Form.Control>
+					<Form.FieldErrors />
+				</Form.Field>
+
+				<Button type="submit">Create Custom</Button>
 			</form>
 		</Sheet.Content>
 	</Sheet.Root>

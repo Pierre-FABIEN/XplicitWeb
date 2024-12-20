@@ -7,14 +7,15 @@ const ACCEPTED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'imag
 const createCustomSchema = z.object({
 	productId: z.string().min(1, 'Product ID is required'),
 	image: z
-		.instanceof(File)
+		.array(z.instanceof(File))
+		.refine((files) => files.length > 0, 'At least one image is required.')
 		.refine(
-			(file) => file.size <= MAX_FILE_SIZE,
+			(files) => files.every((file) => file.size <= MAX_FILE_SIZE),
 			`Max image size is ${MAX_FILE_SIZE / (1024 * 1024)}MB.`
 		)
 		.refine(
-			(file) => ACCEPTED_IMAGE_MIME_TYPES.includes(file.type),
-			'Only .jpg, .jpeg, .png, and .webp are supported.'
+			(files) => files.every((file) => ACCEPTED_IMAGE_MIME_TYPES.includes(file.type)),
+			'Only .jpg, .jpeg, .png and .webp formats are supported.'
 		),
 	quantity: z
 		.number()
@@ -28,15 +29,15 @@ const updateCustomSchema = z.object({
 	id: z.string().min(1, 'Custom ID is required'),
 	productId: z.string().min(1, 'Product ID is required'),
 	image: z
-		.instanceof(File)
-		.optional()
+		.array(z.instanceof(File))
+		.refine((files) => files.length > 0, 'At least one image is required.')
 		.refine(
-			(file) => !file || file.size <= MAX_FILE_SIZE,
+			(files) => files.every((file) => file.size <= MAX_FILE_SIZE),
 			`Max image size is ${MAX_FILE_SIZE / (1024 * 1024)}MB.`
 		)
 		.refine(
-			(file) => !file || ACCEPTED_IMAGE_MIME_TYPES.includes(file.type),
-			'Only .jpg, .jpeg, .png, and .webp are supported.'
+			(files) => files.every((file) => ACCEPTED_IMAGE_MIME_TYPES.includes(file.type)),
+			'Only .jpg, .jpeg, .png and .webp formats are supported.'
 		),
 	quantity: z
 		.number()
