@@ -155,7 +155,7 @@
 								bind:checked={$isMfaEnabledData.isMfaEnabled}
 								type="submit"
 							/>
-							<Label for="mfa-switch">Activer/Désactiver MFA</Label>
+							<Label for="mfa-switch">Désactiver/Activer MFA</Label>
 						</div>
 					</Form.Control>
 					<Form.FieldErrors />

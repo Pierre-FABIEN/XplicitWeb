@@ -19,8 +19,8 @@ enum OrderStatus {
   CANCELLED
 }
 
-// _______________________________________________________________________________________________________
-// AUTH LUCIA DEMO
+
+
 model User {
   id                        String                     @id @default(auto()) @map("_id") @db.ObjectId
   email                     String                     @unique
@@ -94,7 +94,7 @@ model Order {
   status        OrderStatus       @default(PENDING)
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @default(now())
-  items         OrderItem[]       // Relation avec OrderItem
+  items         OrderItem[]       
 
   user          User              @relation(fields: [userId], references: [id])
   address       Address?          @relation(fields: [addressId], references: [id])
@@ -137,14 +137,27 @@ model Product {
   orderItems   OrderItem[]
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @default(now())
+   customizations Custom[]
   @@map("products")
+}
+
+model Custom {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  image       String   
+  quantity    Int      
+  message     String   
+  productId   String   @db.ObjectId
+  product     Product  @relation(fields: [productId], references: [id]) 
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+  @@map("customizations")
 }
 
 model Transaction {
   id                     String   @id @default(auto()) @map("_id") @db.ObjectId
   stripePaymentId        String   @unique
   orderId                String   @db.ObjectId
-  userId                 String?  @db.ObjectId // Rendre cette relation facultative
+  userId                 String?  @db.ObjectId 
   amount                 Float
   currency               String
 
@@ -166,7 +179,7 @@ model Transaction {
   app_user_country       String
   products               Json     
 
-  user                   User?    @relation(fields: [userId], references: [id]) // Rendre cette relation facultative
+  user                   User?    @relation(fields: [userId], references: [id]) 
   @@map("transactions")
 }
 
@@ -191,10 +204,10 @@ model Category {
 }
 
 
-// _______________________________________________________________________________________________________
-// BLOG DEMO
 
-// Modèle pour les articles du blog
+
+
+
 model BlogPost {
   id          String       @id @default(auto()) @map("_id") @db.ObjectId
   title       String
@@ -211,7 +224,7 @@ model BlogPost {
   tags        BlogPostTag[]
 }
 
-// Modèle pour les auteurs
+
 model Author {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String   @unique
@@ -219,7 +232,7 @@ model Author {
   createdAt DateTime @default(now())
 }
 
-// Modèle pour les catégories
+
 model BlogCategory {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String   @unique
@@ -228,7 +241,7 @@ model BlogCategory {
   createdAt   DateTime @default(now())
 }
 
-// Modèle pour les commentaires
+
 model BlogComment {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   content   String
@@ -238,7 +251,7 @@ model BlogComment {
   createdAt DateTime @default(now())
 }
 
-// Modèle pour les tags
+
 model Tag {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
   name      String    @unique
@@ -253,5 +266,5 @@ model BlogPostTag {
   tag    Tag    @relation(fields: [tagId], references: [id])
   tagId  String @db.ObjectId
 
-  @@unique([postId, tagId]) // Empêche les doublons
+  @@unique([postId, tagId]) 
 }

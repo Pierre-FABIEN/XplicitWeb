@@ -17,14 +17,18 @@
 		<CardContent class="text-center">
 			<p class="text-gray-700 mb-4">Vous êtes connecté(e) avec succès.</p>
 		</CardContent>
-
-		<CardFooter class="flex flex-col gap-4">
-			<form method="post" action="?/signout" use:enhance class="text-center">
-				<Button type="submit" variant="destructive" class="w-full">Se déconnecter</Button>
-			</form>
-			<div class="flex justify-between w-[100%]">
-				<a href="/auth/settings" class="text-orange-700 hover:underline">Paramètres</a>
+		{#if data.user.role === 'ADMIN'}
+			<div class="w-full ccc">
+				<Button class="m-5" href="/admin">Dashboard</Button>
 			</div>
-		</CardFooter>
+		{/if}
+
+		<div class="w-full ccc">
+			<Button class="m-5" href="/auth/settings">Paramètres</Button>
+		</div>
+
+		<form method="post" action="?/signout" use:enhance class="text-center">
+			<Button type="submit" variant="destructive" class="w-full">Se déconnecter</Button>
+		</form>
 	</Card>
 </div>

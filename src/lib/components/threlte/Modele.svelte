@@ -13,12 +13,12 @@
 	let customMaterial = $state<THREE.MeshStandardMaterial | null>(null);
 
 	// Charger le modèle GLTF
-	const gltf = useGltf('/model/modele.glb', { dracoLoader });
+	const gltf = useGltf('/model/modele-transformed.glb', { dracoLoader });
 
 	// Matériau pour CAN_ALU (aspect métallique réaliste)
 	const canMaterial = new THREE.MeshStandardMaterial({
 		color: 0xaaaaaa, // Couleur métallique de base (aluminium)
-		roughness: 0.2, // Surface légèrement brillante
+		roughness: 0.35, // Surface légèrement brillante
 		metalness: 1.0, // 100% métallique
 		envMapIntensity: 1.5 // Accentuer les reflets
 	});
@@ -32,7 +32,10 @@
 
 			// Mettre à jour le matériau
 			customMaterial = new THREE.MeshStandardMaterial({
-				map: loadedTexture
+				map: loadedTexture,
+				roughness: 0.45, // Surface légèrement brillante
+				metalness: 1.0, // 100% métallique
+				envMapIntensity: 1.5 // Accentuer les reflets
 			});
 		});
 	});

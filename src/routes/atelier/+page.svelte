@@ -4,20 +4,67 @@
 	import { buttonVariants } from '$shadcn/button/index.js';
 	import { Input } from '$shadcn/input/index.js';
 	import { Label } from '$shadcn/label/index.js';
-	import * as RadioGroup from '$lib/components/shadcn/ui/radio-group/index.js';
 	import * as Tooltip from '$shadcn/tooltip/index.js';
+	import * as Popover from '$lib/components/shadcn/ui/popover/index.js';
 
-	import { FileSliders } from 'lucide-svelte';
+	import { Check, ChevronsUpDown, FileSliders } from 'lucide-svelte';
 	import Threltre from '$lib/components/threlte/Threltre.svelte';
-	import { addToCart } from '$lib/store/Data/cartStore';
-	import { textureStore } from '$lib/store/textureStore';
 
-	// Exemple de données pour l'article
-	const article = {
-		productId: '123', // Référence à l'ID du produit existant dans la base de données
-		quantity: 1, // Quantité commandée
-		price: 29.99 // Prix unitaire du produit
-	};
+	import { textureStore } from '$lib/store/textureStore';
+	import { tick } from 'svelte';
+	import { Textarea } from '$lib/components/shadcn/ui/textarea/index.js';
+	import { createCustomSchema } from '$lib/schema/products/customSchema.js';
+	import { superForm } from 'sveltekit-superforms';
+	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { toast } from 'svelte-sonner';
+
+	let { data } = $props();
+
+	const customForm = superForm(data.IcreateCustomSchema, {
+		validators: zodClient(createCustomSchema),
+		id: 'createCustom'
+	});
+
+	const { form: customData, enhance: customEnhance, message: customMessage } = customForm;
+	console.log(data);
+
+	$effect(() => {
+		console.log('dhgrdr', $customData);
+	});
+	$effect(() => {
+		$customData.image = $textureStore;
+	});
+
+	let selectedProductId = $state('');
+	let selectedQuantity = $state(1);
+
+	let openProductPopover = $state(false);
+	let openQuantityPopover = $state(false);
+
+	let triggerProductRef = $state<HTMLButtonElement>(null!);
+	let triggerQuantityRef = $state<HTMLButtonElement>(null!);
+
+	// Fermer et recentrer le bouton produit
+	function closeAndFocusProductTrigger() {
+		openProductPopover = false;
+		tick().then(() => triggerProductRef.focus());
+	}
+
+	// Fermer et recentrer le bouton quantité
+	function closeAndFocusQuantityTrigger() {
+		openQuantityPopover = false;
+		tick().then(() => triggerQuantityRef.focus());
+	}
+
+	// Récupérer le produit sélectionné
+	const selectedProduct = $derived(
+		data.products.find((product) => product.id === selectedProductId)
+	);
+
+	// Générer les options de quantité
+	function generateQuantityOptions(stock: number) {
+		return Array.from({ length: Math.min(stock, 10) }, (_, i) => i + 1); // Max 10
+	}
 
 	/**
 	 * Gère le changement de fichier et met à jour le store global pour la texture.
@@ -30,21 +77,23 @@
 			if (file.type === 'image/png') {
 				// Générer une URL temporaire pour l'image
 				const textureUrl = URL.createObjectURL(file);
+				console.log('textureUrl', textureUrl);
 
 				// Mettre à jour le store global
 				textureStore.set(textureUrl);
-
-				console.log('Texture mise à jour avec succès :', textureUrl);
+				$customData.textureUrl = textureUrl;
+				console.log('Texture mise à jour avec succès :', file, textureUrl);
 			} else {
 				alert('Veuillez télécharger un fichier PNG.');
 			}
 		}
 	}
 
-	function handleAddToCart() {
-		addToCart(article);
-		console.log('Article ajouté au panier :', article);
-	}
+	$effect(() => {
+		if ($customMessage === 'Custom field created successfully') {
+			toast($customMessage);
+		}
+	});
 </script>
 
 <div class="h-screen w-screen">
@@ -62,62 +111,104 @@
 			</Tooltip.Provider>
 		</Sheet.Trigger>
 		<Sheet.Content side="left">
-			<Sheet.Header>
-				<Sheet.Title>Modifier la texture</Sheet.Title>
-				<Sheet.Description>
-					Uploadez une nouvelle texture PNG pour l'appliquer au modèle.
-				</Sheet.Description>
-			</Sheet.Header>
-			<div class="grid gap-4 py-4">
-				<h2>Choisissez la texture de votre boisson</h2>
+			<form method="POST" action="?/createCustom" use:customEnhance>
+				<Sheet.Header>
+					<Sheet.Title>Modifier la texture</Sheet.Title>
+					<Sheet.Description>
+						Uploadez une nouvelle texture PNG pour l'appliquer au modèle.
+					</Sheet.Description>
+				</Sheet.Header>
+				<div class="grid gap-4 py-4">
+					<h2>Choisissez la texture de votre boisson</h2>
 
-				<div class="grid grid-cols-4 items-center gap-4">
-					<Label for="file" class="text-right">Upload</Label>
-					<Input
-						id="file"
-						type="file"
-						accept=".png"
-						onchange={handleFileUpload}
-						class="col-span-3"
-					/>
+					<div class="grid grid-cols-4 items-center gap-4 border rounded p-1">
+						<Label for="file" class="text-right">Upload</Label>
+						<Input
+							id="file"
+							type="file"
+							accept=".png"
+							onchange={handleFileUpload}
+							class="col-span-3"
+						/>
+					</div>
+					<h2>Choisissez le gout de votre boisson</h2>
+
+					<!-- Popover pour sélectionner un produit -->
+					<Popover.Root bind:open={openProductPopover}>
+						<Popover.Trigger bind:ref={triggerProductRef}>
+							<Button
+								variant="outline"
+								class="justify-between w-full"
+								role="combobox"
+								aria-expanded={openProductPopover}
+							>
+								{selectedProduct?.name || 'Choisissez un produit'}
+								<ChevronsUpDown class="opacity-50" />
+							</Button>
+						</Popover.Trigger>
+						<Popover.Content class="w-[300px] p-2">
+							<Popover.Content class="w-[300px] p-2">
+								{#each data.products as product}
+									<Button
+										variant="ghost"
+										class="w-full justify-between"
+										onclick={() => {
+											selectedProductId = product.id;
+											closeAndFocusProductTrigger();
+										}}
+									>
+										<span>{product.name}</span>
+										<span class="text-sm text-gray-500">Stock: {product.stock}</span>
+										{#if selectedProductId === product.id}
+											<Check />
+										{/if}
+									</Button>
+								{/each}
+							</Popover.Content>
+						</Popover.Content>
+					</Popover.Root>
+
+					{#if selectedProduct}
+						<Popover.Root bind:open={openQuantityPopover}>
+							<Popover.Trigger bind:ref={triggerQuantityRef}>
+								<Button
+									variant="outline"
+									class="justify-between w-full"
+									role="combobox"
+									aria-expanded={openQuantityPopover}
+								>
+									Quantité: {selectedQuantity}
+									<ChevronsUpDown class="opacity-50" />
+								</Button>
+							</Popover.Trigger>
+							<Popover.Content class="w-[300px] p-2">
+								{#each generateQuantityOptions(selectedProduct.stock) as quantity}
+									<Button
+										variant="ghost"
+										class="w-full justify-between"
+										onclick={() => {
+											selectedQuantity = quantity;
+											closeAndFocusQuantityTrigger();
+										}}
+									>
+										<span>{quantity}</span>
+										{#if selectedQuantity === quantity}
+											<Check />
+										{/if}
+									</Button>
+								{/each}
+							</Popover.Content>
+						</Popover.Root>
+					{/if}
+
+					<h2>Vous voulez rajouter quelque chose ?</h2>
+					<Textarea placeholder="Type your message here." />
 				</div>
-
-				<h2>Choisissez le gout de votre boisson</h2>
-				<RadioGroup.Root value="comfortable">
-					<div class="flex items-center space-x-2">
-						<RadioGroup.Item value="default" id="r1" />
-						<Label for="r1">Default</Label>
-					</div>
-					<div class="flex items-center space-x-2">
-						<RadioGroup.Item value="comfortable" id="r2" />
-						<Label for="r2">Comfortable</Label>
-					</div>
-					<div class="flex items-center space-x-2">
-						<RadioGroup.Item value="compact" id="r3" />
-						<Label for="r3">Compact</Label>
-					</div>
-				</RadioGroup.Root>
-
-				<h2>Choisissez le nombre de cannettes</h2>
-				<RadioGroup.Root value="comfortable">
-					<div class="flex items-center space-x-2">
-						<RadioGroup.Item value="default" id="r1" />
-						<Label for="r1">Default</Label>
-					</div>
-					<div class="flex items-center space-x-2">
-						<RadioGroup.Item value="comfortable" id="r2" />
-						<Label for="r2">Comfortable</Label>
-					</div>
-					<div class="flex items-center space-x-2">
-						<RadioGroup.Item value="compact" id="r3" />
-						<Label for="r3">Compact</Label>
-					</div>
-				</RadioGroup.Root>
-			</div>
-			<Sheet.Footer>
-				<Button onclick={handleAddToCart}>Ajouter au panier</Button>
-				<Sheet.Close class={buttonVariants({ variant: 'outline' })}>Fermer</Sheet.Close>
-			</Sheet.Footer>
+				<Sheet.Footer>
+					<Button>Ajouter au panier</Button>
+					<Sheet.Close class={buttonVariants({ variant: 'outline' })}>Fermer</Sheet.Close>
+				</Sheet.Footer>
+			</form>
 		</Sheet.Content>
 	</Sheet.Root>
 
