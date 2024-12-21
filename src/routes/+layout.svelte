@@ -19,8 +19,8 @@
 	import Cart from '$lib/components/cart/Cart.svelte';
 	import { setCart } from '$lib/store/Data/cartStore';
 	import { startSync } from '$lib/store/Data/cartSync';
-	import { da } from '@faker-js/faker';
 	import Threltre from '$lib/components/threlte/Threltre.svelte';
+	import BackgroundCanvas from '$lib/components/BackgroundCanvas.svelte';
 
 	let { children, data } = $props();
 
@@ -55,6 +55,7 @@
 {/if}
 {#if $isClient}
 	<div class="wappper">
+		<BackgroundCanvas />
 		<ModeWatcher />
 
 		<div class="container">
@@ -111,5 +112,9 @@
 	.content {
 		position: absolute;
 		z-index: 10;
+	}
+
+	.wrapper {
+		transition: background-color 0.5s ease-in-out;
 	}
 </style>

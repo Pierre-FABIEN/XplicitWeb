@@ -1,6 +1,8 @@
 import { tweened } from 'svelte/motion';
 import { cubicOut } from 'svelte/easing';
-import { writable, derived } from 'svelte/store';
+import { derived } from 'svelte/store';
+import { BackgroundColorStore } from './BackgroundColorStore';
+import { color1Tweened, color2Tweened } from './lightColorStore';
 
 // Stores pour la position de la caméra
 export const cameraX = tweened(0, { duration: 500, easing: cubicOut });
@@ -29,10 +31,16 @@ export function updateCameraPosition(pathname: string) {
 		case '/':
 			[x, y, z] = [0.8, 0.3, 1.6];
 			[tx, ty, tz] = [-0.7, 0.5, 0];
+			BackgroundColorStore.set('#ff0000');
+			color2Tweened.set('#ff0000');
+			color1Tweened.set('#ff0000');
 			break;
 		case '/atelier':
 			[x, y, z] = [0, 1, 1];
 			[tx, ty, tz] = [0, 0.5, 0];
+			BackgroundColorStore.set('#ffff00');
+			color2Tweened.set('#ffff00');
+			color1Tweened.set('#ffff00');
 			break;
 		case '/music':
 			[x, y, z] = [2, 0.5, 3];

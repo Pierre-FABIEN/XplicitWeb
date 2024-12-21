@@ -25,10 +25,15 @@
 	}
 </script>
 
-<div class="ccc w-screen h-screen">
+<div class="ccc absolute z-30 top-[25vh] left-[10vw]">
 	{#if isVisible}
 		<!-- Apply the fly transition. 
 		     "outroend" event is fired after the "out" transition completes. -->
+		<div transition:fly={{ y: 50, duration: 200 }} onoutroend={handleOutroEnd}>
+			<!-- We remove the href and instead use a click handler -->
+			<!-- This ensures the outro transition is completed before navigation -->
+			<Button onclick={handleClick}>Je customise ma cannette</Button>
+		</div>
 		<div transition:fly={{ y: 50, duration: 400 }} onoutroend={handleOutroEnd}>
 			<!-- We remove the href and instead use a click handler -->
 			<!-- This ensures the outro transition is completed before navigation -->

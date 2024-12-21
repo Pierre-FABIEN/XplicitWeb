@@ -2,7 +2,7 @@ import { prisma } from '$lib/server';
 
 export const getPaginatedPosts = async (page: number, ARTICLES_PER_PAGE: number) => {
 	const [articles, totalArticles] = await Promise.all([
-		prisma.post.findMany({
+		prisma.blogPost.findMany({
 			skip: (page - 1) * ARTICLES_PER_PAGE,
 			take: ARTICLES_PER_PAGE,
 			include: {
@@ -15,14 +15,14 @@ export const getPaginatedPosts = async (page: number, ARTICLES_PER_PAGE: number)
 				}
 			}
 		}),
-		prisma.post.count()
+		prisma.blogPost.count()
 	]);
 
 	return { articles, totalArticles };
 };
 
 export const getArticleBySlug = async (slug: string) => {
-	return await prisma.post.findUnique({
+	return await prisma.blogPost.findUnique({
 		where: { slug },
 		include: {
 			author: true,
@@ -73,7 +73,7 @@ export const createPost = async ({
 	tagConnectOrCreate: Array<{ where: { name: string }; create: { name: string } }>;
 	extraData?: object;
 }) => {
-	return await prisma.post.create({
+	return await prisma.blogPost.create({
 		data: {
 			title,
 			content,
