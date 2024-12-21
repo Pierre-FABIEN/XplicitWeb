@@ -5,6 +5,5 @@
 </script>
 
 <Canvas>
-	<PerfMonitor />
 	<Scene />
 </Canvas>

@@ -3,7 +3,7 @@
 	import '@fontsource-variable/raleway';
 </script>
 
-<section class="welcome h-screen w-screen rcc">
+<section class="welcome rcc">
 	<div class="containerText max-w-xl">
 		<h1 class="title">Custom your can</h1>
 

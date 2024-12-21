@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Camera from './components/Camera.svelte';
 	import { T, useTask } from '@threlte/core';
 	import { ContactShadows, Float, Grid, OrbitControls, SoftShadows } from '@threlte/extras';
 	import * as THREE from 'three';
@@ -48,11 +49,9 @@
 	});
 </script>
 
-<T.PerspectiveCamera makeDefault position={[0, 0.3, 2]}>
-	<OrbitControls target={[0, 0.5, 0]} enableDamping autoRotate />
-</T.PerspectiveCamera>
+<Camera />
 
-<!-- <T.DirectionalLight
+<T.DirectionalLight
 	ref={directionalLightRef}
 	position={lightPos}
 	intensity={1.5}
@@ -72,7 +71,7 @@
 	shadow.mapSize.width={4096}
 	shadow.mapSize.height={4096}
 	shadow.bias={0.0001}
-/> -->
+/>
 
 <T.DirectionalLight
 	position={[2, 2, 2]}
@@ -85,19 +84,12 @@
 
 <T.AmbientLight intensity={0.5} />
 
-<Grid
-	position.y={-0.001}
-	cellColor="#ffffff"
-	sectionColor="#ffffff"
-	sectionThickness={0}
-	fadeDistance={25}
-	cellSize={2}
-/>
-
 <ContactShadows opacity={1} scale={10} blur={1} far={10} resolution={256} color="#000000" />
 <SoftShadows focus={30} size={4} samples={30} />
 <Float floatIntensity={1} floatingRange={[0, 0.05]}>
 	<Modele />
 </Float>
+
+<T.PlaneGeometry attach="geometry" position={[0, 0.5, 0]} />
 
 <Plateform />

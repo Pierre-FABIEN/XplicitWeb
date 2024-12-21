@@ -33,7 +33,7 @@
 			// Mettre à jour le matériau
 			customMaterial = new THREE.MeshStandardMaterial({
 				map: loadedTexture,
-				roughness: 0.45, // Surface légèrement brillante
+				roughness: 0.4, // Surface légèrement brillante
 				metalness: 1.0, // 100% métallique
 				envMapIntensity: 1.5 // Accentuer les reflets
 			});
@@ -42,7 +42,7 @@
 
 	// useTask est appelé à chaque frame, delta est le temps écoulé depuis la dernière frame
 	useTask((delta) => {
-		rotation += delta / 4; // Incrémente la rotation sur l'axe Y
+		rotation += delta / 7; // Incrémente la rotation sur l'axe Y
 	});
 </script>
 

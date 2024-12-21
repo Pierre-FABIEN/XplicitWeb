@@ -15,7 +15,7 @@
 
 	// Animation pour faire tourner les groupes
 	useTask((delta) => {
-		const speed = 2; // Vitesse de rotation
+		const speed = 0.1; // Vitesse de rotation
 
 		// Sens horaire pour le premier groupe
 		rotationAngle1 += delta * speed;
@@ -36,28 +36,18 @@
 	<T.RectAreaLight
 		color="#ffffff"
 		intensity={10}
-		width={0.2}
-		height={0.2}
+		width={0.3}
+		height={0.3}
 		rotation={[2 / Math.PI, 2 / Math.PI, 0]}
 		position={[0.5, 0.5, 0.5]}
-		oncreate={(light) => {
-			const helper = new RectAreaLightHelper(light);
-			light.add(helper);
-			return () => light.remove(helper);
-		}}
 	/>
 	<T.RectAreaLight
 		color="#ffffff"
 		intensity={10}
-		width={0.2}
-		height={0.2}
+		width={0.3}
+		height={0.3}
 		rotation={[-2 / Math.PI, 10, 2 / Math.PI]}
 		position={[-0.5, 0.5, -0.5]}
-		oncreate={(light) => {
-			const helper = new RectAreaLightHelper(light);
-			light.add(helper);
-			return () => light.remove(helper);
-		}}
 	/>
 </T.Group>
 
@@ -66,27 +56,17 @@
 	<T.RectAreaLight
 		color="#ffffff"
 		intensity={10}
-		width={0.2}
-		height={0.2}
+		width={0.3}
+		height={0.3}
 		rotation={[2 / Math.PI, 2 / Math.PI, 0]}
 		position={[0.5, 0.5, 0.5]}
-		oncreate={(light) => {
-			const helper = new RectAreaLightHelper(light);
-			light.add(helper);
-			return () => light.remove(helper);
-		}}
 	/>
 	<T.RectAreaLight
 		color="#ffffff"
 		intensity={10}
-		width={0.2}
-		height={0.2}
+		width={0.3}
+		height={0.3}
 		rotation={[-2 / Math.PI, 10, 2 / Math.PI]}
 		position={[-0.5, 0.5, -0.5]}
-		oncreate={(light) => {
-			const helper = new RectAreaLightHelper(light);
-			light.add(helper);
-			return () => light.remove(helper);
-		}}
 	/>
 </T.Group>

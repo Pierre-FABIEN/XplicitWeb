@@ -11,7 +11,6 @@
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import { buttonVariants } from '$shadcn/button';
-	import Threltre from '$lib/components/threlte/Threltre.svelte';
 	import { FileSliders } from 'lucide-svelte';
 	import { textureStore } from '$lib/store/textureStore.js';
 
@@ -182,7 +181,4 @@
 			</form>
 		</Sheet.Content>
 	</Sheet.Root>
-
-	<!-- Threltre avec texture dynamique -->
-	<Threltre />
 </div>

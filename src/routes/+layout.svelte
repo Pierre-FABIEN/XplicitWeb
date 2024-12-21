@@ -20,6 +20,7 @@
 	import { setCart } from '$lib/store/Data/cartStore';
 	import { startSync } from '$lib/store/Data/cartSync';
 	import { da } from '@faker-js/faker';
+	import Threltre from '$lib/components/threlte/Threltre.svelte';
 
 	let { children, data } = $props();
 
@@ -50,7 +51,7 @@
 </svelte:head>
 
 {#if !$firstLoadComplete}
-	<Loader />
+	<!-- <Loader /> -->
 {/if}
 {#if $isClient}
 	<div class="wappper">
@@ -64,7 +65,13 @@
 			</div>
 			<SmoothScrollBar>
 				<main class="mainLayout">
-					{@render children()}
+					<!-- Threltre avec texture dynamique -->
+					<div class="canva">
+						<Threltre />
+					</div>
+					<div class="content">
+						{@render children()}
+					</div>
 				</main>
 			</SmoothScrollBar>
 		</div>
@@ -94,8 +101,15 @@
 		right: 0%;
 		bottom: 0px;
 	}
+	.canva {
+		position: absolute;
+		width: 100vw;
+		height: 100vh;
+		z-index: 1;
+	}
 
-	.wappper {
-		background: linear-gradient(to bottom, #23064f07, #ff680a05) !important;
+	.content {
+		position: absolute;
+		z-index: 10;
 	}
 </style>
