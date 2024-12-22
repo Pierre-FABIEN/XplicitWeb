@@ -10,7 +10,7 @@
 	// Animation des positions et des couleurs
 	useTask((delta) => {
 		const state = get(LightStore);
-		state.rotationAngle += delta * 0.5;
+		state.rotationAngle += delta * 0.05;
 		const radius = 2;
 
 		// Mise à jour des positions
@@ -41,7 +41,7 @@
 <T.DirectionalLight
 	bind:ref={$LightStore.directionalLightRef}
 	position={$LightStore.lightPos}
-	intensity={2}
+	intensity={1}
 	color={$color1Tweened}
 	castShadow
 	shadow.mapSize.width={4096}
@@ -52,7 +52,7 @@
 <T.DirectionalLight
 	bind:ref={$LightStore.directionalLightRef2}
 	position={$LightStore.lightPos2}
-	intensity={2}
+	intensity={1}
 	color={$color2Tweened}
 	castShadow
 	shadow.mapSize.width={4096}

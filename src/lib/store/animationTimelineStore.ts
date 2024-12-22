@@ -1,8 +1,9 @@
 import { tweened } from 'svelte/motion';
 import { cubicOut } from 'svelte/easing';
-import { derived } from 'svelte/store';
-import { BackgroundColorStore } from './BackgroundColorStore';
+import { derived, get } from 'svelte/store';
+import { BackgroundColorStore, LightColorStore } from './BackgroundColorStore';
 import { color1Tweened, color2Tweened } from './lightColorStore';
+import { mode } from 'mode-watcher';
 
 // Stores pour la position de la caméra
 export const cameraX = tweened(0, { duration: 500, easing: cubicOut });
@@ -18,6 +19,8 @@ export const targetZ = tweened(0, { duration: 500, easing: cubicOut });
 export const cameraPosition = derived([cameraX, cameraY, cameraZ], ([$x, $y, $z]) => [$x, $y, $z]);
 export const cameraTarget = derived([targetX, targetY, targetZ], ([$x, $y, $z]) => [$x, $y, $z]);
 
+const currentMode = get(mode);
+
 // Fonction pour mettre à jour les positions de la caméra et de la cible
 export function updateCameraPosition(pathname: string) {
 	let x = 0,
@@ -31,9 +34,20 @@ export function updateCameraPosition(pathname: string) {
 		case '/':
 			[x, y, z] = [0.8, 0.3, 1.6];
 			[tx, ty, tz] = [-0.7, 0.5, 0];
-			BackgroundColorStore.set('#ff0000');
-			color2Tweened.set('#ff0000');
-			color1Tweened.set('#ff0000');
+			mode.subscribe((currentMode) => {
+				if (currentMode === 'dark') {
+					LightColorStore.set('#000000');
+					BackgroundColorStore.set('#00021a');
+					color2Tweened.set('#00c2ff');
+					color1Tweened.set('#00c2ff');
+				} else if (currentMode === 'light') {
+					LightColorStore.set('#75deff');
+					BackgroundColorStore.set('#00c2ff');
+					color2Tweened.set('#00c2ff');
+					color1Tweened.set('#00c2ff');
+				}
+			});
+
 			break;
 		case '/atelier':
 			[x, y, z] = [0, 1, 1];
@@ -42,9 +56,12 @@ export function updateCameraPosition(pathname: string) {
 			color2Tweened.set('#ffff00');
 			color1Tweened.set('#ffff00');
 			break;
-		case '/music':
-			[x, y, z] = [2, 0.5, 3];
-			[tx, ty, tz] = [0, 0.5, 0];
+		case '/catalogue':
+			[x, y, z] = [0.8, 0.5, 0.8];
+			[tx, ty, tz] = [-0.8, 0.5, 0];
+			BackgroundColorStore.set('#00ff00');
+			color2Tweened.set('#00ff00');
+			color1Tweened.set('#00ff00');
 			break;
 		default:
 			[x, y, z] = [0, 0.3, 2];

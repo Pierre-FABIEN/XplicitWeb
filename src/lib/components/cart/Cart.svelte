@@ -34,96 +34,105 @@
 	}
 </script>
 
-<div class="absolute right-3 top-3 z-50">
-	<Sheet.Root>
-		<Sheet.Trigger>
-			<button class="m-5 text-gray-600 ccc">
-				<ShoppingCart class="z-50 absolute right-0" />
-				<Badge class="absolute bottom-5 left-0">
-					{#if $cart && $cart.items}
-						{$cart.items.length > 0 ? $cart.items.length : '0'}
-					{:else}
-						0
-					{/if}
-				</Badge>
-			</button>
-		</Sheet.Trigger>
+<div class="cartButton relative w-70 h-70 mx-7 ccc">
+	<div class="absolutez-50 ccc">
+		<Sheet.Root>
+			<Sheet.Trigger>
+				<button class="m-5 text-gray-600 ccc">
+					<ShoppingCart class="z-50 absolute right-0" />
+					<Badge class="absolute bottom-5 left-0">
+						{#if $cart && $cart.items}
+							{$cart.items.length > 0 ? $cart.items.length : '0'}
+						{:else}
+							0
+						{/if}
+					</Badge>
+				</button>
+			</Sheet.Trigger>
 
-		<Sheet.Content class="p-4 max-w-md w-full">
-			<h2 class="text-2xl font-bold mb-4">Your Cart</h2>
-			{#if $cart && $cart.items && $cart.items.length > 0}
-				<div class="max-h-[500px] overflow-y-auto">
-					{#each $cart.items as item (item.id)}
-						<div class="p-4 border rounded-lg shadow-sm flex justify-between items-center mb-2">
-							{#if item.product.images && item.product.images[0]}
-								<img
-									src={item.product.images[0]}
-									alt={item.product.name}
-									class="w-20 h-20 object-cover"
-								/>
-							{/if}
-							<div class="flex-1 mx-4">
-								<h3 class="text-lg font-semibold">{item.product.name}</h3>
-								<p class="text-gray-600">${item.product.price.toFixed(1)}€</p>
-								<div>
-									<select
-										class="border p-2 rounded"
-										onchange={(e) => changeQuantity(item.product.id, parseInt(e.target.value))}
-										bind:value={item.quantity}
+			<Sheet.Content class="p-4 max-w-md w-full">
+				<h2 class="text-2xl font-bold mb-4">Your Cart</h2>
+				{#if $cart && $cart.items && $cart.items.length > 0}
+					<div class="max-h-[500px] overflow-y-auto">
+						{#each $cart.items as item (item.id)}
+							<div class="p-4 border rounded-lg shadow-sm flex justify-between items-center mb-2">
+								{#if item.product.images && item.product.images[0]}
+									<img
+										src={item.product.images[0]}
+										alt={item.product.name}
+										class="w-20 h-20 object-cover"
+									/>
+								{/if}
+								<div class="flex-1 mx-4">
+									<h3 class="text-lg font-semibold">{item.product.name}</h3>
+									<p class="text-gray-600">${item.product.price.toFixed(1)}€</p>
+									<div>
+										<select
+											class="border p-2 rounded"
+											onchange={(e) => changeQuantity(item.product.id, parseInt(e.target.value))}
+											bind:value={item.quantity}
+										>
+											{#each createQuantityOptions(item.product.stock) as option}
+												<option value={option.value}>{option.label}</option>
+											{/each}
+										</select>
+									</div>
+								</div>
+								<div class="flex flex-col items-end">
+									<p class="text-lg font-semibold">
+										{(item.price * item.quantity).toFixed(1)}€
+									</p>
+									<button
+										onclick={() => handleRemoveFromCart(item.product.id)}
+										class="text-red-600 hover:text-red-800"
 									>
-										{#each createQuantityOptions(item.product.stock) as option}
-											<option value={option.value}>{option.label}</option>
-										{/each}
-									</select>
+										<Trash />
+									</button>
 								</div>
 							</div>
-							<div class="flex flex-col items-end">
-								<p class="text-lg font-semibold">
-									{(item.price * item.quantity).toFixed(1)}€
-								</p>
-								<button
-									onclick={() => handleRemoveFromCart(item.product.id)}
-									class="text-red-600 hover:text-red-800"
-								>
-									<Trash />
-								</button>
-							</div>
-						</div>
-					{/each}
-				</div>
-				<div class="mt-4 border-t pt-4">
-					<div class="flex justify-between">
-						<span class="text-xl font-semibold">Total:</span>
-						<span class="text-xl font-semibold">
-							{$cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(1)}€
-						</span>
+						{/each}
 					</div>
-				</div>
-				<Button>
-					<a href="/checkout">Checkout</a>
-				</Button>
-			{:else}
-				<p>Your cart is empty.</p>
-			{/if}
-
-			{#if user}
-				<!-- Si l'utilisateur est connecté -->
-				<Button>
-					<a href="/auth">Mes paramètres</a>
-				</Button>
-			{:else}
-				<!-- Si l'utilisateur n'est pas connecté -->
-				<div class="text-center mt-4">
-					<p class=" mb-2">
-						Veuillez vous <a href="/login" class="text-blue-500 underline">connecter</a>
-						ou <a href="/signup" class="text-blue-500 underline">vous inscrire</a> pour finaliser votre
-						commande.
-					</p>
+					<div class="mt-4 border-t pt-4">
+						<div class="flex justify-between">
+							<span class="text-xl font-semibold">Total:</span>
+							<span class="text-xl font-semibold">
+								{$cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(1)}€
+							</span>
+						</div>
+					</div>
 					<Button>
-						<a href="/login">Se connecter</a>
+						<a href="/checkout">Checkout</a>
 					</Button>
-				</div>
-			{/if}
-		</Sheet.Content>
-	</Sheet.Root>
+				{:else}
+					<p>Your cart is empty.</p>
+				{/if}
+
+				{#if user}
+					<!-- Si l'utilisateur est connecté -->
+					<Button>
+						<a href="/auth">Mes paramètres</a>
+					</Button>
+				{:else}
+					<!-- Si l'utilisateur n'est pas connecté -->
+					<div class="text-center mt-4">
+						<p class=" mb-2">
+							Veuillez vous <a href="/login" class="text-blue-500 underline">connecter</a>
+							ou <a href="/signup" class="text-blue-500 underline">vous inscrire</a> pour finaliser votre
+							commande.
+						</p>
+						<Button>
+							<a href="/login">Se connecter</a>
+						</Button>
+					</div>
+				{/if}
+			</Sheet.Content>
+		</Sheet.Root>
+	</div>
 </div>
+
+<style>
+	.cartButton {
+		width: 50px;
+		height: 40px;
+	}
+</style>

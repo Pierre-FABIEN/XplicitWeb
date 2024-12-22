@@ -47,16 +47,16 @@
 	});
 </script>
 
-<div class="flex-col space-x-6 items-center">
+<div class="rcc space-x-6 h-[100%]">
 	<!-- Mode Sombre -->
-	<div class="flex items-center space-x-2 mb-5">
+	<div class="flex mx-4">
 		<SunIcon class="h-5 w-5 text-yellow-500" />
 		<Switch bind:checked={darkMod} onclick={toggleDarkMode} />
 		<MoonIcon class="h-5 w-5 text-gray-500" />
 	</div>
 
 	<!-- Plein Écran -->
-	<div class="flex items-center space-x-2" style="margin: 0;">
+	<div class="flex mx-4" style="margin: 0;">
 		<Maximize2Icon class="h-5 w-5" />
 		<Switch bind:checked={isFullscreen} onclick={toggleFullscreen} />
 		<Minimize2Icon class="h-5 w-5" />

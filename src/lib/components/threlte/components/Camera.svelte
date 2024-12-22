@@ -3,7 +3,7 @@
 	import { OrbitControls } from '@threlte/extras';
 	import { afterNavigate } from '$app/navigation';
 
-	// On importe les stores et la fonction depuis cameraStore
+	// On importe les stores et la fonction depuis animationTimelineStore
 	import {
 		cameraX,
 		cameraY,
@@ -12,7 +12,7 @@
 		targetY,
 		targetZ,
 		updateCameraPosition
-	} from '$lib/store/cameraStore';
+	} from '$lib/store/animationTimelineStore';
 
 	// MàJ de la caméra après chaque navigation
 	afterNavigate(({ to }) => {

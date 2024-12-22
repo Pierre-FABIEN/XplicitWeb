@@ -8,7 +8,7 @@
 	export const ref = new THREE.Group();
 	const dracoLoader = useDraco('/draco/');
 
-	export const texturePngStore = writable<string>('/BAT/black.png');
+	export const texturePngStore = writable<string>('/BAT/wild.png');
 	let rotation = $state(0);
 	let customMaterial = $state<THREE.MeshStandardMaterial | null>(null);
 
