@@ -64,7 +64,7 @@
 		<div class="container">
 			<div class="iconeNav ccc">
 				<nav
-					class="bg-white/10 backdrop-blur-3xl shadow-xl border border-[#ffffff88] rounded-[16px] flex justify-end items-center p-2 space-x-4"
+					class="backdrop-blur-3xl shadow-xl border border-[#ffffff88] rounded-[16px] flex justify-end items-center p-2 space-x-4"
 				>
 					<ul class="rcs">
 						<li class="ccc">
@@ -80,7 +80,7 @@
 							<a href="/blog"> Blog </a>
 						</li>
 						<li class="ccc">
-							<a href="/blog"> Contact </a>
+							<a href="/contact"> Contact </a>
 						</li>
 					</ul>
 					<Options />
@@ -121,7 +121,7 @@
 
 	.iconeNav {
 		position: absolute;
-		z-index: 100;
+		z-index: 10;
 		bottom: 10px;
 		width: 100%;
 
@@ -137,17 +137,17 @@
 						border-radius: 16px;
 						height: 40px;
 						padding: 0px 20px;
-						font-family: 'Open Sans Variable', sans-serif;
-						text-transform: uppercase;
+						font-family: 'Raleway Variable', sans-serif;
+
 						margin: 0px 5px;
-						font-weight: 600;
+
 						transition: all 0.3s ease;
-						background: white;
-						color: black;
+						font-weight: 400;
+						//color: white;
 
 						&:hover {
 							transform: translateY(-1px);
-							background: rgba(255, 255, 255, 0.5);
+							background: rgba(255, 255, 255, 0.1);
 						}
 					}
 				}
@@ -155,7 +155,7 @@
 			&:hover {
 				transform: translateY(-5px);
 				box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.3);
-				background: rgba(255, 255, 255, 0.5);
+				background: rgba(255, 255, 255, 0.05);
 			}
 		}
 	}
@@ -168,8 +168,7 @@
 
 	.content {
 		position: absolute;
-		z-index: 10;
-		width: 100vw;
+		z-index: 1;
 		height: 100vh;
 	}
 

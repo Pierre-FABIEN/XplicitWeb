@@ -1,4 +1,6 @@
 <script lang="ts">
+	import '@fontsource-variable/open-sans';
+	import '@fontsource-variable/raleway';
 	import { cart, removeFromCart, updateCartItemQuantity } from '$lib/store/Data/cartStore';
 	import { Badge } from '$shadcn/badge';
 	import Button from '$shadcn/button/button.svelte';
@@ -35,12 +37,14 @@
 </script>
 
 <div class="cartButton relative w-70 h-70 mx-7 ccc">
-	<div class="absolutez-50 ccc">
+	<div class="absolute z-50 ccc">
 		<Sheet.Root>
 			<Sheet.Trigger>
-				<button class="m-5 text-gray-600 ccc">
-					<ShoppingCart class="z-50 absolute right-0" />
-					<Badge class="absolute bottom-5 left-0">
+				<button class="m-5 ccc">
+					<ShoppingCart class="w-8 h-8 z-0 absolute right-0 top-0 stroke-white" />
+					<Badge
+						class="bulletCart font-bold absolute z-10 left-0 bottom-0 bg-white/90 border-slate-400 "
+					>
 						{#if $cart && $cart.items}
 							{$cart.items.length > 0 ? $cart.items.length : '0'}
 						{:else}
@@ -133,6 +137,13 @@
 <style>
 	.cartButton {
 		width: 50px;
-		height: 40px;
+		height: 50px;
+		border: 1px solid white;
+		background-color: rgba(255, 255, 255, 0.2);
+		border-radius: 10px;
+	}
+
+	.bulletCart {
+		font-family: 'Raleway Variable', sans-serif;
 	}
 </style>

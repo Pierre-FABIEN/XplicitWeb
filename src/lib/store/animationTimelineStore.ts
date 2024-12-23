@@ -50,18 +50,75 @@ export function updateCameraPosition(pathname: string) {
 
 			break;
 		case '/atelier':
-			[x, y, z] = [0, 1, 1];
+			[x, y, z] = [1, 1, 1];
 			[tx, ty, tz] = [0, 0.5, 0];
-			BackgroundColorStore.set('#ffff00');
-			color2Tweened.set('#ffff00');
-			color1Tweened.set('#ffff00');
+
+			mode.subscribe((currentMode) => {
+				if (currentMode === 'dark') {
+					LightColorStore.set('#000000');
+					BackgroundColorStore.set('#030911');
+					color2Tweened.set('#030911');
+					color1Tweened.set('#030911');
+				} else if (currentMode === 'light') {
+					LightColorStore.set('#75deff');
+					BackgroundColorStore.set('#bcd6ff');
+					color2Tweened.set('#bcd6ff');
+					color1Tweened.set('#bcd6ff');
+				}
+			});
 			break;
 		case '/catalogue':
+			[x, y, z] = [0.8, 0.3, 1.6];
+			[tx, ty, tz] = [-0.7, 0.5, 0];
+			mode.subscribe((currentMode) => {
+				if (currentMode === 'dark') {
+					LightColorStore.set('#000000');
+					BackgroundColorStore.set('#00021a');
+					color2Tweened.set('#00c2ff');
+					color1Tweened.set('#00c2ff');
+				} else if (currentMode === 'light') {
+					LightColorStore.set('#75deff');
+					BackgroundColorStore.set('#00c2ff');
+					color2Tweened.set('#00c2ff');
+					color1Tweened.set('#00c2ff');
+				}
+			});
+
+			break;
+		case '/blog':
 			[x, y, z] = [0.8, 0.5, 0.8];
 			[tx, ty, tz] = [-0.8, 0.5, 0];
-			BackgroundColorStore.set('#00ff00');
-			color2Tweened.set('#00ff00');
-			color1Tweened.set('#00ff00');
+			mode.subscribe((currentMode) => {
+				if (currentMode === 'dark') {
+					LightColorStore.set('#001606');
+					BackgroundColorStore.set('#041208');
+					color2Tweened.set('#041208');
+					color1Tweened.set('#041208');
+				} else if (currentMode === 'light') {
+					LightColorStore.set('#66bd7d');
+					BackgroundColorStore.set('#b5ffc9');
+					color2Tweened.set('#b5ffc9');
+					color1Tweened.set('#b5ffc9');
+				}
+			});
+			break;
+
+		case '/contact':
+			[x, y, z] = [0.5, 2, 0.5];
+			[tx, ty, tz] = [0.5, 1, 0];
+			mode.subscribe((currentMode) => {
+				if (currentMode === 'dark') {
+					LightColorStore.set('#090909');
+					BackgroundColorStore.set('#15141c');
+					color2Tweened.set('#15141c');
+					color1Tweened.set('#15141c');
+				} else if (currentMode === 'light') {
+					LightColorStore.set('#66bd7d');
+					BackgroundColorStore.set('#b5ffc9');
+					color2Tweened.set('#b5ffc9');
+					color1Tweened.set('#b5ffc9');
+				}
+			});
 			break;
 		default:
 			[x, y, z] = [0, 0.3, 2];
