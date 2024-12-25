@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as THREE from 'three';
 	import { T, useTask } from '@threlte/core';
-	import { useDraco, useGltf } from '@threlte/extras';
+	import { useDraco, useGltf, Align } from '@threlte/extras';
 	import { textureStore } from '$lib/store/textureStore';
 	import { writable } from 'svelte/store';
 
@@ -50,28 +50,30 @@
 	{#await gltf}
 		<slot name="fallback" />
 	{:then gltf}
-		<!-- CAN_ALU avec matériau métallique et rotation sur l'axe Y -->
-		<T.Mesh
-			castShadow
-			receiveShadow
-			geometry={gltf.nodes.CAN_ALU.geometry}
-			material={canMaterial}
-			position={[0, 0.2, 0]}
-			rotation={[0, rotation, 0.2]}
-			scale={5}
-		/>
-		<!-- Mesh_1 avec texture personnalisée -->
-		{#if customMaterial}
+		<Align auto>
+			<!-- CAN_ALU avec matériau métallique et rotation sur l'axe Y -->
 			<T.Mesh
 				castShadow
 				receiveShadow
-				geometry={gltf.nodes.Mesh_1.geometry}
-				material={customMaterial}
+				geometry={gltf.nodes.CAN_ALU.geometry}
+				material={canMaterial}
 				position={[0, 0.2, 0]}
 				rotation={[0, rotation, 0.2]}
-				scale={[5.005, 5, 5.005]}
+				scale={5}
 			/>
-		{/if}
+			<!-- Mesh_1 avec texture personnalisée -->
+			{#if customMaterial}
+				<T.Mesh
+					castShadow
+					receiveShadow
+					geometry={gltf.nodes.Mesh_1.geometry}
+					material={customMaterial}
+					position={[0, 0.2, 0]}
+					rotation={[0, rotation, 0.2]}
+					scale={[5.005, 5, 5.005]}
+				/>
+			{/if}
+		</Align>
 	{:catch error}
 		<slot name="error" {error} />
 	{/await}

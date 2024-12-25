@@ -142,7 +142,7 @@
 						margin: 0px 5px;
 
 						transition: all 0.3s ease;
-						font-weight: 400;
+						font-weight: 500;
 						//color: white;
 
 						&:hover {
@@ -169,8 +169,6 @@
 	.content {
 		position: absolute;
 		z-index: 1;
-		height: 100vh;
-		width: 100vw;
 	}
 
 	.wrapper {

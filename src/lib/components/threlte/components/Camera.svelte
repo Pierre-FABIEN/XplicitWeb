@@ -22,5 +22,11 @@
 </script>
 
 <T.PerspectiveCamera makeDefault position={[$cameraX, $cameraY, $cameraZ]}>
-	<OrbitControls target={[$targetX, $targetY, $targetZ]} enableDamping />
+	<OrbitControls
+		target={[$targetX, $targetY, $targetZ]}
+		enableDamping
+		enableZoom={false}
+		enablePan={false}
+		enableRotate={false}
+	/>
 </T.PerspectiveCamera>
