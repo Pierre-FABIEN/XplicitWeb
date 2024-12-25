@@ -78,7 +78,8 @@ export const actions: Actions = {
 				price: form.data.price,
 				stock: form.data.stock,
 				images: uploadedImageUrls,
-				slug: slug
+				slug: slug,
+				colorProduct: form.data.colorProduct
 			});
 
 			await connectProductToCategories(product.id, existingCategoryIds);

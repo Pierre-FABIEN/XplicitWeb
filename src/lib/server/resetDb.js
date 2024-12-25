@@ -117,6 +117,7 @@ async function main() {
 					'https://res-console.cloudinary.com/dedmxt8ta/thumbnails/v1/image/upload/v1734637235/cHJvZHVjdHMvdTU3MHMzeXE1c3JpYjR6enZ1d2U=/drilldown'
 				],
 				slug: 'black',
+				colorProduct: '#6554E3',
 				createdAt: '2024-12-19T19:40:36.809+00:00',
 				updatedAt: '2024-12-19T19:40:36.809+00:00',
 				categories: beverageCategory?.id
@@ -132,6 +133,7 @@ async function main() {
 					'https://res-console.cloudinary.com/dedmxt8ta/thumbnails/v1/image/upload/v1734637259/cHJvZHVjdHMvZWptcXR1a21kZmRvbWhienZxdWc=/drilldown'
 				],
 				slug: 'dragon',
+				colorProduct: '#EB3BE6',
 				createdAt: '2024-12-19T19:41:01.519+00:00',
 				updatedAt: '2024-12-19T19:41:01.519+00:00',
 				categories: snackCategory?.id
@@ -147,6 +149,7 @@ async function main() {
 					'https://res-console.cloudinary.com/dedmxt8ta/thumbnails/v1/image/upload/v1734637301/cHJvZHVjdHMvanA3cm5saWdsb2g4eGp4ZHcwMW0=/drilldown'
 				],
 				slug: 'fresh',
+				colorProduct: '#48DAE5',
 				createdAt: '2024-12-19T19:41:42.780+00:00',
 				updatedAt: '2024-12-19T19:41:42.780+00:00',
 				categories: beverageCategory?.id
@@ -162,6 +165,7 @@ async function main() {
 					'https://res.cloudinary.com/dedmxt8ta/image/upload/fl_preserve_transparency/v1734637323/products/rmwynwjtowb45p1ffsep.jpg?_s=public-apps'
 				],
 				slug: 'wild',
+				colorProduct: '#5BEA53',
 				createdAt: '2024-12-19T19:42:04.914+00:00',
 				updatedAt: '2024-12-19T19:42:04.914+00:00',
 				categories: snackCategory?.id
@@ -177,6 +181,7 @@ async function main() {
 					stock: product.stock,
 					images: product.images,
 					slug: product.slug,
+					colorProduct: product.colorProduct,
 					categories: {
 						create: {
 							categoryId: product.categories

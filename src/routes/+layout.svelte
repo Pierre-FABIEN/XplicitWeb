@@ -170,6 +170,7 @@
 		position: absolute;
 		z-index: 1;
 		height: 100vh;
+		width: 100vw;
 	}
 
 	.wrapper {

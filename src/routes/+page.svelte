@@ -56,8 +56,13 @@
 		<a
 			class="buttonStart rcc"
 			style="color: {strokeColor}; --stroke-color: {strokeColor};"
-			href="/atelier">Commencer <Power class="ml-10" /></a
+			href="/atelier"
 		>
+			Commencer
+			<span>
+				<Power class="ml-10" />
+			</span>
+		</a>
 	</button>
 </div>
 
@@ -126,6 +131,18 @@
 			text-transform: uppercase;
 			font-size: 22px;
 			padding: 6px 40px;
+
+			span {
+				transform: translateY(35px);
+				transition: all 0.4s ease-in-out;
+			}
+		}
+		&:hover {
+			a {
+				span {
+					transform: translateY(0px);
+				}
+			}
 		}
 	}
 
@@ -142,7 +159,7 @@
 			width: 10px;
 			height: 2px;
 			background-color: var(--stroke-color);
-			transition: all 0.6s;
+			transition: all 0.4s;
 		}
 		&:hover {
 			&::before {

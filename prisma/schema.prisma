@@ -133,6 +133,7 @@ model Product {
   stock        Int
   images       String[]
   slug         String       @unique
+  colorProduct String
   categories   ProductCategory[]
   orderItems   OrderItem[]
   createdAt    DateTime     @default(now())

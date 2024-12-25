@@ -116,6 +116,21 @@
 					</div>
 
 					<div class="w-[100%]">
+						<Form.Field name="colorProduct" form={createProduct}>
+							<Form.Control>
+								<Form.Label>Color</Form.Label>
+								<Input
+									name="colorProduct"
+									type="color"
+									bind:value={$createProductData.colorProduct}
+									class="w-16 h-10 p-0 border border-gray-300 rounded"
+								/>
+							</Form.Control>
+							<Form.FieldErrors />
+						</Form.Field>
+					</div>
+
+					<div class="w-[100%]">
 						<h4 class="scroll-m-20 text-xl font-semibold tracking-tight">Categories</h4>
 						<Form.Field name="categoryId" form={createProduct}>
 							<Form.Control>
