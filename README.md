@@ -107,6 +107,12 @@ revoir la sécurité sur les données
 
 
 Continuer la cart
+
 réaliser les produits faire atention aux stock quand il sagit d'une custom (mettre une option custom dans les produit selon la selection des gouts)
+
 Sur l'admin il faut pouvoir changer le role indépendant dans un form mais aussi les adresses et pouvoir changer le mot de passe et mettre une option pour activer le M2FA
+
 S'occuper des ventes et voir ca sur le server
+
+Pouvoir faire la gestion des catégories dans les gestion produit
+

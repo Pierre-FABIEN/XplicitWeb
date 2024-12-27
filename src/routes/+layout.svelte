@@ -6,7 +6,7 @@
 	import { initializeLayoutState, setupNavigationEffect, isClient } from './layout.svelte';
 
 	import { ModeWatcher } from 'mode-watcher';
-	import { Toaster } from '$shadcn/sonner';
+	import Toaster from '$lib/components/shadcn/ui/sonner/sonner.svelte';
 
 	import SmoothScrollBar from '$lib/components/smoothScrollBar/SmoothScrollBar.svelte';
 	import {

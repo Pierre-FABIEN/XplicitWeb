@@ -15,7 +15,7 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
-	import { createPostSchema } from '$lib/schema/blog/articleSchema.js';
+	import { createPostSchema } from '$lib/schema/BlogPost/articleSchema.js';
 
 	// Initialisation des données via $props
 	let { data } = $props();

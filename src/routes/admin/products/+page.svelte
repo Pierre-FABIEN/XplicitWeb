@@ -6,6 +6,7 @@
 	import { toast } from 'svelte-sonner';
 	import Pencil from 'lucide-svelte/icons/pencil';
 	import Trash from 'lucide-svelte/icons/trash';
+	import { deleteCategorySchema } from '$lib/schema/categories/deleteCategorySchema.js';
 
 	// Props
 	let { data } = $props();
@@ -28,8 +29,6 @@
 					: product.description || 'No description available'
 		}))
 	);
-
-	console.log(productsData);
 
 	// Form handling with superForm
 	const deleteProduct = superForm(data?.IdeleteProductSchema ?? {}, {
@@ -77,7 +76,49 @@
 			toast.success($deleteProductMessage);
 		}
 	});
+
+	// Form handling with superForm
+	const deleteCategory = superForm(data?.IdeleteCategorySchema ?? {}, {
+		validators: zodClient(deleteCategorySchema),
+		id: 'deleteCategory'
+	});
+
+	const {
+		form: deleteCategoryData,
+		enhance: deleteCategoryEnhance,
+		message: deleteCategoryMessage
+	} = deleteCategory;
+
+	// Table columns
+	const categoryColumns = [{ key: 'name', label: 'Nom' }];
+
+	// Table actions
+	const categoryActions = [
+		{
+			type: 'link',
+			name: 'edit',
+			url: (item: any) => `/admin/products/categories/${item.id}`,
+			icon: Pencil
+		},
+		{
+			type: 'form',
+			name: 'delete',
+			url: '?/deleteCategory',
+			dataForm: deleteCategoryData.id,
+			enhanceAction: deleteCategoryEnhance,
+			icon: Trash
+		}
+	];
+
+	// Show toast on delete message
+	$effect(() => {
+		if ($deleteCategoryMessage) {
+			toast.success($deleteCategoryMessage);
+		}
+	});
 </script>
+
+<h1 class="m-5 text-4xl">Gestion produits</h1>
 
 <!-- UI Table -->
 <div class="ccc w-xl m-5">
@@ -87,5 +128,15 @@
 		data={productsData ?? []}
 		actions={productActions}
 		addLink="/admin/products/create"
+	/>
+</div>
+
+<div class="ccc w-xl m-5">
+	<Table
+		name="Catégories"
+		columns={categoryColumns}
+		data={data.categories ?? []}
+		actions={categoryActions}
+		addLink="/admin/products/categories/create"
 	/>
 </div>

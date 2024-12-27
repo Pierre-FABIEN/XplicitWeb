@@ -1,5 +1,5 @@
 import { superValidate, message, fail } from 'sveltekit-superforms';
-import { createPostSchema } from '$lib/schema/blog/articleSchema.js';
+import { createPostSchema } from '$lib/schema/BlogPost/BlogPostSchema.js';
 import { zod } from 'sveltekit-superforms/adapters';
 import { createPost, getAllCategories, getAllTags } from '$lib/prisma/posts/posts';
 import { upsertAuthor } from '$lib/prisma/authors/authors';

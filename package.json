@@ -121,6 +121,7 @@
 		"@threlte/rapier": "^2.0.1",
 		"@threlte/theatre": "^3.0.0-next.9",
 		"@threlte/xr": "^1.0.0-next.13",
+		"@tinymce/tinymce-svelte": "^3.0.0",
 		"@types/three": "^0.170.0",
 		"apexcharts": "^4.0.0",
 		"arctic": "^2.2.2",

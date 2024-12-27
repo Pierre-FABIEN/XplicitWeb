@@ -20,7 +20,7 @@ enum OrderStatus {
 }
 
 
-
+// AUTH __________________________________________________________________________________
 model User {
   id                        String                     @id @default(auto()) @map("_id") @db.ObjectId
   email                     String                     @unique
@@ -71,6 +71,10 @@ model PasswordResetSession {
   twoFactorVerified Boolean  @default(false)
 }
 
+
+
+// COMMERCE __________________________________________________________________________________
+
 model Address {
   id        String  @id @default(auto()) @map("_id") @db.ObjectId
   recipient String
@@ -84,7 +88,6 @@ model Address {
   orders    Order[]
   @@map("addresses")
 }
-
 
 model Order {
   id            String            @id @default(auto()) @map("_id") @db.ObjectId
@@ -184,7 +187,6 @@ model Transaction {
   @@map("transactions")
 }
 
-
 model ProductCategory {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   productId   String   @db.ObjectId
@@ -208,7 +210,7 @@ model Category {
 
 
 
-
+// BLOG __________________________________________________________________________________
 model BlogPost {
   id          String       @id @default(auto()) @map("_id") @db.ObjectId
   title       String
@@ -217,7 +219,7 @@ model BlogPost {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   published   Boolean      @default(false)
-  author      Author       @relation(fields: [authorId], references: [id])
+  author      BlogAuthor       @relation(fields: [authorId], references: [id])
   authorId    String       @db.ObjectId
   category    BlogCategory     @relation(fields: [categoryId], references: [id])
   categoryId  String       @db.ObjectId
@@ -225,14 +227,12 @@ model BlogPost {
   tags        BlogPostTag[]
 }
 
-
-model Author {
+model BlogAuthor {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String   @unique
   posts     BlogPost[]
   createdAt DateTime @default(now())
 }
-
 
 model BlogCategory {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -241,7 +241,6 @@ model BlogCategory {
   posts       BlogPost[]
   createdAt   DateTime @default(now())
 }
-
 
 model BlogComment {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -252,8 +251,7 @@ model BlogComment {
   createdAt DateTime @default(now())
 }
 
-
-model Tag {
+model BlogTag {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
   name      String    @unique
   posts     BlogPostTag[]
@@ -264,7 +262,7 @@ model BlogPostTag {
   id     String @id @default(auto()) @map("_id") @db.ObjectId
   post   BlogPost   @relation(fields: [postId], references: [id])
   postId String @db.ObjectId
-  tag    Tag    @relation(fields: [tagId], references: [id])
+  tag    BlogTag    @relation(fields: [tagId], references: [id])
   tagId  String @db.ObjectId
 
   @@unique([postId, tagId]) 

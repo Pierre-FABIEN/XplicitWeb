@@ -11,6 +11,7 @@ import { deleteCategorySchema } from '$lib/schema/categories/deleteCategorySchem
 import {
 	deleteCategoryById,
 	deleteProductCategories,
+	getAllcategories,
 	getCategoriesById
 } from '$lib/prisma/categories/categories';
 import { deleteProductById, getAllProducts, getProductById } from '$lib/prisma/products/products';
@@ -19,10 +20,13 @@ export const load: PageServerLoad = async () => {
 	const IdeleteProductSchema = await superValidate(zod(deleteProductSchema));
 	const IdeleteCategorySchema = await superValidate(zod(deleteCategorySchema));
 	const products = await getAllProducts();
+	const categories = await getAllcategories();
+
 	return {
 		products,
 		IdeleteCategorySchema,
-		IdeleteProductSchema
+		IdeleteProductSchema,
+		categories
 	};
 };
 

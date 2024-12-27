@@ -84,7 +84,7 @@
 	.secondline,
 	.thirdline {
 		position: absolute;
-		transition: transform 0.2s ease-in-out;
+		transition: transform 0.4s ease-in-out;
 	}
 
 	.firstline.hovered {

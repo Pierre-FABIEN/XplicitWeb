@@ -6,8 +6,8 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { toast } from 'svelte-sonner';
 	import { emailSchema, passwordSchema } from '$lib/schema/auth/settingsSchemas';
-	import { Switch } from '$lib/components/shadcn/ui/switch/index.js';
-	import { Label } from '$lib/components/shadcn/ui/label/index.js';
+	import { Switch } from '$shadcn/switch/index.js';
+	import { Label } from '$shadcn/label/index.js';
 	import { isMfaEnabledSchema } from '$lib/schema/users/MfaEnabledSchema.js';
 
 	let { data } = $props();

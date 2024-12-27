@@ -24,7 +24,7 @@
 	$effect(() => {
 		if ($createCategoryMessage === 'Category created successfully') {
 			toast.success($createCategoryMessage);
-			setTimeout(() => goto('/admin/categories/'), 0);
+			setTimeout(() => goto('/admin/products/categories/'), 0);
 		}
 	});
 </script>
