@@ -6,19 +6,24 @@
 	import { Button } from '$shadcn/button';
 	import { Checkbox } from '$shadcn/checkbox/index.js';
 	import { Label } from '$shadcn/label/index.js';
-	import { cn } from '$lib/components/shadcn/utils.js';
 
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { goto } from '$app/navigation';
 	import Editor from '@tinymce/tinymce-svelte';
-	import { env } from '$env/dynamic/public';
 	import { toast } from 'svelte-sonner';
 	import { createBlogPostSchema } from '$lib/schema/BlogPost/BlogPostSchema.js';
-	import { Check, ChevronsUpDown } from 'lucide-svelte';
-	import { tick } from 'svelte';
+	import { PUBLIC_TINYMCE_API_KEY } from '$env/static/public';
 
 	let { data } = $props();
+
+	// Variables pour catégories et tags
+	let categories = $state(data.AllCategoriesPost || []);
+	let tags = $state(data.AllTagsPost || []);
+	let selectedCategory = $state('');
+	let selectedTag = $state('');
+	let openCategory = $state(false);
+	let openTag = $state(false);
 
 	const createPost = superForm(data.IcreateBlogPostSchema, {
 		validators: zodClient(createBlogPostSchema),
@@ -30,29 +35,9 @@
 		enhance: createPostEnhance,
 		message: createPostMessage
 	} = createPost;
-
-	const frameworks = [
-		{
-			value: 'sveltekit',
-			label: 'SvelteKit'
-		},
-		{
-			value: 'next.js',
-			label: 'Next.js'
-		},
-		{
-			value: 'nuxt.js',
-			label: 'Nuxt.js'
-		},
-		{
-			value: 'remix',
-			label: 'Remix'
-		},
-		{
-			value: 'astro',
-			label: 'Astro'
-		}
-	];
+	$effect(() => {
+		console.log($createPostData);
+	});
 
 	$effect(() => {
 		if ($createPostMessage === 'Post created successfully') {
@@ -61,20 +46,26 @@
 		}
 	});
 
-	let checked = $derived($createPostData.published);
-
-	let open = $state(false);
-	let value = $state('');
-	let triggerRef = $state<HTMLButtonElement>(null!);
-
-	const selectedValue = $derived(frameworks.find((f) => f.value === value)?.label);
-
-	function closeAndFocusTrigger() {
-		open = false;
-		tick().then(() => {
-			triggerRef.focus();
-		});
+	function handleSelectCategory(category) {
+		selectedCategory = category;
+		openCategory = false;
 	}
+
+	function handleSelectTag(tag) {
+		selectedTag = tag;
+		openTag = false;
+	}
+
+	let editorConfig = {
+		telemetry: false,
+		branding: false,
+		license_key: 'gpl',
+		plugins: [
+			'advlist autolink lists link image charmap anchor searchreplace visualblocks code fullscreen insertdatetime media table preview help wordcount'
+		],
+		toolbar:
+			'undo redo | blocks | bold italic forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help'
+	};
 </script>
 
 <div class="ccc">
@@ -95,7 +86,7 @@
 					<Form.Field name="title" form={createPost} class="rcc">
 						<Form.Control>
 							<div class="rcc">
-								<Checkbox aria-labelledby="published" />
+								<Checkbox aria-labelledby="published" bind:checked={$createPostData.published} />
 								<Label
 									id="published"
 									for="terms"
@@ -109,104 +100,66 @@
 					</Form.Field>
 				</div>
 
-				<div class="ccc flex items-center space-x-2 ml-5">
-					<Popover.Root bind:open>
-						<Popover.Trigger bind:ref={triggerRef}>
-							{#snippet child({ props })}
-								<Button
-									variant="outline"
-									class="w-[200px] justify-between"
-									{...props}
-									role="combobox"
-									aria-expanded={open}
-								>
-									{selectedValue || 'Selectionnez un tag...'}
-									<ChevronsUpDown class="opacity-50" />
-								</Button>
-							{/snippet}
+				<div class="mx-2">
+					<Popover.Root bind:open={openCategory}>
+						<Popover.Trigger>
+							<Button>
+								{selectedCategory || ' catégorie'}
+							</Button>
 						</Popover.Trigger>
-						<Popover.Content class="w-[200px] p-0">
+						<Popover.Content>
 							<Command.Root>
-								<Command.Input placeholder="Search framework..." />
-								<Command.List>
-									<Command.Empty>No framework found.</Command.Empty>
-									<Command.Group>
-										{#each frameworks as framework}
-											<Command.Item
-												value={framework.value}
-												onSelect={() => {
-													value = framework.value;
-													closeAndFocusTrigger();
-												}}
-											>
-												<Check class={cn(value !== framework.value && 'text-transparent')} />
-												{framework.label}
-											</Command.Item>
-										{/each}
-									</Command.Group>
-								</Command.List>
+								{#each categories as category}
+									<Command.Item onSelect={() => handleSelectCategory(category)}>
+										{category.name}
+									</Command.Item>
+								{/each}
 							</Command.Root>
 						</Popover.Content>
 					</Popover.Root>
+					<input type="text" bind:value={selectedCategory} class="hidden" />
 				</div>
-
-				<div class="ccc flex items-center space-x-2 ml-5">
-					<Popover.Root bind:open>
-						<Popover.Trigger bind:ref={triggerRef}>
-							{#snippet child({ props })}
-								<Button
-									variant="outline"
-									class="w-[200px] justify-between"
-									{...props}
-									role="combobox"
-									aria-expanded={open}
-								>
-									{selectedValue || 'Selectionnez une categorie...'}
-									<ChevronsUpDown class="opacity-50" />
-								</Button>
-							{/snippet}
+				<div class="mx-2">
+					<Popover.Root bind:open={openTag}>
+						<Popover.Trigger>
+							<Button>
+								{selectedTag || 'tag'}
+							</Button>
 						</Popover.Trigger>
-						<Popover.Content class="w-[200px] p-0">
+						<Popover.Content>
 							<Command.Root>
-								<Command.Input placeholder="Search framework..." />
-								<Command.List>
-									<Command.Empty>No framework found.</Command.Empty>
-									<Command.Group>
-										{#each frameworks as framework}
-											<Command.Item
-												value={framework.value}
-												onSelect={() => {
-													value = framework.value;
-													closeAndFocusTrigger();
-												}}
-											>
-												<Check class={cn(value !== framework.value && 'text-transparent')} />
-												{framework.label}
-											</Command.Item>
-										{/each}
-									</Command.Group>
-								</Command.List>
+								{#each tags as tag}
+									<Command.Item onSelect={() => handleSelectTag(tag)}>
+										{tag.name}
+									</Command.Item>
+								{/each}
 							</Command.Root>
 						</Popover.Content>
+						<input type="text" bind:value={selectedTag} class="hidden" />
 					</Popover.Root>
 				</div>
-			</div>
 
-			<div class="w-[100%]">
-				<Form.Field name="content" form={createPost}>
-					<Form.Control>
-						<Form.Label>Content</Form.Label>
-						<Editor apiKey={env.PUBLIC_TINYMCE_API_KEY} bind:value={$createPostData.content} />
-					</Form.Control>
-					<Form.FieldErrors />
-				</Form.Field>
-			</div>
+				<div class="w-[100%]">
+					<Form.Field name="content" form={createPost}>
+						<Form.Control>
+							<Form.Label>Content</Form.Label>
+							<Editor
+								{editorConfig}
+								scriptSrc="/tinymce/tinymce.min.js"
+								apiKey={PUBLIC_TINYMCE_API_KEY}
+								bind:value={$createPostData.content}
+							/>
+						</Form.Control>
+						<Form.FieldErrors />
+					</Form.Field>
+				</div>
 
-			<input type="hidden" name="content" bind:value={$createPostData.content} />
-			{#if data.user}
-				<input type="hidden" name="authorId" value={data.user.id} />
-			{/if}
-			<Button type="submit">Save changes</Button>
+				<input type="hidden" name="content" bind:value={$createPostData.content} />
+				{#if data.user}
+					<input type="hidden" name="authorId" value={data.user.id} />
+				{/if}
+				<Button type="submit">Save changes</Button>
+			</div>
 		</form>
 	</div>
 </div>
