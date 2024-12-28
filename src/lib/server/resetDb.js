@@ -196,11 +196,18 @@ async function main() {
 		console.log('Produits fictifs créés avec succès.');
 
 		// Création d'auteurs
-		const author = await prisma.blogAuthor.create({
-			data: {
-				name: 'Jean Dupont'
-			}
+		let author = await prisma.blogAuthor.findUnique({
+			where: { id: adminUser.id }
 		});
+
+		if (!author) {
+			author = await prisma.blogAuthor.create({
+				data: {
+					id: adminUser.id,
+					name: adminUser.name
+				}
+			});
+		}
 
 		console.log('Auteur créé:', author);
 
@@ -240,7 +247,7 @@ async function main() {
 				slug: 'le-futur-de-la-technologie',
 				published: true,
 				author: {
-					connect: { id: author.id }
+					connect: { id: adminUser.id }
 				},
 				category: {
 					connect: { id: technologyCategory.id }
@@ -263,7 +270,7 @@ async function main() {
 				slug: 'ameliorer-votre-sante-quotidienne',
 				published: true,
 				author: {
-					connect: { id: author.id }
+					connect: { id: adminUser.id }
 				},
 				category: {
 					connect: { id: healthCategory.id }

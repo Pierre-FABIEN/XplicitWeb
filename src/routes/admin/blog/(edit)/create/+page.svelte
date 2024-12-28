@@ -17,11 +17,13 @@
 
 	let { data } = $props();
 
+	console.log(data);
+
 	// Variables pour catégories et tags
 	let categories = $state(data.AllCategoriesPost || []);
 	let tags = $state(data.AllTagsPost || []);
-	let selectedCategory = $state('');
-	let selectedTag = $state('');
+	let selectedCategory = $state([]);
+	let selectedTag = $state([]);
 	let openCategory = $state(false);
 	let openTag = $state(false);
 
@@ -39,6 +41,8 @@
 		console.log($createPostData);
 	});
 
+	$createPostData.authorId = data.user.id;
+
 	$effect(() => {
 		if ($createPostMessage === 'Post created successfully') {
 			toast($createPostMessage);
@@ -47,12 +51,15 @@
 	});
 
 	function handleSelectCategory(category) {
-		selectedCategory = category;
+		console.log(category);
+
+		selectedCategory = [category.id];
 		openCategory = false;
 	}
 
 	function handleSelectTag(tag) {
-		selectedTag = tag;
+		console.log(tag);
+		selectedTag = [...selectedTag, tag.id];
 		openTag = false;
 	}
 
@@ -117,7 +124,7 @@
 							</Command.Root>
 						</Popover.Content>
 					</Popover.Root>
-					<input type="text" bind:value={selectedCategory} class="hidden" />
+					<input type="text" name="categoryId" bind:value={selectedCategory} class="hidden" />
 				</div>
 				<div class="mx-2">
 					<Popover.Root bind:open={openTag}>
@@ -135,7 +142,7 @@
 								{/each}
 							</Command.Root>
 						</Popover.Content>
-						<input type="text" bind:value={selectedTag} class="hidden" />
+						<input type="text" name="tagIds" bind:value={selectedTag} class="hidden" />
 					</Popover.Root>
 				</div>
 
@@ -154,10 +161,8 @@
 					</Form.Field>
 				</div>
 
+				<input type="hidden" name="authorId" bind:value={$createPostData.authorId} />
 				<input type="hidden" name="content" bind:value={$createPostData.content} />
-				{#if data.user}
-					<input type="hidden" name="authorId" value={data.user.id} />
-				{/if}
 				<Button type="submit">Save changes</Button>
 			</div>
 		</form>

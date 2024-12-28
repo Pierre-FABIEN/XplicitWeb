@@ -55,7 +55,7 @@ export const createPost = async (
 	content: string,
 	authorId: string,
 	slug: string,
-	published: boolean = false // Ajout de la propriété published avec valeur par défaut
+	published: boolean
 ) => {
 	try {
 		const post = await prisma.blogPost.create({
@@ -104,6 +104,9 @@ export const getAllPosts = async () => {
 				}
 			}
 		});
+
+		console.log('All posts:', posts);
+
 		return posts;
 	} catch (error) {
 		console.error('Error retrieving posts:', error);

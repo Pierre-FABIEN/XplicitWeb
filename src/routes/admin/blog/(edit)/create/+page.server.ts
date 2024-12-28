@@ -39,13 +39,13 @@ export const actions: Actions = {
 			return fail(400, { form });
 		}
 
-		const { title, content, authorId } = form.data;
+		const { title, content, authorId, published } = form.data;
 		const slug = slugify(title);
 
 		try {
 			console.log('Creating new post with title:', form.data.title);
 
-			await createPost(title, content, authorId, slug);
+			await createPost(title, content, authorId, slug, published);
 
 			return message(form, 'Post created successfully');
 		} catch (error) {
