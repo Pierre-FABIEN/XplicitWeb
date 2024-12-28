@@ -221,8 +221,8 @@ model BlogPost {
   published   Boolean      @default(false)
   author      BlogAuthor       @relation(fields: [authorId], references: [id])
   authorId    String       @db.ObjectId
-  category    BlogCategory     @relation(fields: [categoryId], references: [id])
-  categoryId  String       @db.ObjectId
+  category    BlogCategory?    @relation(fields: [categoryId], references: [id])
+  categoryId  String?          @db.ObjectId
   comments    BlogComment[]
   tags        BlogPostTag[]
 }

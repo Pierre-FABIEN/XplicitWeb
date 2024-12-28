@@ -110,7 +110,7 @@
 		{
 			type: 'form',
 			name: 'delete',
-			url: '?/deleteBlogTags',
+			url: '?/deleteBlogTag',
 			dataForm: deleteBlogTagData.id,
 			enhanceAction: deleteBlogTagEnhance,
 			icon: Trash
@@ -121,6 +121,12 @@
 	$effect(() => {
 		if ($deleteBlogPostMessage) {
 			toast.success($deleteBlogPostMessage);
+		}
+		if ($deleteBlogCategoryMessage) {
+			toast.success($deleteBlogCategoryMessage);
+		}
+		if ($deleteBlogTagMessage) {
+			toast.success($deleteBlogTagMessage);
 		}
 	});
 </script>

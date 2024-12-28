@@ -158,9 +158,21 @@ export const getTagById = async (id: string) => {
 
 export const deleteTag = async (id: string) => {
 	try {
-		return await prisma.blogTag.delete({
-			where: { id }
+		// Début d'une transaction
+		const result = await prisma.$transaction(async (prisma) => {
+			// Supprimer d'abord toutes les entrées BlogPostTag liées au tag
+			await prisma.blogPostTag.deleteMany({
+				where: { tagId: id }
+			});
+
+			// Puis supprimer le tag
+			return prisma.blogTag.delete({
+				where: { id }
+			});
 		});
+
+		console.log('Deleted tag and all related BlogPostTag entries:', result);
+		return result;
 	} catch (error) {
 		console.error('Error deleting tag:', error);
 		throw error;
@@ -180,9 +192,19 @@ export const getCategoryById = async (id: string) => {
 
 export const deleteCategory = async (id: string) => {
 	try {
-		return await prisma.blogCategory.delete({
-			where: { id }
+		await prisma.$transaction(async (prisma) => {
+			// Re-assigner les posts à `null` avant de supprimer la catégorie
+			await prisma.blogPost.updateMany({
+				where: { categoryId: id },
+				data: { categoryId: null }
+			});
+
+			// Supprimer la catégorie
+			return prisma.blogCategory.delete({
+				where: { id }
+			});
 		});
+		return 'Category deleted successfully';
 	} catch (error) {
 		console.error('Error deleting category:', error);
 		throw error;
