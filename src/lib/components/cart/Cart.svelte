@@ -120,12 +120,12 @@
 					<!-- Si l'utilisateur n'est pas connecté -->
 					<div class="text-center mt-4">
 						<p class=" mb-2">
-							Veuillez vous <a href="/login" class="text-blue-500 underline">connecter</a>
-							ou <a href="/signup" class="text-blue-500 underline">vous inscrire</a> pour finaliser votre
-							commande.
+							Veuillez vous <a href="/auth/login" class="text-blue-500 underline">connecter</a>
+							ou <a href="/auth/signup" class="text-blue-500 underline">vous inscrire</a> pour finaliser
+							votre commande.
 						</p>
 						<Button>
-							<a href="/login">Se connecter</a>
+							<a href="/auth/login">Se connecter</a>
 						</Button>
 					</div>
 				{/if}

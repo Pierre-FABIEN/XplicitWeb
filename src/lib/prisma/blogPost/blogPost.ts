@@ -2,10 +2,14 @@ import { prisma } from '$lib/server';
 
 export const getAllCategoriesPosts = async () => {
 	try {
-		const posts = await prisma.blogCategory.findMany({});
-		return posts;
+		const categories = await prisma.blogCategory.findMany({
+			include: {
+				posts: true
+			}
+		});
+		return categories;
 	} catch (error) {
-		console.error('Error retrieving posts:', error);
+		console.error('Error retrieving categories with posts:', error);
 	} finally {
 		await prisma.$disconnect();
 	}
@@ -13,10 +17,18 @@ export const getAllCategoriesPosts = async () => {
 
 export const getAllTagsPosts = async () => {
 	try {
-		const posts = await prisma.blogTag.findMany({});
-		return posts;
+		const tags = await prisma.blogTag.findMany({
+			include: {
+				posts: {
+					include: {
+						post: true
+					}
+				}
+			}
+		});
+		return tags;
 	} catch (error) {
-		console.error('Error retrieving posts:', error);
+		console.error('Error retrieving tags with posts:', error);
 	} finally {
 		await prisma.$disconnect();
 	}
@@ -42,15 +54,19 @@ export const createPost = async (
 	title: string,
 	content: string,
 	authorId: string,
-	slug: string
+	slug: string,
+	published: boolean = false // Ajout de la propriété published avec valeur par défaut
 ) => {
 	try {
 		const post = await prisma.blogPost.create({
-			title,
-			content,
-			authorId,
-			slug,
-			createdAt: new Date()
+			data: {
+				title,
+				content,
+				authorId,
+				slug,
+				published,
+				createdAt: new Date()
+			}
 		});
 		return post;
 	} catch (error) {
@@ -79,7 +95,13 @@ export const getAllPosts = async () => {
 	try {
 		const posts = await prisma.blogPost.findMany({
 			include: {
-				author: true
+				author: true,
+				category: true,
+				tags: {
+					include: {
+						tag: true
+					}
+				}
 			}
 		});
 		return posts;
@@ -120,5 +142,49 @@ export const updatePost = async (id: string, title: string, content: string) => 
 		console.error('Error updating post:', error);
 	} finally {
 		await prisma.$disconnect();
+	}
+};
+
+export const getTagById = async (id: string) => {
+	try {
+		return await prisma.blogTag.findUnique({
+			where: { id }
+		});
+	} catch (error) {
+		console.error('Error retrieving tag by ID:', error);
+		throw error;
+	}
+};
+
+export const deleteTag = async (id: string) => {
+	try {
+		return await prisma.blogTag.delete({
+			where: { id }
+		});
+	} catch (error) {
+		console.error('Error deleting tag:', error);
+		throw error;
+	}
+};
+
+export const getCategoryById = async (id: string) => {
+	try {
+		return await prisma.blogCategory.findUnique({
+			where: { id }
+		});
+	} catch (error) {
+		console.error('Error retrieving category by ID:', error);
+		throw error;
+	}
+};
+
+export const deleteCategory = async (id: string) => {
+	try {
+		return await prisma.blogCategory.delete({
+			where: { id }
+		});
+	} catch (error) {
+		console.error('Error deleting category:', error);
+		throw error;
 	}
 };

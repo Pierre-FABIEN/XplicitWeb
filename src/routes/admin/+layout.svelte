@@ -14,31 +14,19 @@
 				title: 'Dashboard',
 				items: [
 					{ title: 'Accueil', url: '/admin' },
-					{ title: 'utilisateurs', url: '/admin/users' },
 					{ title: 'ventes', url: '/admin/sales' },
+					{ title: 'utilisateurs', url: '/admin/users' },
 					{ title: 'produits', url: '/admin/products' },
 					{ title: 'blog', url: '/admin/blog' }
 				]
 			}
 		]
 	};
-
-	// Version sélectionnée
-	let selectedVersion = $state(data.versions[0]);
 </script>
 
 <div class="w-screen h-screen">
 	<Sidebar.Provider>
 		<Sidebar.Root class="border-none">
-			<!-- En-tête avec Sélecteur de version et Recherche -->
-			<Sidebar.Header>
-				<!-- Champ de recherche -->
-				<div class="relative mt-4">
-					<input type="text" placeholder="Search the docs..." class="pl-8 border rounded w-full" />
-					<Search class="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
-				</div>
-			</Sidebar.Header>
-
 			<!-- Contenu de la Sidebar -->
 			<Sidebar.Content>
 				{#each data.navMain as group}
@@ -61,11 +49,11 @@
 		<!-- Contenu principal -->
 		<Sidebar.Inset class="border rounded-[12px] m-3 max-h-[95vh] min-h-[95vh]">
 			<SmoothScrollBar>
-				<header class="flex items-center gap-2 px-4 h-16">
+				<header class="absolute flex items-center gap-2 px-4 h-16">
 					<Sidebar.Trigger />
 				</header>
 
-				<div class="p-4">
+				<div class="py-[40px]">
 					{@render children?.()}
 				</div>
 			</SmoothScrollBar>

@@ -36,8 +36,8 @@ async function main() {
 			prisma.blogComment.deleteMany(),
 			prisma.blogPost.deleteMany(),
 			prisma.blogCategory.deleteMany(),
-			prisma.author.deleteMany(),
-			prisma.tag.deleteMany(),
+			prisma.blogAuthor.deleteMany(),
+			prisma.blogTag.deleteMany(),
 			prisma.orderStatusHistory.deleteMany(),
 			prisma.orderItem.deleteMany(),
 			prisma.order.deleteMany(),
@@ -194,6 +194,92 @@ async function main() {
 			console.log(`Produit créé : ${createdProduct.name}`);
 		}
 		console.log('Produits fictifs créés avec succès.');
+
+		// Création d'auteurs
+		const author = await prisma.blogAuthor.create({
+			data: {
+				name: 'Jean Dupont'
+			}
+		});
+
+		console.log('Auteur créé:', author);
+
+		// Création de catégories de blog
+		const technologyCategory = await prisma.blogCategory.create({
+			data: {
+				name: 'Technologie',
+				description: 'Tout sur les dernières technologies et innovations.'
+			}
+		});
+
+		const healthCategory = await prisma.blogCategory.create({
+			data: {
+				name: 'Santé',
+				description: 'Conseils de santé, nouvelles découvertes médicales et plus encore.'
+			}
+		});
+
+		console.log('Catégories créées:', technologyCategory, healthCategory);
+
+		// Création de tags
+		const tag1 = await prisma.blogTag.create({
+			data: { name: 'Tech' }
+		});
+
+		const tag2 = await prisma.blogTag.create({
+			data: { name: 'Health' }
+		});
+
+		console.log('Tags créés:', tag1, tag2);
+
+		// Création d'articles de blog
+		const post1 = await prisma.blogPost.create({
+			data: {
+				title: 'Le futur de la technologie',
+				content: 'Contenu détaillé sur les prochaines grandes innovations.',
+				slug: 'le-futur-de-la-technologie',
+				published: true,
+				author: {
+					connect: { id: author.id }
+				},
+				category: {
+					connect: { id: technologyCategory.id }
+				}
+			}
+		});
+
+		// Association des tags aux articles
+		await prisma.blogPostTag.create({
+			data: {
+				postId: post1.id,
+				tagId: tag1.id
+			}
+		});
+
+		const post2 = await prisma.blogPost.create({
+			data: {
+				title: 'Améliorer votre santé quotidienne',
+				content: 'Des astuces pratiques pour vivre une vie plus saine.',
+				slug: 'ameliorer-votre-sante-quotidienne',
+				published: true,
+				author: {
+					connect: { id: author.id }
+				},
+				category: {
+					connect: { id: healthCategory.id }
+				}
+			}
+		});
+
+		// Association des tags aux articles
+		await prisma.blogPostTag.create({
+			data: {
+				postId: post2.id,
+				tagId: tag2.id
+			}
+		});
+
+		console.log('Articles de blog créés:', post1, post2);
 	} catch (error) {
 		console.error('Erreur lors du nettoyage et du peuplement :', error);
 	} finally {

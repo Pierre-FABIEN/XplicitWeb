@@ -116,3 +116,4 @@ S'occuper des ventes et voir ca sur le server
 
 Pouvoir faire la gestion des catégories dans les gestion produit
 
+faire attention de voir si on peut fusionner le google avec l'email

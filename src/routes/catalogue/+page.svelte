@@ -6,7 +6,7 @@
 	let { data } = $props();
 </script>
 
-<div class="h-[100vh] absolute left-0 ccc">
+<div class="h-[100vh] absolute left-0 top-0 ccc">
 	<div class="h-[100vh] ccc">
 		<Carousel.Root
 			opts={{

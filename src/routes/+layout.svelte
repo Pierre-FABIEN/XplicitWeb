@@ -61,7 +61,7 @@
 		<BackgroundCanvas />
 		<ModeWatcher />
 
-		<div class="container">
+		<div class="container ccc">
 			<div class="iconeNav ccc">
 				<nav
 					class="backdrop-blur-3xl shadow-xl border border-[#ffffff88] rounded-[16px] flex justify-end items-center p-2 space-x-4"
@@ -89,29 +89,33 @@
 					<NavigationMenu /> -->
 				</nav>
 			</div>
-			<SmoothScrollBar>
-				<main class="mainLayout">
-					<!-- Threltre avec texture dynamique -->
-					<div class="canva">
-						<Threltre />
-					</div>
-					<div class="content">
-						{@render children()}
-					</div>
-				</main>
-			</SmoothScrollBar>
+			<div class="wrapperScroll">
+				<SmoothScrollBar>
+					<main class="mainLayout">
+						<!-- Threltre avec texture dynamique -->
+						<div class="canva">
+							<Threltre />
+						</div>
+						<div class="content ccc">
+							{@render children()}
+						</div>
+					</main>
+				</SmoothScrollBar>
+			</div>
 		</div>
 		<Toaster />
 	</div>
 {/if}
 
-<style lang="scss" global>
+<style lang="scss">
 	.container {
-		width: 100%;
+		width: 100vw;
+		height: 100vh;
 		padding: 0;
 		margin: 0;
 		max-width: none;
 		overflow: hidden;
+		position: relative;
 	}
 
 	.mainLayout {
@@ -119,11 +123,22 @@
 		overflow: hidden;
 	}
 
+	.wrapperScroll {
+		width: 100vw;
+		height: 100vh;
+		overflow: hidden;
+		position: absolute;
+		top: 0;
+		left: 0;
+		z-index: 1;
+	}
+
 	.iconeNav {
 		position: absolute;
 		z-index: 10;
 		bottom: 10px;
 		width: 100%;
+		max-width: 80vw;
 
 		nav {
 			transition: all 0.3s ease;

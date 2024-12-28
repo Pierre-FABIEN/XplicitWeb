@@ -6,17 +6,36 @@ import { zod } from 'sveltekit-superforms/adapters';
 
 import { deleteBlogPostSchema } from '$lib/schema/BlogPost/BlogPostSchema';
 
-import { getPostById } from '$lib/prisma/BlogPost/BlogPost';
+import {
+	deleteCategory,
+	deleteTag,
+	getAllCategoriesPosts,
+	getAllTagsPosts,
+	getCategoryById,
+	getPostById,
+	getTagById
+} from '$lib/prisma/BlogPost/BlogPost';
 import { deletePost } from '$lib/prisma/BlogPost/BlogPost';
 import { getAllPosts } from '$lib/prisma/BlogPost/BlogPost';
+import { deleteBlogCategorySchema } from '$lib/schema/BlogPost/categoriesSchema';
+import { deleteBlogTagSchema } from '$lib/schema/BlogPost/tagSchema';
 
 export const load: PageServerLoad = async () => {
 	const BlogPost = await getAllPosts();
+	const AllCategoriesPost = await getAllCategoriesPosts();
+	const AllTagsPost = await getAllTagsPosts();
+
 	const IdeleteBlogPostSchema = await superValidate(zod(deleteBlogPostSchema));
+	const IdeleteBlogCategorySchema = await superValidate(zod(deleteBlogCategorySchema));
+	const IdeleteBlogTagSchema = await superValidate(zod(deleteBlogTagSchema));
 
 	return {
+		AllCategoriesPost,
+		AllTagsPost,
 		IdeleteBlogPostSchema,
-		BlogPost
+		BlogPost,
+		IdeleteBlogTagSchema,
+		IdeleteBlogCategorySchema
 	};
 };
 
@@ -50,6 +69,68 @@ export const actions: Actions = {
 		} catch (error) {
 			console.error('Error deleting category:', error);
 			return fail(500, { message: 'Post deletion failed' });
+		}
+	},
+	deleteBlogTag: async ({ request }) => {
+		console.log('deleteTag action initiated.', request);
+
+		const formData = await request.formData();
+		console.log(formData, 'form data');
+
+		const form = await superValidate(formData, zod(deleteBlogTagSchema));
+		const id = formData.get('id') as string;
+		console.log('Received id:', id);
+		if (!id) {
+			console.log('No id provided');
+			return fail(400, { message: 'Tag ID is required' });
+		}
+		try {
+			// Vérifier si le tag existe
+			const existingTag = await getTagById(id);
+			if (!existingTag) {
+				console.log('Tag not found:', id);
+				return fail(400, { message: 'Tag not found' });
+			}
+			console.log('Tag found:', existingTag);
+
+			// Supprimer le tag
+			const deletedTag = await deleteTag(id);
+			console.log('Deleted tag:', deletedTag);
+			return message(form, 'Tag deleted successfully');
+		} catch (error) {
+			console.error('Error deleting tag:', error);
+			return fail(500, { message: 'Tag deletion failed' });
+		}
+	},
+	deleteBlogCategory: async ({ request }) => {
+		console.log('deleteCategory action initiated.', request);
+
+		const formData = await request.formData();
+		console.log(formData, 'form data');
+
+		const form = await superValidate(formData, zod(deleteBlogCategorySchema));
+		const id = formData.get('id') as string;
+		console.log('Received id:', id);
+		if (!id) {
+			console.log('No id provided');
+			return fail(400, { message: 'Category ID is required' });
+		}
+		try {
+			// Vérifier si la catégorie existe
+			const existingCategory = await getCategoryById(id);
+			if (!existingCategory) {
+				console.log('Category not found:', id);
+				return fail(400, { message: 'Category not found' });
+			}
+			console.log('Category found:', existingCategory);
+
+			// Supprimer la catégorie
+			const deletedCategory = await deleteCategory(id);
+			console.log('Deleted category:', deletedCategory);
+			return message(form, 'Category deleted successfully');
+		} catch (error) {
+			console.error('Error deleting category:', error);
+			return fail(500, { message: 'Category deletion failed' });
 		}
 	}
 };
