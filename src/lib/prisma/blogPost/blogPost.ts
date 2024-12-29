@@ -1,96 +1,6 @@
 import { prisma } from '$lib/server';
 
-export const getAllCategoriesPosts = async () => {
-	try {
-		const categories = await prisma.blogCategory.findMany({
-			include: {
-				posts: true
-			}
-		});
-		return categories;
-	} catch (error) {
-		console.error('Error retrieving categories with posts:', error);
-	} finally {
-		await prisma.$disconnect();
-	}
-};
-
-export const getAllTagsPosts = async () => {
-	try {
-		const tags = await prisma.blogTag.findMany({
-			include: {
-				posts: {
-					include: {
-						post: true
-					}
-				}
-			}
-		});
-		return tags;
-	} catch (error) {
-		console.error('Error retrieving tags with posts:', error);
-	} finally {
-		await prisma.$disconnect();
-	}
-};
-
-export const getPostById = async (id: string) => {
-	try {
-		const post = await prisma.blogPost.findUnique({
-			where: { id },
-			include: {
-				author: true,
-				tags: true
-			}
-		});
-		return post;
-	} catch (error) {
-		console.error('Error retrieving post:', error);
-	} finally {
-		await prisma.$disconnect();
-	}
-};
-
-export const createPost = async (
-	title: string,
-	content: string,
-	authorId: string,
-	slug: string,
-	published: boolean
-) => {
-	try {
-		const post = await prisma.blogPost.create({
-			data: {
-				title,
-				content,
-				authorId,
-				slug,
-				published,
-				createdAt: new Date()
-			}
-		});
-		return post;
-	} catch (error) {
-		console.error('Error creating post:', error);
-	} finally {
-		await prisma.$disconnect();
-	}
-};
-
-export const deletePost = async (id: string) => {
-	console.log('Deleting post with id:', id);
-
-	try {
-		const post = await prisma.blogPost.delete({
-			where: { id }
-		});
-		return post;
-	} catch (error) {
-		console.error('Error deleting post:', error);
-	} finally {
-		await prisma.$disconnect();
-	}
-};
+// POST
 
 export const getAllPosts = async () => {
 	try {
@@ -155,40 +65,66 @@ export const updatePost = async (data: {
 	});
 };
 
-export const getTagById = async (id: string) => {
+export const getPostById = async (id: string) => {
 	try {
-		return await prisma.blogTag.findUnique({
+		const post = await prisma.blogPost.findUnique({
+			where: { id },
+			include: {
+				author: true,
+				tags: true
+			}
+		});
+		return post;
+	} catch (error) {
+		console.error('Error retrieving post:', error);
+	} finally {
+		await prisma.$disconnect();
+	}
+};
+
+export const createPost = async (
+	title: string,
+	content: string,
+	authorId: string,
+	slug: string,
+	published: boolean
+) => {
+	try {
+		const post = await prisma.blogPost.create({
+			data: {
+				title,
+				content,
+				authorId,
+				slug,
+				published,
+				createdAt: new Date()
+			}
+		});
+		return post;
+	} catch (error) {
+		console.error('Error creating post:', error);
+	} finally {
+		await prisma.$disconnect();
+	}
+};
+
+export const deletePost = async (id: string) => {
+	console.log('Deleting post with id:', id);
+
+	try {
+		const post = await prisma.blogPost.delete({
 			where: { id }
 		});
+		return post;
 	} catch (error) {
-		console.error('Error retrieving tag by ID:', error);
-		throw error;
+		console.error('Error deleting post:', error);
+	} finally {
+		await prisma.$disconnect();
 	}
 };
 
-export const deleteTag = async (id: string) => {
-	try {
-		// Début d'une transaction
-		const result = await prisma.$transaction(async (prisma) => {
-			// Supprimer d'abord toutes les entrées BlogPostTag liées au tag
-			await prisma.blogPostTag.deleteMany({
-				where: { tagId: id }
-			});
-
-			// Puis supprimer le tag
-			return prisma.blogTag.delete({
-				where: { id }
-			});
-		});
-
-		console.log('Deleted tag and all related BlogPostTag entries:', result);
-		return result;
-	} catch (error) {
-		console.error('Error deleting tag:', error);
-		throw error;
-	}
-};
-
+// CATEGORIES
+// Récupérer une catégorie par ID
 export const getCategoryById = async (id: string) => {
 	try {
 		return await prisma.blogCategory.findUnique({
@@ -200,6 +136,35 @@ export const getCategoryById = async (id: string) => {
 	}
 };
 
+// Créer une nouvelle catégorie
+export const createCategory = async (name?: string, description?: string) => {
+	try {
+		return await prisma.blogCategory.create({
+			data: {
+				name: name ?? '',
+				description: description
+			}
+		});
+	} catch (error) {
+		console.error('Error creating category:', error);
+		throw error;
+	}
+};
+
+// Mettre à jour une catégorie existante
+export const updateCategory = async (id: string, data: { name?: string; description?: string }) => {
+	try {
+		return await prisma.blogCategory.update({
+			where: { id },
+			data
+		});
+	} catch (error) {
+		console.error('Error updating category:', error);
+		throw error;
+	}
+};
+
+// Supprimer une catégorie
 export const deleteCategory = async (id: string) => {
 	try {
 		await prisma.$transaction(async (prisma) => {
@@ -217,6 +182,99 @@ export const deleteCategory = async (id: string) => {
 		return 'Category deleted successfully';
 	} catch (error) {
 		console.error('Error deleting category:', error);
+		throw error;
+	}
+};
+
+// Récupérer toutes les catégories avec les posts associés
+export const getAllCategoriesPosts = async () => {
+	try {
+		return await prisma.blogCategory.findMany({
+			include: {
+				posts: true
+			}
+		});
+	} catch (error) {
+		console.error('Error retrieving categories with posts:', error);
+		throw error;
+	}
+};
+
+// TAGS
+// Récupérer un tag par ID
+export const getTagById = async (id: string) => {
+	try {
+		return await prisma.blogTag.findUnique({
+			where: { id }
+		});
+	} catch (error) {
+		console.error('Error retrieving tag by ID:', error);
+		throw error;
+	}
+};
+
+// Créer un nouveau tag
+export const createTag = async (name: string) => {
+	try {
+		return await prisma.blogTag.create({
+			data: {
+				name
+			}
+		});
+	} catch (error) {
+		console.error('Error creating tag:', error);
+		throw error;
+	}
+};
+
+// Mettre à jour un tag existant
+export const updateTag = async (id: string, data: { name?: string }) => {
+	try {
+		return await prisma.blogTag.update({
+			where: { id },
+			data
+		});
+	} catch (error) {
+		console.error('Error updating tag:', error);
+		throw error;
+	}
+};
+
+// Supprimer un tag
+export const deleteTag = async (id: string) => {
+	try {
+		await prisma.$transaction(async (prisma) => {
+			// Supprimer toutes les entrées BlogPostTag liées au tag
+			await prisma.blogPostTag.deleteMany({
+				where: { tagId: id }
+			});
+
+			// Supprimer le tag
+			return prisma.blogTag.delete({
+				where: { id }
+			});
+		});
+		return 'Tag deleted successfully';
+	} catch (error) {
+		console.error('Error deleting tag:', error);
+		throw error;
+	}
+};
+
+// Récupérer tous les tags avec les posts associés
+export const getAllTagsPosts = async () => {
+	try {
+		return await prisma.blogTag.findMany({
+			include: {
+				posts: {
+					include: {
+						post: true
+					}
+				}
+			}
+		});
+	} catch (error) {
+		console.error('Error retrieving tags with posts:', error);
 		throw error;
 	}
 };
