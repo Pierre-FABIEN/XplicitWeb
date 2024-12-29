@@ -39,7 +39,8 @@ export const getPostById = async (id: string) => {
 		const post = await prisma.blogPost.findUnique({
 			where: { id },
 			include: {
-				author: true
+				author: true,
+				tags: true
 			}
 		});
 		return post;
@@ -131,21 +132,27 @@ export const getPostBySlug = async (slug: string) => {
 	}
 };
 
-export const updatePost = async (id: string, title: string, content: string) => {
-	try {
-		const post = await prisma.blogPost.update({
-			where: { id },
-			data: {
-				title,
-				content
+export const updatePost = async (data: {
+	id: string;
+	title: string;
+	content: string;
+	authorId: string;
+	categoryId: string;
+	tagIds: string[];
+	published: boolean;
+}) => {
+	return prisma.blogPost.update({
+		where: { id: data.id },
+		data: {
+			title: data.title,
+			content: data.content,
+			categoryId: data.categoryId,
+			published: data.published,
+			tags: {
+				set: data.tagIds.map((tagId) => ({ id: tagId }))
 			}
-		});
-		return post;
-	} catch (error) {
-		console.error('Error updating post:', error);
-	} finally {
-		await prisma.$disconnect();
-	}
+		}
+	});
 };
 
 export const getTagById = async (id: string) => {

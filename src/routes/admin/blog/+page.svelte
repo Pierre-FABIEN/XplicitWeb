@@ -70,7 +70,7 @@
 		{
 			type: 'link',
 			name: 'edit',
-			url: (item: any) => `/admin/blog/${item.id}`,
+			url: (item: any) => `/admin/blog/post/${item.id}`,
 			icon: Pencil
 		},
 		{
@@ -139,7 +139,7 @@
 		columns={PostsColumns}
 		data={data.BlogPost ?? []}
 		actions={PostsActions}
-		addLink="/admin/blog/create"
+		addLink="/admin/blog/post/create"
 	/>
 </div>
 

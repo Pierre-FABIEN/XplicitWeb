@@ -50,16 +50,33 @@
 		}
 	});
 
+	/*
+	 * Handles category selection in the Popover/Command list.
+	 * Only one category is allowed, so we overwrite selectedCategory with a single value array.
+	 */
 	function handleSelectCategory(category) {
-		console.log(category);
-
-		selectedCategory = [category.id];
+		console.log('ca passe!', category);
+		selectedCategory = category.name;
+		$createPostData.categoryId = category.id; // Store the category ID directly
 		openCategory = false;
 	}
 
+	/*
+	 * Handles tag selection in the Popover/Command list.
+	 * We allow multiple tags, so we push the new tag into selectedTag.
+	 */
 	function handleSelectTag(tag) {
-		console.log(tag);
-		selectedTag = [...selectedTag, tag.id];
+		console.log('ca passe!', tag);
+
+		// Initialisez $createPostData.tagIds en tant que tableau s'il est undefined ou null
+		if (!$createPostData.tagIds || !Array.isArray($createPostData.tagIds)) {
+			$createPostData.tagIds = [];
+		}
+
+		// Ajoutez l'ID du tag à la liste
+		$createPostData.tagIds = [...$createPostData.tagIds, tag.id];
+		selectedTag = [...selectedTag, tag.name];
+
 		openTag = false;
 	}
 
@@ -90,10 +107,14 @@
 
 			<div class="rcs w-[100%]">
 				<div class="flex items-center space-x-2">
-					<Form.Field name="title" form={createPost} class="rcc">
+					<Form.Field name="published" form={createPost} class="rcc">
 						<Form.Control>
 							<div class="rcc">
-								<Checkbox aria-labelledby="published" bind:checked={$createPostData.published} />
+								<Checkbox
+									name="published"
+									aria-labelledby="published"
+									bind:checked={$createPostData.published as boolean | undefined}
+								/>
 								<Label
 									id="published"
 									for="terms"
@@ -124,7 +145,6 @@
 							</Command.Root>
 						</Popover.Content>
 					</Popover.Root>
-					<input type="text" name="categoryId" bind:value={selectedCategory} class="hidden" />
 				</div>
 				<div class="mx-2">
 					<Popover.Root bind:open={openTag}>
@@ -142,7 +162,6 @@
 								{/each}
 							</Command.Root>
 						</Popover.Content>
-						<input type="text" name="tagIds" bind:value={selectedTag} class="hidden" />
 					</Popover.Root>
 				</div>
 
@@ -160,7 +179,13 @@
 						<Form.FieldErrors />
 					</Form.Field>
 				</div>
-
+				<input type="text" name="tagIds" bind:value={$createPostData.tagIds} class="hidden" />
+				<input
+					type="text"
+					name="categoryId"
+					bind:value={$createPostData.categoryId}
+					class="hidden"
+				/>
 				<input type="hidden" name="authorId" bind:value={$createPostData.authorId} />
 				<input type="hidden" name="content" bind:value={$createPostData.content} />
 				<Button type="submit">Save changes</Button>

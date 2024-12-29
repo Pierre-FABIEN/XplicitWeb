@@ -31,7 +31,19 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		console.log('Received form data:', formData);
 
-		const form = await superValidate(formData, zod(createBlogPostSchema));
+		// Convertir formData en un objet plat
+		const raw = Object.fromEntries(formData);
+
+		// Convertir tagIds en tableau
+		if (raw.tagIds) {
+			raw.tagIds = raw.tagIds.split(',');
+		}
+
+		// Convertir le champ `published` en booléen
+		raw.published = raw.published === 'on';
+
+		// On passe ensuite "raw" au superValidate
+		const form = await superValidate(raw, zod(createBlogPostSchema));
 		console.log('Form validation result:', form);
 
 		if (!form.valid) {
@@ -39,14 +51,13 @@ export const actions: Actions = {
 			return fail(400, { form });
 		}
 
+		// Ensuite vous utilisez form.data comme d’habitude
 		const { title, content, authorId, published } = form.data;
 		const slug = slugify(title);
 
 		try {
 			console.log('Creating new post with title:', form.data.title);
-
 			await createPost(title, content, authorId, slug, published);
-
 			return message(form, 'Post created successfully');
 		} catch (error) {
 			console.error('Error creating post:', error);
