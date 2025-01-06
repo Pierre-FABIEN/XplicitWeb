@@ -1,12 +1,30 @@
 import { cart } from './cartStore';
 import { get } from 'svelte/store';
 
-let lastSynced = Date.now();
+let lastSynced = 0;
+let isSyncing = false; // Verrou pour empêcher des appels multiples
 
 const syncCart = async () => {
 	const currentCart = get(cart);
 
+	console.log('lastModified:', currentCart.lastModified);
+	console.log('lastSynced:', lastSynced);
+
+	if (isSyncing) {
+		console.log('Sync already in progress. Skipping this call.');
+		return;
+	}
+
+	if (lastSynced === 0) {
+		// Initialisation du verrou au premier appel
+		lastSynced = currentCart.lastModified;
+		console.log('Initialized lastSynced to', lastSynced);
+		return;
+	}
+
 	if (currentCart.lastModified > lastSynced) {
+		isSyncing = true; // Active le verrou
+		console.log('Synchronizing cart...');
 		try {
 			const response = await fetch('/api/save-cart', {
 				method: 'POST',
@@ -20,15 +38,20 @@ const syncCart = async () => {
 				throw new Error('Failed to save cart');
 			}
 
-			lastSynced = Date.now();
+			// Met à jour `lastSynced` uniquement après une synchronisation réussie
+			lastSynced = currentCart.lastModified;
 		} catch (error) {
 			console.error('Failed to sync cart:', error);
+		} finally {
+			isSyncing = false; // Libère le verrou
 		}
+	} else {
+		console.log('No sync needed. Cart is already up-to-date.');
 	}
 };
 
 const startSync = () => {
-	setInterval(syncCart, 20000); // Sync every 2 seconds
+	setInterval(syncCart, 10000); // Sync toutes les 10 secondes
 };
 
 export { startSync };

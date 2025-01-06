@@ -21,7 +21,7 @@ const createCustomSchema = z.object({
 		.number()
 		.min(1, 'Quantity must be at least 1')
 		.max(100, 'Quantity must not exceed 100'),
-	message: z.string().max(500, 'Message must not exceed 500 characters')
+	userMessage: z.string().max(500, 'Message must not exceed 500 characters')
 });
 
 // Schema for updating a custom field
@@ -44,7 +44,7 @@ const updateCustomSchema = z.object({
 		.min(1, 'Quantity must be at least 1')
 		.max(100, 'Quantity must not exceed 100')
 		.optional(),
-	message: z.string().max(500, 'Message must not exceed 500 characters').optional()
+	userMessage: z.string().max(500, 'Message must not exceed 500 characters').optional()
 });
 
 // Schema for deleting a custom field

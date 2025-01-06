@@ -32,12 +32,14 @@ async function main() {
 	try {
 		// Démarrage d'une transaction pour supprimer toutes les données
 		await prisma.$transaction([
+			// Supprimer les relations dépendantes
 			prisma.blogPostTag.deleteMany(),
 			prisma.blogComment.deleteMany(),
 			prisma.blogPost.deleteMany(),
 			prisma.blogCategory.deleteMany(),
 			prisma.blogAuthor.deleteMany(),
 			prisma.blogTag.deleteMany(),
+			prisma.custom.deleteMany(), // Supprimer les personnalisations avant les OrderItem
 			prisma.orderStatusHistory.deleteMany(),
 			prisma.orderItem.deleteMany(),
 			prisma.order.deleteMany(),

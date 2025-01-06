@@ -16,8 +16,6 @@
 	} from '$lib/store/initialLoaderStore';
 	import Loader from '$lib/components/loader/Loader.svelte';
 	import { page } from '$app/stores';
-	import NavigationMenu from '$lib/components/navigation/NavigationMenu.svelte';
-	import Breadcrumb from '$lib/components/navigation/Breadcrumb.svelte';
 	import Cart from '$lib/components/cart/Cart.svelte';
 	import { setCart } from '$lib/store/Data/cartStore';
 	import { startSync } from '$lib/store/Data/cartSync';
@@ -26,21 +24,29 @@
 	import Options from '$lib/components/navigation/Options.svelte';
 
 	let { children, data } = $props();
-
+	let cartInitialized = $state(false);
 	$effect(() => {
 		const unsubscribe = page.subscribe((currentPage) => {
 			initializeLayoutState(currentPage);
 		});
 		setupNavigationEffect();
 
+		console.log(data);
+
 		setFirstOpen(true);
 		setRessourceToValide(true);
 
-		const items = data.pendingOrder;
-		if (items) {
-			setCart(items.id, items.userId, items.items, items.total);
+		if (data.user === null) {
+		} else {
+			const items = data.pendingOrder;
+
+			if (!cartInitialized) {
+				setCart(items.id, items.userId, items.items, items.total);
+				cartInitialized = true;
+			}
+
+			startSync();
 		}
-		startSync();
 
 		return unsubscribe;
 	});

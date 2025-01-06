@@ -6,10 +6,15 @@ export type OrderItem = {
 		id: string;
 		name: string;
 		price: number;
-		images: string[];
+		images: string;
 	};
 	quantity: number;
 	price: number;
+	custom: {
+		id: string;
+		image: string;
+		userMessage: string;
+	};
 };
 
 type CartState = {
@@ -20,52 +25,7 @@ type CartState = {
 	lastModified: number;
 };
 
-function isBrowser(): boolean {
-	return typeof window !== 'undefined';
-}
-
-function loadCartFromLocalStorage(): CartState {
-	if (!isBrowser()) {
-		// Retourner un panier vide si ce n'est pas le navigateur
-		return {
-			id: '',
-			userId: '',
-			items: [],
-			total: 0,
-			lastModified: Date.now()
-		};
-	}
-
-	const savedCart = localStorage.getItem('cart');
-	if (savedCart) {
-		try {
-			return JSON.parse(savedCart);
-		} catch {
-			return {
-				id: '',
-				userId: '',
-				items: [],
-				total: 0,
-				lastModified: Date.now()
-			};
-		}
-	}
-	return {
-		id: '',
-		userId: '',
-		items: [],
-		total: 0,
-		lastModified: Date.now()
-	};
-}
-
-export const cart = writable<CartState>(loadCartFromLocalStorage());
-
-function saveCartToLocalStorage(currentCart: CartState) {
-	if (isBrowser() && !currentCart.userId) {
-		localStorage.setItem('cart', JSON.stringify(currentCart));
-	}
-}
+export const cart = writable<CartState>();
 
 export const setCart = (id: string, userId: string, items: OrderItem[], total: number) => {
 	cart.set({
@@ -78,18 +38,40 @@ export const setCart = (id: string, userId: string, items: OrderItem[], total: n
 };
 
 export const addToCart = (product: OrderItem) => {
+	console.log(product, 'product addToCart');
+
 	cart.update((currentCart) => {
+		// Assurez-vous que `items` est un tableau
 		if (!Array.isArray(currentCart.items)) {
 			currentCart.items = [];
 		}
-		const itemIndex = currentCart.items.findIndex((item) => item.product.id === product.product.id);
+
+		// Vérifiez si le produit avec la même personnalisation existe
+		const itemIndex = currentCart.items.findIndex(
+			(item) =>
+				item.product.id === product.product.id &&
+				item.custom?.userMessage === product.custom?.userMessage
+		);
+
 		if (itemIndex !== -1) {
-			currentCart.items[itemIndex].quantity += 1;
+			// Met à jour la quantité si le produit existe
+			currentCart.items[itemIndex].quantity += product.quantity;
 		} else {
-			currentCart.items.push(product);
+			// Ajoute un nouvel article
+			currentCart.items.push({
+				...product,
+				product: {
+					...product.product,
+					images: Array.isArray(product.product.images)
+						? product.product.images
+						: [product.product.images] // Force un tableau
+				}
+			});
 		}
+
+		// Recalcule le total
 		currentCart.total = currentCart.items.reduce(
-			(sum, item) => sum + item.price * item.quantity,
+			(sum, item) => sum + item.product.price * item.quantity,
 			0
 		);
 		currentCart.lastModified = Date.now();
@@ -132,6 +114,5 @@ export const updateCartItemQuantity = (productId: string, quantity: number) => {
 };
 
 cart.subscribe((currentCart) => {
-	// Sauvegarde dans localStorage si le contexte est navigateur
-	saveCartToLocalStorage(currentCart);
+	console.log('Cart updated:', JSON.stringify(currentCart, null, 2));
 });
