@@ -5,7 +5,7 @@ import { superValidate, fail, message } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 
 import { updateBlogCategorySchema } from '$lib/schema/BlogPost/categoriesSchema';
-import { getCategoryById, updateCategory } from '$lib/prisma/BlogPost/BlogPost';
+import { getCategoryById, updateCategory } from '$lib/prisma/blogPost/blogPost';
 
 export const load: PageServerLoad = async ({ params }) => {
 	// Récupérer la catégorie en base

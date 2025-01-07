@@ -3,7 +3,7 @@ import { superValidate, fail, message } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 
 import { createBlogTagSchema } from '$lib/schema/BlogPost/tagSchema';
-import { createTag } from '$lib/prisma/BlogPost/BlogPost';
+import { createTag } from '$lib/prisma/blogPost/blogPost';
 
 export const load: PageServerLoad = async () => {
 	const createTagForm = await superValidate(zod(createBlogTagSchema));

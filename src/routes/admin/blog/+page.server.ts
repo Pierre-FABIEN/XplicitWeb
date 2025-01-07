@@ -14,9 +14,9 @@ import {
 	getCategoryById,
 	getPostById,
 	getTagById
-} from '$lib/prisma/BlogPost/BlogPost';
-import { deletePost } from '$lib/prisma/BlogPost/BlogPost';
-import { getAllPosts } from '$lib/prisma/BlogPost/BlogPost';
+} from '$lib/prisma/blogPost/blogPost';
+import { deletePost } from '$lib/prisma/blogPost/blogPost';
+import { getAllPosts } from '$lib/prisma/blogPost/blogPost';
 import { deleteBlogCategorySchema } from '$lib/schema/BlogPost/categoriesSchema';
 import { deleteBlogTagSchema } from '$lib/schema/BlogPost/tagSchema';
 

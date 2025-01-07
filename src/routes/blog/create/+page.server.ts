@@ -1,7 +1,7 @@
 import { superValidate, message, fail } from 'sveltekit-superforms';
 import { createBlogPostSchema } from '$lib/schema/BlogPost/BlogPostSchema.js';
 import { zod } from 'sveltekit-superforms/adapters';
-import { createPost, getAllCategoriesPosts, getAllTagsPosts } from '$lib/prisma/BlogPost/BlogPost';
+import { createPost, getAllCategoriesPosts, getAllTagsPosts } from '$lib/prisma/blogPost/blogPost';
 import { upsertAuthor } from '$lib/prisma/authors/authors';
 import { createCategory } from '$lib/prisma/categories/categories';
 
