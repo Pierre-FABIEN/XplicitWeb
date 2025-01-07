@@ -5,7 +5,7 @@ import { zod } from 'sveltekit-superforms/adapters';
 
 import { createBlogPostSchema } from '$lib/schema/BlogPost/BlogPostSchema';
 
-import { createPost, getAllCategoriesPosts, getAllTagsPosts } from '$lib/prisma/BlogPost/BlogPost';
+import { createPost, getAllCategoriesPosts, getAllTagsPosts } from '$lib/prisma/BlogPost/BlogPost.js';
 
 import { slugify } from '$lib/prisma/slugify';
 

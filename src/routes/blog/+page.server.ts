@@ -1,4 +1,4 @@
-import { getAllPosts } from '$lib/prisma/BlogPost/BlogPost';
+import { getAllPosts } from '$lib/prisma/BlogPost/BlogPost.js';
 import type { PageServerLoad } from './$types';
 
 export const load = (async () => {
