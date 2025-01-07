@@ -28,7 +28,7 @@
 		{ label: '20', value: 20 }
 	]);
 
-	let itemsPerPageString = $state(String(itemsPerPage));
+	let itemsPerPageString = $state(5);
 	let sortColumn = $state('');
 	let sortDirection = $state('asc');
 	let filteredItems = $state([]);
