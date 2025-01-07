@@ -26,7 +26,6 @@ export const createPendingOrder = async (userId: string) => {
 	});
 	return { ...order, items: [] };
 };
-
 export async function updateOrderItems(orderId: string, incomingItems: any[]) {
 	console.log('--- Start updating order items (non-destructive) ---');
 	console.log(`Order ID: ${orderId}`);
@@ -51,7 +50,7 @@ export async function updateOrderItems(orderId: string, incomingItems: any[]) {
 		});
 		console.log('Existing order items:', existingOrderItems);
 
-		// On récupère leurs IDs pour savoir ensuite lesquels supprimer
+		// On récupère leurs IDs pour savoir lesquels supprimer ensuite
 		const existingOrderItemIds = existingOrderItems.map((oi) => oi.id);
 
 		// Cette liste contiendra les IDs des orderItems qu'on souhaite conserver ou créer
@@ -63,77 +62,75 @@ export async function updateOrderItems(orderId: string, incomingItems: any[]) {
 			// Vérifie si l'item est déjà en base (via l’ID)
 			const matchingExistingItem = existingOrderItems.find((oi) => oi.id === newItem.id);
 
+			// Normaliser newItem.custom comme un tableau (s'il ne l'est pas déjà)
+			const newCustomArray = Array.isArray(newItem.custom)
+				? newItem.custom
+				: newItem.custom
+					? [newItem.custom]
+					: [];
+
 			if (matchingExistingItem) {
 				// --- Mise à jour (UPDATE) d'un item existant ---
 				console.log(`Updating existing orderItem ID: ${matchingExistingItem.id}`);
 
-				// Prépare la data d’update
-				const dataToUpdate: any = {
-					quantity: newItem.quantity,
-					price: newItem.price,
-					productId: newItem.product?.id
-				};
-
-				// Gestion de la custom :
-				// - Si "newItem.custom" est un tableau (cas multi-custom)
-				//   ou un objet unique (cas single custom).
-				//   Ici, on illustre la gestion d’un seul custom (le plus courant).
-				if (newItem.custom && newItem.custom.image && newItem.custom.userMessage) {
-					// Soit on fait un upsert sur le custom existant
-					// (pour éviter de le supprimer puis le recréer).
-					// S'il y a plusieurs custom, il faudra faire une boucle ou un traitement spécifique.
-					dataToUpdate.custom = {
-						upsert: {
-							where: { id: newItem.custom.id ?? '' },
-							update: {
-								image: newItem.custom.image,
-								userMessage: newItem.custom.userMessage
-							},
-							create: {
-								image: newItem.custom.image,
-								userMessage: newItem.custom.userMessage
-							}
-						}
-					};
-				} else {
-					// Si pas de nouveau custom envoyé, on ne touche pas à l'existant
-					// (On pourrait le supprimer si la logique métier l’exige, à adapter).
-				}
-
+				// (A) Mettre à jour l'orderItem
 				const updatedItem = await prisma.orderItem.update({
 					where: { id: matchingExistingItem.id },
-					data: dataToUpdate,
+					data: {
+						quantity: newItem.quantity,
+						price: newItem.price,
+						productId: newItem.product?.id
+					},
 					include: { custom: true, product: true }
 				});
 				console.log('Updated orderItem:', updatedItem);
+
+				// (B) Gérer la table `Custom` :
+				// On supprime tout pour cet orderItem, puis on recrée.
+				// => Méthode destructive pour `Custom`, mais plus simple.
+				await prisma.custom.deleteMany({
+					where: { orderItemId: matchingExistingItem.id }
+				});
+
+				if (newCustomArray.length > 0) {
+					// Créer toutes les entrées custom en même temps
+					const createdCustoms = await prisma.custom.createMany({
+						data: newCustomArray.map((c) => ({
+							image: c.image,
+							userMessage: c.userMessage,
+							orderItemId: matchingExistingItem.id
+						}))
+					});
+					console.log('Created/updated custom entries:', createdCustoms);
+				}
 
 				keptOrCreatedIds.push(matchingExistingItem.id);
 			} else {
 				// --- Création (CREATE) d'un nouvel item ---
 				console.log('Creating new order item (no matching ID found)');
 
-				const dataToCreate: any = {
-					orderId,
-					productId: newItem.product?.id,
-					quantity: newItem.quantity,
-					price: newItem.price
-				};
-
-				// Gestion de la custom en création
-				if (newItem.custom && newItem.custom.image && newItem.custom.userMessage) {
-					dataToCreate.custom = {
-						create: {
-							image: newItem.custom.image,
-							userMessage: newItem.custom.userMessage
-						}
-					};
-				}
-
+				// (A) Créer l'orderItem
 				const createdOrderItem = await prisma.orderItem.create({
-					data: dataToCreate,
-					include: { custom: true, product: true }
+					data: {
+						orderId,
+						productId: newItem.product?.id,
+						quantity: newItem.quantity,
+						price: newItem.price
+					}
 				});
 				console.log('Created orderItem:', createdOrderItem);
+
+				// (B) Gérer la table `Custom` pour cet orderItem fraichement créé
+				if (newCustomArray.length > 0) {
+					const createdCustoms = await prisma.custom.createMany({
+						data: newCustomArray.map((c) => ({
+							image: c.image,
+							userMessage: c.userMessage,
+							orderItemId: createdOrderItem.id
+						}))
+					});
+					console.log('Created custom entries (new item):', createdCustoms);
+				}
 
 				keptOrCreatedIds.push(createdOrderItem.id);
 			}
@@ -141,7 +138,6 @@ export async function updateOrderItems(orderId: string, incomingItems: any[]) {
 
 		// 4) Supprimer les orderItems (et leurs customs) non présents dans la nouvelle liste
 		const itemsToDelete = existingOrderItemIds.filter((id) => !keptOrCreatedIds.includes(id));
-
 		if (itemsToDelete.length > 0) {
 			console.log(`Step 4: Deleting items no longer in the list: ${itemsToDelete}`);
 
@@ -165,9 +161,7 @@ export async function updateOrderItems(orderId: string, incomingItems: any[]) {
 
 		// 5) Recalculer le total
 		console.log('Step 5: Calculating new total...');
-		const allItems = await prisma.orderItem.findMany({
-			where: { orderId }
-		});
+		const allItems = await prisma.orderItem.findMany({ where: { orderId } });
 		const total = allItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
 		console.log(`New total calculated: ${total}`);
 
