@@ -2,8 +2,39 @@
 	import '@fontsource-variable/raleway';
 	import * as Card from '$shadcn/card/index.js';
 	import * as Carousel from '$shadcn/carousel/index.js';
+	import { textureStore } from '$lib/store/textureStore';
+	import Button from '$lib/components/shadcn/ui/button/button.svelte';
+	import { addToCart } from '$lib/store/Data/cartStore';
 
 	let { data } = $props();
+
+	// Fonction pour ajouter un produit au panier
+	const addCart = (productId: string) => {
+		// Trouve le produit correspondant
+		const item = data.Products.find((product) => product.id === productId);
+
+		if (!item) {
+			console.error(`Produit introuvable pour l'id: ${productId}`);
+			return;
+		}
+
+		// Crée un objet structuré pour le panier
+		const result = {
+			id: crypto.randomUUID(), // Identifiant unique pour l'article
+			quantity: 1, // Par défaut, ajoute 1 unité
+			price: item.price,
+			product: {
+				id: item.id,
+				name: item.name,
+				price: item.price,
+				images: item.images[0] // Première image du produit
+			}
+		};
+
+		// Ajoute l'article au panier
+		addToCart(result);
+		console.log('Produit ajouté au panier :', result);
+	};
 </script>
 
 <div class="h-[100vh] absolute left-0 top-0 ccc">
@@ -21,6 +52,9 @@
 						<Card.Root
 							style="border-color: {product.colorProduct}"
 							class="bg-transparent backdrop-blur-3xl shadow-xl border border-[#ffffff88] rounded-[16px] flex justify-end items-center p-2 space-x-4"
+							onmouseenter={() => {
+								textureStore.set(product.images[0]);
+							}}
 						>
 							<Card.Content
 								class="w-[400px] h-[200px] flex flex-col items-center justify-center p-6 space-y-4"
@@ -39,7 +73,11 @@
 								</p>
 
 								<!-- Prix -->
-								<p class="text-lg font-medium text-indigo-600">{product.price} €</p>
+								<div class="rcb w-[100%]">
+									<p class="text-lg font-medium text-indigo-600">{product.price} €</p>
+
+									<Button onclick={() => addCart(product.id)}>Acheter</Button>
+								</div>
 							</Card.Content>
 						</Card.Root>
 					</Carousel.Item>

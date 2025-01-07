@@ -10,7 +10,7 @@ export type OrderItem = {
 	};
 	quantity: number;
 	price: number;
-	custom: {
+	custom?: {
 		id: string;
 		image: string;
 		userMessage: string;
