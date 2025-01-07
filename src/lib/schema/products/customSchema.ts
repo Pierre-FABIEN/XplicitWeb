@@ -20,7 +20,7 @@ const createCustomSchema = z.object({
 	quantity: z
 		.number()
 		.min(1, 'Quantity must be at least 1')
-		.max(100, 'Quantity must not exceed 100'),
+		.max(10000, 'Quantity must not exceed 10000'),
 	userMessage: z.string().max(500, 'Message must not exceed 500 characters')
 });
 

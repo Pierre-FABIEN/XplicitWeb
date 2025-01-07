@@ -7,6 +7,7 @@
 	import * as Sheet from '$shadcn/sheet/index.js';
 	import { Trash } from 'lucide-svelte';
 	import { ShoppingCart } from 'lucide-svelte';
+	import { toast } from 'svelte-sonner';
 
 	let { data } = $props();
 	const user = data?.user ?? null;
@@ -22,7 +23,7 @@
 		if (product && quantity <= Math.min(product.stock, 10)) {
 			updateCartItemQuantity(productId, quantity);
 		} else {
-			alert('Selected quantity exceeds available stock or the maximum limit of 10.');
+			toast.error('Quantité maximale atteinte');
 		}
 	}
 
@@ -79,15 +80,16 @@
 									</h3>
 									<p class="text-gray-600">${item.product.price.toFixed(1)}€</p>
 									<div>
-										<select
-											class="border p-2 rounded"
-											onchange={(e) => changeQuantity(item.product.id, parseInt(e.target.value))}
-											bind:value={item.quantity}
-										>
-											{#each createQuantityOptions(item.product.stock) as option}
-												<option value={option.value}>{option.label}</option>
-											{/each}
-										</select>
+										<div>
+											<input
+												type="number"
+												class="border p-2 rounded w-[60px]"
+												bind:value={item.quantity}
+												oninput={(e) => changeQuantity(item.product.id, parseInt(e.target.value))}
+												min="1"
+												max={item.product.stock}
+											/>
+										</div>
 									</div>
 								</div>
 								<div class="flex flex-col items-end">
