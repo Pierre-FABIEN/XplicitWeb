@@ -103,8 +103,8 @@
 <Camera />
 
 <!-- Ombres de contact et douces pour un rendu réaliste -->
-<ContactShadows opacity={1} scale={10} blur={1.1} far={15} resolution={556} color="#000000" />
-<SoftShadows focus={30} size={4} samples={30} />
+<!-- <ContactShadows opacity={1} scale={10} blur={1.1} far={15} resolution={556} color="#000000" />
+<SoftShadows focus={30} size={4} samples={30} /> -->
 
 <!-- Modèle avec rotation animée -->
 <Float
