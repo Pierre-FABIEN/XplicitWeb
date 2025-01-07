@@ -5,7 +5,7 @@ import {
 	createPost,
 	getAllCategoriesPosts,
 	getAllTagsPosts
-} from '$lib/prisma/BlogPost/BlogPost.js.js';
+} from '$lib/prisma/BlogPost/BlogPost.js';
 import { upsertAuthor } from '$lib/prisma/authors/authors';
 import { createCategory } from '$lib/prisma/categories/categories';
 
