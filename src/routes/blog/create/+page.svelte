@@ -15,14 +15,14 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
-	import { createPostSchema } from '$lib/schema/BlogPost/articleSchema.js';
+	import { createBlogPostSchema } from '$lib/schema/BlogPost/BlogPostSchema';
 
 	// Initialisation des données via $props
 	let { data } = $props();
 
 	// Formulaire géré avec superForm
 	const createPostForm = superForm(data.form, {
-		validators: zodClient(createPostSchema),
+		validators: zodClient(createBlogPostSchema),
 		id: 'createPostForm'
 	});
 

@@ -1,14 +1,18 @@
 import { superValidate, message, fail } from 'sveltekit-superforms';
-import { createPostSchema } from '$lib/schema/BlogPost/BlogPostSchema.js';
+import { createBlogPostSchema } from '$lib/schema/BlogPost/BlogPostSchema.js';
 import { zod } from 'sveltekit-superforms/adapters';
-import { createPost, getAllCategories, getAllTags } from '$lib/prisma/posts/posts';
+import {
+	createPost,
+	getAllCategoriesPosts,
+	getAllTagsPosts
+} from '$lib/prisma/BlogPost/BlogPost.js';
 import { upsertAuthor } from '$lib/prisma/authors/authors';
 import { createCategory } from '$lib/prisma/categories/categories';
 
 export const load = async () => {
-	const form = await superValidate(zod(createPostSchema));
-	const category = await getAllCategories();
-	const tags = await getAllTags();
+	const form = await superValidate(zod(createBlogPostSchema));
+	const category = await getAllCategoriesPosts();
+	const tags = await getAllTagsPosts();
 
 	return { form, category, tags };
 };
@@ -17,7 +21,7 @@ export const actions = {
 		const formData = await request.formData();
 
 		// Validation du formulaire
-		const form = await superValidate(formData, zod(createPostSchema));
+		const form = await superValidate(formData, zod(createBlogPostSchema));
 
 		if (!form.valid) {
 			console.error('Données invalides :', form.errors);
