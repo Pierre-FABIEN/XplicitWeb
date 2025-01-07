@@ -40,6 +40,8 @@ const syncCart = async () => {
 
 			// Met à jour `lastSynced` uniquement après une synchronisation réussie
 			lastSynced = currentCart.lastModified;
+
+			console.log(response, 'iiiiiiiiiiiiiiiiii');
 		} catch (error) {
 			console.error('Failed to sync cart:', error);
 		} finally {

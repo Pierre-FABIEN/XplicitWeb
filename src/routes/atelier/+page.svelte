@@ -33,27 +33,15 @@
 			}
 		},
 		onResult: (dataReturn) => {
-			console.log(dataReturn, 'ggggggggggggggggggg');
+			console.log(dataReturn, 'dataReturn');
+
 			const result = dataReturn.result.data.form.message.data;
 
 			if (result) {
-				addToCart({
-					id: data.pendingOrder.id,
-					product: {
-						id: result.product.id,
-						name: result.product.name,
-						price: result.product.price,
-						images: result.product.images
-					},
-					quantity: result.quantity,
-					price: result.price,
-					custom: {
-						id: result.custom.id,
-						image: result.custom.image,
-						userMessage: result.custom.userMessage
-					}
-				});
+				addToCart(result);
 			}
+
+			editModel = false;
 		}
 	});
 
@@ -72,6 +60,7 @@
 	let products = $state(data.products || []);
 
 	let showTutoriel = $state(false);
+	let editModel = $state(false);
 
 	$effect(() => {
 		if (data.user === null) {
@@ -84,7 +73,6 @@
 	// On success, if a message is returned, we can redirect or show a toast
 	$effect(() => {
 		if ($createCustomMessage === 'Custom created successfully') {
-			goto('/admin/custom/');
 			toast.success($createCustomMessage);
 		}
 	});
@@ -101,7 +89,7 @@
 
 <div class="ccc w-[100vw] absolute z-50 bottom-[-90vh] left-0">
 	<div class="rcb max-w-[800px] w-[80vw]">
-		<Sheet.Root>
+		<Sheet.Root bind:open={editModel}>
 			<Sheet.Trigger class={`  w-[80px] h-[80px]  ${buttonVariants({ variant: 'outline' })}`}>
 				<Tooltip.Provider>
 					<Tooltip.Root>

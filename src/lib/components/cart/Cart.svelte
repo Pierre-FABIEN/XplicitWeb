@@ -60,15 +60,23 @@
 					<div class="max-h-[500px] overflow-y-auto">
 						{#each $cart.items as item (item.id)}
 							<div class="p-4 border rounded-lg shadow-sm flex justify-between items-center mb-2">
-								{#if item.product.images && item.product.images[0]}
-									<img
-										src={item.product.images[0]}
-										alt={item.product.name}
-										class="w-20 h-20 object-cover"
-									/>
-								{/if}
+								<img
+									src={(item.custom?.length > 0 && item.custom[0].image) ||
+										(Array.isArray(item.product.images)
+											? item.product.images[0]
+											: item.product.images) ||
+										''}
+									alt={item.product.name}
+									class="w-20 h-20 object-cover"
+								/>
+
 								<div class="flex-1 mx-4">
-									<h3 class="text-lg font-semibold">{item.product.name}</h3>
+									<h3 class="text-lg font-semibold">
+										{item.product.name}
+										{#if item.custom?.length > 0}
+											<span class="text-sm font-normal text-gray-500">Custom</span>
+										{/if}
+									</h3>
 									<p class="text-gray-600">${item.product.price.toFixed(1)}€</p>
 									<div>
 										<select

@@ -41,7 +41,9 @@ export const actions: Actions = {
 						{
 							folder: 'client',
 							public_id: `product_${productId}_${image.name.split('.')[0]}`,
-							tags: [`user_${locals.userId}`]
+							tags: [`user_${locals.userId}`],
+							type: 'upload', // Assure que l'image est accessible publiquement
+							access_mode: 'public' // Définit le mode d'accès comme public
 						}
 					);
 
@@ -54,7 +56,7 @@ export const actions: Actions = {
 		}
 
 		// Serialize images for database
-		const serializedImages = JSON.stringify(uploadedImageUrls);
+		const serializedImages = uploadedImageUrls[0];
 
 		const products = await getAllProducts();
 
@@ -64,15 +66,17 @@ export const actions: Actions = {
 			price: products.find((product) => product.id === productId)?.price,
 			product: {
 				id: productId,
-				name: products.find((product) => product.id === productId)?.name,
+				name: `${products.find((product) => product.id === productId)?.name}`,
 				price: products.find((product) => product.id === productId)?.price,
 				images: products.find((product) => product.id === productId)?.images[0]
 			},
-			custom: {
-				id: crypto.randomUUID(),
-				image: serializedImages,
-				userMessage
-			}
+			custom: [
+				{
+					id: crypto.randomUUID(),
+					image: serializedImages,
+					userMessage
+				}
+			]
 		};
 		return message(form, {
 			message: 'Personnalisation ajoutée avec succès',

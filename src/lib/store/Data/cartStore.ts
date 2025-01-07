@@ -62,9 +62,7 @@ export const addToCart = (product: OrderItem) => {
 				...product,
 				product: {
 					...product.product,
-					images: Array.isArray(product.product.images)
-						? product.product.images
-						: [product.product.images] // Force un tableau
+					images: product.product.images
 				}
 			});
 		}
