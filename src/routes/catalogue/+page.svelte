@@ -5,35 +5,40 @@
 	import { textureStore } from '$lib/store/textureStore';
 	import Button from '$lib/components/shadcn/ui/button/button.svelte';
 	import { addToCart } from '$lib/store/Data/cartStore';
+	import { toast } from 'svelte-sonner';
 
 	let { data } = $props();
 
 	// Fonction pour ajouter un produit au panier
 	const addCart = (productId: string) => {
 		// Trouve le produit correspondant
-		const item = data.Products.find((product) => product.id === productId);
+		if (data.user === null) {
+			toast.error('Veuillez vous connecter pour ajouter au panier.');
+		} else {
+			const item = data.Products.find((product) => product.id === productId);
 
-		if (!item) {
-			console.error(`Produit introuvable pour l'id: ${productId}`);
-			return;
-		}
-
-		// Crée un objet structuré pour le panier
-		const result = {
-			id: crypto.randomUUID(), // Identifiant unique pour l'article
-			quantity: 1, // Par défaut, ajoute 1 unité
-			price: item.price,
-			product: {
-				id: item.id,
-				name: item.name,
-				price: item.price,
-				images: item.images[0] // Première image du produit
+			if (!item) {
+				console.error(`Produit introuvable pour l'id: ${productId}`);
+				return;
 			}
-		};
 
-		// Ajoute l'article au panier
-		addToCart(result);
-		console.log('Produit ajouté au panier :', result);
+			// Crée un objet structuré pour le panier
+			const result = {
+				id: crypto.randomUUID(), // Identifiant unique pour l'article
+				quantity: 1, // Par défaut, ajoute 1 unité
+				price: item.price,
+				product: {
+					id: item.id,
+					name: item.name,
+					price: item.price,
+					images: item.images[0] // Première image du produit
+				}
+			};
+
+			// Ajoute l'article au panier
+			addToCart(result);
+			console.log('Produit ajouté au panier :', result);
+		}
 	};
 </script>
 

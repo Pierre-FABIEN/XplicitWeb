@@ -1,4 +1,5 @@
 import { prisma } from '$lib/server';
+import cloudinary from '$lib/server/cloudinary';
 
 export const findPendingOrder = async (userId: string) => {
 	return await prisma.order.findFirst({
@@ -26,14 +27,14 @@ export const createPendingOrder = async (userId: string) => {
 	});
 	return { ...order, items: [] };
 };
+
 export async function updateOrderItems(orderId: string, incomingItems: any[]) {
 	console.log('--- Start updating order items (non-destructive) ---');
 	console.log(`Order ID: ${orderId}`);
 	console.log('New items:', JSON.stringify(incomingItems, null, 2));
 
 	try {
-		// 1) Vérifier si la commande existe
-		console.log('Step 1: Checking if the order exists...');
+		// Étape 1: Vérifier si la commande existe
 		const orderExists = await prisma.order.findUnique({
 			where: { id: orderId }
 		});
@@ -42,74 +43,56 @@ export async function updateOrderItems(orderId: string, incomingItems: any[]) {
 		}
 		console.log('Order found:', orderExists);
 
-		// 2) Récupérer tous les orderItems existants pour cette commande
-		console.log('Step 2: Retrieving existing order items...');
+		// Étape 2: Récupérer les items existants
 		const existingOrderItems = await prisma.orderItem.findMany({
 			where: { orderId },
 			include: { custom: true }
 		});
-		console.log('Existing order items:', existingOrderItems);
-
-		// On récupère leurs IDs pour savoir lesquels supprimer ensuite
 		const existingOrderItemIds = existingOrderItems.map((oi) => oi.id);
 
-		// Cette liste contiendra les IDs des orderItems qu'on souhaite conserver ou créer
+		// IDs qu'on va conserver ou créer
 		const keptOrCreatedIds: string[] = [];
 
-		// 3) Boucler sur chaque nouvel item à *upsert* (update ou create)
-		console.log('Step 3: Upserting new/updated items...');
+		// Étape 3: Boucle sur chaque item entrant (upsert)
 		for (const newItem of incomingItems) {
-			// Vérifie si l'item est déjà en base (via l’ID)
-			const matchingExistingItem = existingOrderItems.find((oi) => oi.id === newItem.id);
+			const matchingExisting = existingOrderItems.find((oi) => oi.id === newItem.id);
 
-			// Normaliser newItem.custom comme un tableau (s'il ne l'est pas déjà)
+			// Normaliser newItem.custom en tableau
 			const newCustomArray = Array.isArray(newItem.custom)
 				? newItem.custom
 				: newItem.custom
 					? [newItem.custom]
 					: [];
 
-			if (matchingExistingItem) {
-				// --- Mise à jour (UPDATE) d'un item existant ---
-				console.log(`Updating existing orderItem ID: ${matchingExistingItem.id}`);
-
-				// (A) Mettre à jour l'orderItem
-				const updatedItem = await prisma.orderItem.update({
-					where: { id: matchingExistingItem.id },
+			if (matchingExisting) {
+				// -> Mise à jour
+				await prisma.orderItem.update({
+					where: { id: matchingExisting.id },
 					data: {
 						quantity: newItem.quantity,
 						price: newItem.price,
 						productId: newItem.product?.id
-					},
-					include: { custom: true, product: true }
+					}
 				});
-				console.log('Updated orderItem:', updatedItem);
 
-				// (B) Gérer la table `Custom` :
-				// On supprime tout pour cet orderItem, puis on recrée.
-				// => Méthode destructive pour `Custom`, mais plus simple.
+				// On supprime tous les "custom" existants pour cet item, puis on recrée
 				await prisma.custom.deleteMany({
-					where: { orderItemId: matchingExistingItem.id }
+					where: { orderItemId: matchingExisting.id }
 				});
 
 				if (newCustomArray.length > 0) {
-					// Créer toutes les entrées custom en même temps
-					const createdCustoms = await prisma.custom.createMany({
+					await prisma.custom.createMany({
 						data: newCustomArray.map((c) => ({
 							image: c.image,
 							userMessage: c.userMessage,
-							orderItemId: matchingExistingItem.id
+							orderItemId: matchingExisting.id
 						}))
 					});
-					console.log('Created/updated custom entries:', createdCustoms);
 				}
 
-				keptOrCreatedIds.push(matchingExistingItem.id);
+				keptOrCreatedIds.push(matchingExisting.id);
 			} else {
-				// --- Création (CREATE) d'un nouvel item ---
-				console.log('Creating new order item (no matching ID found)');
-
-				// (A) Créer l'orderItem
+				// -> Création d'un nouvel item
 				const createdOrderItem = await prisma.orderItem.create({
 					data: {
 						orderId,
@@ -118,62 +101,67 @@ export async function updateOrderItems(orderId: string, incomingItems: any[]) {
 						price: newItem.price
 					}
 				});
-				console.log('Created orderItem:', createdOrderItem);
 
-				// (B) Gérer la table `Custom` pour cet orderItem fraichement créé
 				if (newCustomArray.length > 0) {
-					const createdCustoms = await prisma.custom.createMany({
+					await prisma.custom.createMany({
 						data: newCustomArray.map((c) => ({
 							image: c.image,
 							userMessage: c.userMessage,
 							orderItemId: createdOrderItem.id
 						}))
 					});
-					console.log('Created custom entries (new item):', createdCustoms);
 				}
 
 				keptOrCreatedIds.push(createdOrderItem.id);
 			}
 		}
 
-		// 4) Supprimer les orderItems (et leurs customs) non présents dans la nouvelle liste
+		// Étape 4: Identifier les items à supprimer
 		const itemsToDelete = existingOrderItemIds.filter((id) => !keptOrCreatedIds.includes(id));
 		if (itemsToDelete.length > 0) {
-			console.log(`Step 4: Deleting items no longer in the list: ${itemsToDelete}`);
+			console.log('Deleting items not in new list:', itemsToDelete);
 
-			// Supprimer d’abord les customs correspondants
+			// 4A) Récupérer les images associées à ces items
+			const imagesToDelete = await prisma.custom.findMany({
+				where: { orderItemId: { in: itemsToDelete } },
+				select: { image: true }
+			});
+
+			// 4B) Supprimer d’abord les customs de la base
 			await prisma.custom.deleteMany({
-				where: {
-					orderItemId: { in: itemsToDelete }
-				}
+				where: { orderItemId: { in: itemsToDelete } }
 			});
 
-			// Puis supprimer les orderItems
+			// 4C) Supprimer les orderItems de la base
 			await prisma.orderItem.deleteMany({
-				where: {
-					id: { in: itemsToDelete }
-				}
+				where: { id: { in: itemsToDelete } }
 			});
-			console.log('Deleted the items no longer needed');
+
+			console.log('Deleted old order items and their custom entries.');
+
+			// 4D) Maintenant qu'on a effectivement supprimé en base,
+			// on peut vérifier si chaque image est encore utilisée ailleurs
+			for (const { image } of imagesToDelete) {
+				if (!image) continue;
+
+				await maybeDeleteImageOnCloudinary(image);
+			}
 		} else {
 			console.log('No order items to delete - everything is kept or updated.');
 		}
 
-		// 5) Recalculer le total
-		console.log('Step 5: Calculating new total...');
+		// Étape 5: Recalculer le total
 		const allItems = await prisma.orderItem.findMany({ where: { orderId } });
 		const total = allItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
 		console.log(`New total calculated: ${total}`);
 
-		// 6) Mettre à jour le total de la commande
-		console.log('Step 6: Updating the order total...');
+		// Étape 6: Mettre à jour la commande
 		await prisma.order.update({
 			where: { id: orderId },
 			data: { total }
 		});
 
-		// 7) Récupérer la commande finale avec items + custom
-		console.log('Step 7: Fetching updated order with items + custom...');
+		// Étape 7: Retour final de la commande avec items + custom
 		const updatedOrderWithItems = await prisma.order.findUnique({
 			where: { id: orderId },
 			include: {
@@ -189,10 +177,49 @@ export async function updateOrderItems(orderId: string, incomingItems: any[]) {
 		console.log('--- Successfully updated order items ---');
 		console.log('Final updated order:', updatedOrderWithItems);
 
-		// 8) Retourner la commande mise à jour
 		return updatedOrderWithItems;
 	} catch (error) {
 		console.error('Error while updating order items (non-destructive):', error);
 		throw error;
 	}
+}
+
+/**
+ * Supprime une image sur Cloudinary si elle n'est plus utilisée.
+ */
+async function maybeDeleteImageOnCloudinary(imageUrl: string) {
+	try {
+		if (!imageUrl) return;
+
+		const publicId = extractPublicId(imageUrl);
+		console.log(`Attempting to delete image with public_id: ${publicId}`);
+
+		// Vérifier si l'image est encore utilisée
+
+		const stillInUse = await prisma.custom.findFirst({ where: { image: imageUrl } });
+		if (stillInUse) {
+			console.log(`Image still in use: ${imageUrl}, skipping deletion.`);
+			return;
+		}
+
+		// Supprimer l'image de Cloudinary
+		const result = await cloudinary.uploader.destroy(`client/${publicId}`);
+		if (result.result === 'ok') {
+			console.log(`Image ${publicId} deleted successfully.`);
+		} else {
+			console.error(`Failed to delete image ${publicId}:`, result);
+		}
+	} catch (err) {
+		console.error(`Error deleting image: ${imageUrl}`, err);
+	}
+}
+
+/**
+ * Extrait le public_id d'une URL Cloudinary.
+ */
+function extractPublicId(imageUrl: string): string {
+	if (!imageUrl) return '';
+	const parts = imageUrl.split('/');
+	const fileNameWithExtension = parts[parts.length - 1];
+	return fileNameWithExtension.split('.')[0];
 }
