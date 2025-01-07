@@ -9,7 +9,7 @@ import {
 	getAllTagsPosts,
 	getPostById,
 	updatePost
-} from '$lib/prisma/BlogPost/BlogPost.js';
+} from '$lib/prisma/BlogPost/BlogPost';
 
 export const load: PageServerLoad = async ({ params }) => {
 	const blogPost = await getPostById(params.id);

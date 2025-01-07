@@ -3,7 +3,7 @@ import { superValidate, fail, message } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 
 import { createBlogCategorySchema } from '$lib/schema/BlogPost/categoriesSchema';
-import { createCategory } from '$lib/prisma/BlogPost/BlogPost.js';
+import { createCategory } from '$lib/prisma/BlogPost/BlogPost';
 
 export const load: PageServerLoad = async () => {
 	const createCategoryForm = await superValidate(zod(createBlogCategorySchema));
