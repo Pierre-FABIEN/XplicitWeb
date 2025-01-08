@@ -68,7 +68,8 @@ export const actions: Actions = {
 				id: productId,
 				name: `${products.find((product) => product.id === productId)?.name}`,
 				price: products.find((product) => product.id === productId)?.price,
-				images: products.find((product) => product.id === productId)?.images[0]
+				images: products.find((product) => product.id === productId)?.images[0],
+				stock: products.find((product) => product.id === productId)?.stock
 			},
 			custom: [
 				{

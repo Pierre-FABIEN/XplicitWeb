@@ -31,7 +31,8 @@
 					id: item.id,
 					name: item.name,
 					price: item.price,
-					images: item.images[0] // Première image du produit
+					images: item.images[0],
+					stock: item.stock
 				}
 			};
 

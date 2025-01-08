@@ -4,22 +4,21 @@
 	import { Button } from '$shadcn/button';
 	import { Textarea } from '$shadcn/textarea';
 	import * as Sheet from '$shadcn/sheet';
-	import * as AlertDialog from '$shadcn/alert-dialog';
 	import * as Tooltip from '$shadcn/tooltip';
 	import { filesFieldProxy, superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { createCustomSchema } from '$lib/schema/products/customSchema';
-	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import { buttonVariants } from '$shadcn/button';
 	import { Box, Move3d, ShieldQuestion } from 'lucide-svelte';
 	import { textureStore } from '$lib/store/textureStore.js';
 	import Tutoriel from '$lib/components/Tutoriel/Tutoriel.svelte';
-	import { addToCart, setCart } from '$lib/store/Data/cartStore.js';
+	import { addToCart } from '$lib/store/Data/cartStore.js';
 
 	// Props passed from the page load function
 	let { data } = $props();
-	// data: { IcreateCustomSchema: ReturnTypeOfSuperValidate, products: ArrayOfProducts }
+
+	let selectedProductStock = $state(0);
 
 	// Initialize the superForm using the schema and data from the load function
 	const createCustom = superForm(data.IcreateCustomSchema, {
@@ -85,6 +84,39 @@
 			textureStore.set(url);
 		}
 	});
+
+	// Fonction qui met à jour le stock lorsqu'on sélectionne un produit
+	function updateStock(productId: string) {
+		const product = products.find((p) => p.id === productId);
+		selectedProductStock = product ? product.stock : 0;
+	}
+
+	/**
+	 * Contrôle la quantité saisie et la corrige si elle
+	 * dépasse le stock ou si elle est inférieure à 1.
+	 */
+	function handleQuantityInput(event: Event) {
+		const inputEl = event.target as HTMLInputElement;
+		const rawValue = parseInt(inputEl.value, 10);
+
+		// Si la valeur n'est pas un nombre valide, on force 1
+		if (isNaN(rawValue) || rawValue < 1) {
+			inputEl.value = '1';
+			$createCustomData.quantity = 1;
+			return;
+		}
+
+		// Si la valeur dépasse le stock, on force la valeur du stock
+		if (rawValue > selectedProductStock) {
+			inputEl.value = String(selectedProductStock);
+			$createCustomData.quantity = selectedProductStock;
+			toast.error('Quantité maximale atteinte');
+			return;
+		}
+
+		// Sinon, on met à jour la valeur saisie
+		$createCustomData.quantity = rawValue;
+	}
 </script>
 
 <div class="ccc w-[100vw] absolute z-50 bottom-[-90vh] left-0">
@@ -171,6 +203,7 @@
 								name="productId"
 								class="border rounded px-3 py-2 w-full"
 								bind:value={$createCustomData.productId}
+								onchange={(e) => updateStock(e.target.value)}
 							>
 								<option value="" disabled selected>Select a product...</option>
 								{#each products as product}
@@ -189,8 +222,9 @@
 								name="quantity"
 								type="number"
 								bind:value={$createCustomData.quantity}
-								step="1"
 								min="1"
+								max={selectedProductStock}
+								oninput={handleQuantityInput}
 							/>
 						</Form.Control>
 						<Form.FieldErrors />

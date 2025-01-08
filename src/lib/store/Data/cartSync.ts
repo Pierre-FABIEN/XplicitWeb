@@ -53,7 +53,10 @@ const syncCart = async () => {
 };
 
 const startSync = () => {
-	setInterval(syncCart, 10000); // Sync toutes les 10 secondes
+	cart.subscribe(() => {
+		// Appeler syncCart chaque fois que le store change
+		setTimeout(syncCart, 500);
+	});
 };
 
 export { startSync };

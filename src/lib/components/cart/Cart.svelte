@@ -8,6 +8,7 @@
 	import { Trash } from 'lucide-svelte';
 	import { ShoppingCart } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
+	import Input from '../shadcn/ui/input/input.svelte';
 
 	let { data } = $props();
 	const user = data?.user ?? null;
@@ -81,7 +82,7 @@
 									<p class="text-gray-600">${item.product.price.toFixed(1)}€</p>
 									<div>
 										<div>
-											<input
+											<Input
 												type="number"
 												class="border p-2 rounded w-[60px]"
 												bind:value={item.quantity}
