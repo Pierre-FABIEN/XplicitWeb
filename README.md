@@ -99,21 +99,21 @@ taskkill /PID 17192 /F
 Réaliser les stat sur la consultation
 Performances sur le server pour cache
 commencer le blog et TinyMCE
-Mettre en place Lucia
+Mettre a jour Lucia
 Mettre en place Nodemailer
 
 
 revoir la sécurité sur les données
-
-
-Continuer la cart
-
-réaliser les produits faire atention aux stock quand il sagit d'une custom (mettre une option custom dans les produit selon la selection des gouts)
 
 Sur l'admin il faut pouvoir changer le role indépendant dans un form mais aussi les adresses et pouvoir changer le mot de passe et mettre une option pour activer le M2FA
 
 S'occuper des ventes et voir ca sur le server
 
 Pouvoir faire la gestion des catégories dans les gestion produit
+et aussi dans le blog
 
 faire attention de voir si on peut fusionner le google avec l'email
+
+
+Faire une verification de la order avant d'envoyer sur stripe dans page.server
+Mettre en place le stripe sur server

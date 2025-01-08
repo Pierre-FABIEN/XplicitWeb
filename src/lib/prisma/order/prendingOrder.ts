@@ -223,3 +223,25 @@ function extractPublicId(imageUrl: string): string {
 	const fileNameWithExtension = parts[parts.length - 1];
 	return fileNameWithExtension.split('.')[0];
 }
+
+export const updateOrder = async (orderId, addressId) => {
+	return await prisma.order.update({
+		where: { id: orderId },
+		data: {
+			addressId: addressId // Ajouter l'adresse à la commande
+		}
+	});
+};
+
+export async function getOrderById(orderId: string) {
+	return await prisma.order.findUnique({
+		where: { id: orderId },
+		include: {
+			items: {
+				include: {
+					product: true
+				}
+			}
+		}
+	});
+}

@@ -21,13 +21,6 @@
 	let stripe = $state(null);
 	let selectedAddressId = $state<string | undefined>(undefined);
 
-	let quantityOptions = $state(
-		Array.from({ length: 10 }, (_, i) => i + 1).map((value) => ({
-			value,
-			label: value.toString()
-		}))
-	);
-
 	let { data } = $props();
 
 	let createPayment = superForm(data.IOrderSchema, {
@@ -91,9 +84,12 @@
 
 	// Synchroniser les données du formulaire
 	$effect(() => {
-		createPaymentData.orderId = data.pendingOrder.id;
+		console.log(createPaymentData, 'uhiuhuih');
+
+		$createPaymentData.orderId = data.pendingOrder.id;
+
 		if (selectedAddressId) {
-			createPaymentData.addressId = selectedAddressId;
+			$createPaymentData.addressId = selectedAddressId;
 		}
 	});
 
@@ -140,15 +136,22 @@
 				<div class="ccc max-h-[80vh]">
 					{#each $cart.items as item (item.id)}
 						<div class="p-4 border rounded-lg shadow-sm flex rcb w-[100%] mb-2">
-							{#if item.product.images?.[0]}
-								<img
-									src={item.product.images[0]}
-									alt={item.product.name}
-									class="w-20 h-20 object-cover mr-4"
-								/>
-							{/if}
+							<img
+								src={(item.custom?.length > 0 && item.custom[0].image) ||
+									(Array.isArray(item.product.images)
+										? item.product.images[0]
+										: item.product.images) ||
+									''}
+								alt={item.product.name}
+								class="w-20 h-20 object-cover mr-5"
+							/>
 							<div class="flex-1 clb">
-								<h3 class="text-lg font-semibold">{item.product.name}</h3>
+								<h3 class="text-lg font-semibold">
+									{item.product.name}
+									{#if item.custom?.length > 0}
+										<span class="text-sm font-normal text-gray-500">Custom</span>
+									{/if}
+								</h3>
 								<p class="text-gray-600">${item.product.price.toFixed(1)}€</p>
 								<div>
 									<Input
