@@ -49,7 +49,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		// Récupérer ou créer la commande en attente
 		let pendingOrder = await findPendingOrder(user.id);
 
-		console.log(pendingOrder, 'pendingOrderffffffffffff');
+		//console.log(pendingOrder, 'pendingOrderffffffffffff');
 
 		if (!pendingOrder) {
 			pendingOrder = await createPendingOrder(user.id);

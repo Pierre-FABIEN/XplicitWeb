@@ -4,6 +4,7 @@ import { prisma } from '$lib/server/index.js';
 import dotenv from 'dotenv';
 import { getUserIdByOrderId } from '$lib/prisma/order/prendingOrder.js';
 import { createTransactionInvalidated } from '$lib/prisma/transaction/createTransactionInvalidated.js';
+import { getAllProducts } from '$lib/prisma/products/products.js';
 
 dotenv.config();
 
@@ -54,12 +55,16 @@ export async function POST({ request }) {
 async function handleCheckoutSession(session) {
 	const orderId = session.metadata.order_id;
 
+	console.log('ℹ️ Session metadata:', session.metadata);
+
 	if (!orderId) {
 		console.error('⚠️ Order ID is missing in the session metadata');
 		return;
 	}
+	console.log(`ℹ️ Retrieved order ID: ${orderId}`);
 
 	const user = await getUserIdByOrderId(orderId);
+	console.log('ℹ️ User fetched from order ID:', user);
 
 	if (!user || !user.userId) {
 		console.error('⚠️ User ID is missing for the provided order ID');
@@ -67,10 +72,13 @@ async function handleCheckoutSession(session) {
 	}
 
 	const userId = user.userId;
+	console.log(`ℹ️ Retrieved user ID: ${userId}`);
 
 	try {
 		// Start a transaction to ensure atomicity
 		await prisma.$transaction(async (prisma) => {
+			console.log(`ℹ️ Starting transaction for order ID: ${orderId}`);
+
 			// Fetch order and user details
 			const order = await prisma.order.findUnique({
 				where: { id: orderId },
@@ -79,11 +87,14 @@ async function handleCheckoutSession(session) {
 					address: true,
 					items: {
 						include: {
-							product: true
+							product: true,
+							custom: true
 						}
 					}
 				}
 			});
+
+			console.log(`ℹ️ Order details for order ID ${orderId}:`, JSON.stringify(order, null, 2));
 
 			if (!order) {
 				throw new Error(`Order ${orderId} not found`);
@@ -93,6 +104,7 @@ async function handleCheckoutSession(session) {
 				throw new Error(`Order ${orderId} has no associated address`);
 			}
 
+			console.log('ℹ️ Preparing transaction data...');
 			const transactionData = {
 				stripePaymentId: session.id,
 				amount: session.amount_total / 100,
@@ -116,9 +128,21 @@ async function handleCheckoutSession(session) {
 					id: item.productId,
 					name: item.product.name,
 					price: item.product.price,
-					quantity: item.quantity
+					quantity: item.quantity,
+					description: item.product.description,
+					stock: item.product.stock,
+					images: item.product.images,
+					customizations: item.custom.map((custom) => ({
+						id: custom.id,
+						image: custom.image,
+						userMessage: custom.userMessage,
+						createdAt: custom.createdAt,
+						updatedAt: custom.updatedAt
+					}))
 				}))
 			};
+
+			console.log('ℹ️ Transaction data prepared:', transactionData);
 
 			// Create the transaction record
 			await prisma.transaction.create({ data: transactionData });
@@ -126,24 +150,45 @@ async function handleCheckoutSession(session) {
 
 			// Deduct the quantities from the products in stock
 			for (const item of order.items) {
-				const newStock = item.product.stock - item.quantity;
+				const product = await prisma.product.findUnique({
+					where: { id: item.productId }
+				});
+
+				const newStock = product.stock - item.quantity;
+
 				if (newStock < 0) {
 					throw new Error(`Not enough stock for product ID ${item.productId}`);
 				}
+
+				console.log(
+					`ℹ️ Updating stock for product ID ${item.productId}: ${product.stock} -> ${newStock}`
+				);
 
 				await prisma.product.update({
 					where: { id: item.productId },
 					data: { stock: newStock }
 				});
+
+				const updatedProduct = await prisma.product.findUnique({
+					where: { id: item.productId }
+				});
+				console.log(
+					`✅ Stock after update for product ID ${item.productId}: ${updatedProduct.stock}`
+				);
 			}
 
+			const updatedProduct = await getAllProducts();
+			console.log(`ℹ️ dlkfjgjdloghdxliugh ${orderId}:`, JSON.stringify(updatedProduct, null, 2));
+
 			// Delete order items
+			console.log(`ℹ️ Deleting order items for order ID ${orderId}`);
 			await prisma.orderItem.deleteMany({
 				where: { orderId: orderId }
 			});
 			console.log(`✅ Order items for order ${orderId} deleted successfully.`);
 
 			// Delete the order
+			console.log(`ℹ️ Deleting order ID ${orderId}`);
 			await prisma.order.delete({
 				where: { id: orderId }
 			});

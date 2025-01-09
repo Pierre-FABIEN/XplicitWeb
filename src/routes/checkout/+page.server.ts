@@ -14,8 +14,6 @@ dotenv.config();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const load = (async ({ locals }) => {
-	console.log(locals);
-
 	const userId = locals.user.id;
 	const IOrderSchema = await superValidate(zod(OrderSchema));
 	const addresses = await getUserAddresses(userId);
@@ -31,8 +29,6 @@ export const actions: Actions = {
 
 		const form = await superValidate(formData, zod(OrderSchema));
 
-		console.log(form, 'uojhlodfiuhjdifuh');
-
 		const orderId = form.data.orderId;
 		const addressId = form.data.addressId;
 
@@ -40,15 +36,11 @@ export const actions: Actions = {
 
 		const userId = order.userId;
 
-		console.log(order, 'order');
-
 		if (!order) {
 			return json({ error: 'Order not found' }, { status: 404 });
 		}
 
 		await updateOrder(orderId, addressId);
-
-		console.log(orderId, 'rolsdghdlkrgjh');
 
 		const lineItems = order.items.map((item) => ({
 			price_data: {
@@ -65,8 +57,8 @@ export const actions: Actions = {
 			payment_method_types: ['card'],
 			line_items: lineItems,
 			mode: 'payment',
-			success_url: `${request.headers.get('origin')}/profile`,
-			cancel_url: `${request.headers.get('origin')}/profile`,
+			success_url: `${request.headers.get('origin')}/auth`,
+			cancel_url: `${request.headers.get('origin')}/auth`,
 			metadata: {
 				order_id: orderId
 			},

@@ -92,7 +92,7 @@ netstat -ano | findstr :1000
 netstat -ano | findstr :8025
 
 taskkill /PID <PID> /F
-taskkill /PID 17192 /F
+taskkill /PID 2816 /F
 
 
 
@@ -117,3 +117,9 @@ faire attention de voir si on peut fusionner le google avec l'email
 
 Faire une verification de la order avant d'envoyer sur stripe dans page.server
 Mettre en place le stripe sur server
+regarder la cart ca ne marche pas les quantity
+
+
+
+Mettre a jour les transaction order
+faire les bordereaux et factures
