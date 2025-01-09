@@ -64,5 +64,9 @@
 				<Button type="submit">S'inscrire</Button>
 			</div>
 		</form>
+
+		<a href="/auth/login/google">
+			<Button class="w-full mt-10">Sign in with Google</Button>
+		</a>
 	</div>
 </div>

@@ -1,10 +1,10 @@
 import { json } from '@sveltejs/kit';
 import Stripe from 'stripe';
-import { prisma } from '$lib/server/index.js';
+import { prisma } from '$lib/server/index';
 import dotenv from 'dotenv';
-import { getUserIdByOrderId } from '$lib/prisma/order/prendingOrder.js';
-import { createTransactionInvalidated } from '$lib/prisma/transaction/createTransactionInvalidated.js';
-import { getAllProducts } from '$lib/prisma/products/products.js';
+import { getUserIdByOrderId } from '$lib/prisma/order/prendingOrder';
+import { createTransactionInvalidated } from '$lib/prisma/transaction/createTransactionInvalidated';
+import { getAllProducts } from '$lib/prisma/products/products';
 
 dotenv.config();
 
