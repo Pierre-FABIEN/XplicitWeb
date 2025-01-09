@@ -1,4 +1,4 @@
-import prisma from '$server';
+import { prisma } from '$lib/server';
 
 export const createTransactionInvalidated = async (
 	transactionInvalidated: any,
