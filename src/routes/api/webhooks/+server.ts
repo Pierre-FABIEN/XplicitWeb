@@ -28,27 +28,28 @@ export async function POST({ request }) {
 	switch (event.type) {
 		case 'checkout.session.completed':
 			const session = event.data.object;
-			console.log('✅ Checkout Session:', session);
-			// Fulfill the purchase
-			try {
-				await handleCheckoutSession(session);
-			} catch (error) {
-				console.error('⚠️ Error handling checkout session:', error);
-			}
+			console.log('✅ Checkout session completed:', session);
+			await handleCheckoutSession(session);
 			break;
-		case 'charge.failed':
-			const charge = event.data.object;
-			console.log('⚠️ Charge Failed:', charge);
-			try {
-				await handleChargeFailed(charge);
-			} catch (error) {
-				console.error('⚠️ Error handling charge failed:', error);
-			}
-			break;
-		default:
-			console.warn(`Unhandled event type ${event.type}`);
-	}
 
+		case 'payment_intent.succeeded':
+			const paymentIntent = event.data.object;
+			console.log('✅ Payment intent succeeded:', paymentIntent);
+			break;
+
+		case 'charge.succeeded':
+			const charge = event.data.object;
+			console.log('✅ Charge succeeded:', charge);
+			break;
+
+		case 'charge.failed':
+			const failedCharge = event.data.object;
+			console.log('⚠️ Charge failed:', failedCharge);
+			break;
+
+		default:
+			console.warn(`⚠️ Unhandled event type: ${event.type}`);
+	}
 	return json({ received: true }, { status: 200 });
 }
 
