@@ -4,6 +4,9 @@
 	import Modele from './components/Modele.svelte';
 	import Lights from './components/Lights/index.svelte';
 	import Camera from './components/Camera.svelte';
+	import { MediaQuery } from 'svelte/reactivity';
+
+	const large = new MediaQuery('min-width: 736px');
 
 	// État réactif pour la rotation actuelle et cible
 	let rotation = $state({ x: 0, y: 0 });
@@ -103,8 +106,13 @@
 <Camera />
 
 <!-- Ombres de contact et douces pour un rendu réaliste -->
-<!-- <ContactShadows opacity={1} scale={10} blur={1.1} far={15} resolution={556} color="#000000" />
-<SoftShadows focus={30} size={4} samples={30} /> -->
+{#if large.current}
+	<!-- Ombres de contact pour un rendu réaliste -->
+	<ContactShadows opacity={1} scale={10} blur={1.1} far={15} resolution={556} color="#000000" />
+
+	<!-- Ombres douces pour un éclairage naturel -->
+	<SoftShadows focus={30} size={4} samples={30} />
+{/if}
 
 <!-- Modèle avec rotation animée -->
 <Float

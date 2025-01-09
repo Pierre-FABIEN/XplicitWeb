@@ -18,8 +18,6 @@
 	// Props passed from the page load function
 	let { data } = $props();
 
-	let selectedProductStock = $state(0);
-
 	// Initialize the superForm using the schema and data from the load function
 	const createCustom = superForm(data.IcreateCustomSchema, {
 		validators: zodClient(createCustomSchema),
@@ -32,8 +30,6 @@
 			}
 		},
 		onResult: (dataReturn) => {
-			console.log(dataReturn, 'dataReturn');
-
 			const result = dataReturn.result.data.form.message.data;
 
 			if (result) {
@@ -54,19 +50,34 @@
 	const fileProxy = filesFieldProxy(createCustom, 'image');
 	const { values: fileValues } = fileProxy;
 
+	let selectedProductStock = $state(0);
+
 	// We have an array of products from the load function
 	// We will allow the user to select one productId
 	let products = $state(data.products || []);
-
-	let showTutoriel = $state(false);
 	let editModel = $state(false);
 
+	let showTutoriel = $state(false);
+	let currentStep = $state(0);
+
+	const openTutoriel = () => {
+		showTutoriel = true;
+		currentStep = 0;
+	};
+
+	// Ferme le dialogue et réinitialise currentStep
+	const closeTutoriel = () => {
+		showTutoriel = false;
+		currentStep = 0;
+	};
+
 	$effect(() => {
-		if (data.user === null) {
-			showTutoriel = false;
-		} else {
-			showTutoriel = true;
-		}
+		// if (data.user === null) {
+		// 	console.log('User is not logged in');
+		// 	showTutoriel = true;
+		// } else {
+		// 	showTutoriel = false;
+		// }
 	});
 
 	// On success, if a message is returned, we can redirect or show a toast
@@ -244,11 +255,11 @@
 			</Sheet.Content>
 		</Sheet.Root>
 
-		<div class="">
-			<Button onclick={() => (showTutoriel = true)}>
+		<div>
+			<Button onclick={openTutoriel} aria-label="Ouvrir le tutoriel">
 				<ShieldQuestion style="width: 25px; height: 25px" />
 			</Button>
-			<Tutoriel {showTutoriel} />
+			<Tutoriel {showTutoriel} {currentStep} {closeTutoriel} />
 		</div>
 	</div>
 </div>

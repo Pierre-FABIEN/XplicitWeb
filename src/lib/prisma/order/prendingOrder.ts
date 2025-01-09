@@ -245,3 +245,10 @@ export async function getOrderById(orderId: string) {
 		}
 	});
 }
+
+export async function getUserIdByOrderId(orderId: string) {
+	return await prisma.order.findUnique({
+		where: { id: orderId },
+		select: { userId: true }
+	});
+}

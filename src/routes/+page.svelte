@@ -4,7 +4,7 @@
 	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { mode } from 'mode-watcher';
-	import { Power } from 'lucide-svelte';
+	import { Power, Store } from 'lucide-svelte';
 
 	let animateLines = $state(false); // Contrôle de l'animation des lignes
 

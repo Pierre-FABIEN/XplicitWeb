@@ -159,6 +159,6 @@ export const updateCartItemQuantity = (productId: string, quantity: number, cust
 };
 
 // Subscribe to cart changes (for debugging or UI updates)
-cart.subscribe((currentCart) => {
-	console.log('Cart updated:', JSON.stringify(currentCart, null, 2));
-});
+// cart.subscribe((currentCart) => {
+// 	console.log('Cart updated:', JSON.stringify(currentCart, null, 2));
+// });

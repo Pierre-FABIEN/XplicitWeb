@@ -27,15 +27,6 @@
 			toast.error('Quantité maximale atteinte');
 		}
 	}
-
-	// Crée les options de quantité basées sur le stock disponible et une limite maximale de 10
-	function createQuantityOptions(stock: number) {
-		const maxQuantity = Math.min(stock, 10);
-		return Array.from({ length: maxQuantity }, (_, i) => i + 1).map((value) => ({
-			value,
-			label: value.toString()
-		}));
-	}
 </script>
 
 <div class="cartButton relative w-70 h-70 mx-7 ccc">
@@ -85,7 +76,7 @@
 											<Input
 												type="number"
 												class="border p-2 rounded w-[60px]"
-												bind:value={item.quantity}
+												value={item.quantity}
 												oninput={(e) => changeQuantity(item.product.id, parseInt(e.target.value))}
 												min="1"
 												max={item.product.stock}

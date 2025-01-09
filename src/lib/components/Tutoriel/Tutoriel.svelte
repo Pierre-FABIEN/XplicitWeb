@@ -1,19 +1,7 @@
 <script>
 	import * as AlertDialog from '$shadcn/alert-dialog';
 
-	let { showTutoriel } = $props();
-	let currentStep = $state(0);
-
-	// Synchronise showTutoriel avec currentStep
-	$effect(() => {
-		showTutoriel = currentStep !== -1;
-	});
-
-	// Ferme le dialogue et réinitialise currentStep
-	function closeDialog() {
-		currentStep = -1;
-		showTutoriel = false;
-	}
+	let { showTutoriel, currentStep, closeTutoriel } = $props();
 
 	const tutorialSteps = [
 		{
@@ -56,13 +44,16 @@
 			>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel onclick={closeDialog}>Cancel</AlertDialog.Cancel>
+			<AlertDialog.Action onclick={closeTutoriel}>Fermer</AlertDialog.Action>
+			{#if currentStep > 0}
+				<AlertDialog.Action onclick={() => (currentStep -= 1)}>Précédent</AlertDialog.Action>
+			{/if}
 			{#if currentStep < tutorialSteps.length - 1}
 				<AlertDialog.Action onclick={() => (currentStep += 1)}>
 					{tutorialSteps[currentStep]?.actionText}
 				</AlertDialog.Action>
 			{:else}
-				<AlertDialog.Action onclick={closeDialog}>Terminé</AlertDialog.Action>
+				<AlertDialog.Action onclick={closeTutoriel}>Terminé</AlertDialog.Action>
 			{/if}
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
