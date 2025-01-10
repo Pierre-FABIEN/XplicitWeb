@@ -107,7 +107,6 @@ revoir la sécurité sur les données
 
 Sur l'admin il faut pouvoir changer le role indépendant dans un form mais aussi les adresses et pouvoir changer le mot de passe et mettre une option pour activer le M2FA
 
-S'occuper des ventes et voir ca sur le server
 
 Pouvoir faire la gestion des catégories dans les gestion produit
 et aussi dans le blog
@@ -116,10 +115,48 @@ faire attention de voir si on peut fusionner le google avec l'email
 
 
 Faire une verification de la order avant d'envoyer sur stripe dans page.server
-Mettre en place le stripe sur server
-regarder la cart ca ne marche pas les quantity
+
 
 
 
 Mettre a jour les transaction order
 faire les bordereaux et factures
+
+
+
+
+quantité pour les customs: 
+24 packs de 24 canettes (576 unités) : 0,99 € HT/unité (condition EXW, hors frais de livraison).
+Tarifs dégressifs selon volume :
+
+1/4 de palette : 30 packs (720 unités).
+1/2 palette : 60 packs (1 440 unités).
+1 palette : 120 packs (2 880 unités).
+3 palettes : 360 packs (8 640 unités).
+(Pour les tarifs exacts, veuillez vous référer à la fiche tarifaire jointe.)
+
+
+
+mettre dans le tuto et dans la selection custom le delais de livraisons
+Délai de fabrication :
+44 jours après validation du visuel.
+30 jours avec option prioritaire (supplément : 99 €/ordre prioritaire).
+
+sur la custom pas de frais de livraison(prix a fournir livraison )
+Sur les natif réalise une req api boxtal pour donner un prix de livraison
+impossible de réaliser une commande custom et native 
+
+
+sur toute commande rajouter 5.5% (tva). sur la cart réaliser sur l'ensemble de la commande une addition de 5.5% (hors livraison)
+sur la page checkout faire un appel API boxtal a partir de la selection de l'adresse.
+
+ON NE PEUT PAS MELANGER LES COMMANDE CUSTOM ET NATIVE
+
+POUR CUSTOM PRECISER LES DELAIS DE LIVRAISONS ET QUE LES TARIFS COMPRENNENT BAT ET LIVRAISONS COMPRISES
+
+
+
+
+
+
+

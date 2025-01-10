@@ -41,7 +41,7 @@
 			const items = data.pendingOrder;
 
 			if (!cartInitialized) {
-				setCart(items.id, items.userId, items.items, items.total);
+				setCart(items.id, items.userId, items.items, items.subtotal, items.tax, items.total);
 				cartInitialized = true;
 			}
 

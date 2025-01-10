@@ -121,44 +121,36 @@ export async function updateOrderItems(orderId: string, incomingItems: any[]) {
 		if (itemsToDelete.length > 0) {
 			console.log('Deleting items not in new list:', itemsToDelete);
 
-			// 4A) Récupérer les images associées à ces items
-			const imagesToDelete = await prisma.custom.findMany({
-				where: { orderItemId: { in: itemsToDelete } },
-				select: { image: true }
-			});
-
-			// 4B) Supprimer d’abord les customs de la base
+			// 4A) Supprimer les customs de la base
 			await prisma.custom.deleteMany({
 				where: { orderItemId: { in: itemsToDelete } }
 			});
 
-			// 4C) Supprimer les orderItems de la base
+			// 4B) Supprimer les orderItems de la base
 			await prisma.orderItem.deleteMany({
 				where: { id: { in: itemsToDelete } }
 			});
 
 			console.log('Deleted old order items and their custom entries.');
-
-			// 4D) Maintenant qu'on a effectivement supprimé en base,
-			// on peut vérifier si chaque image est encore utilisée ailleurs
-			for (const { image } of imagesToDelete) {
-				if (!image) continue;
-
-				await maybeDeleteImageOnCloudinary(image);
-			}
 		} else {
 			console.log('No order items to delete - everything is kept or updated.');
 		}
 
-		// Étape 5: Recalculer le total
+		// Étape 5: Recalculer les totaux
 		const allItems = await prisma.orderItem.findMany({ where: { orderId } });
-		const total = allItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
+
+		const subtotal = allItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
+		const tax = parseFloat((subtotal * 0.055).toFixed(2)); // TVA de 5,5%
+		const total = parseFloat((subtotal + tax).toFixed(2));
+
+		console.log(`New subtotal calculated: ${subtotal}`);
+		console.log(`New tax calculated: ${tax}`);
 		console.log(`New total calculated: ${total}`);
 
 		// Étape 6: Mettre à jour la commande
 		await prisma.order.update({
 			where: { id: orderId },
-			data: { total }
+			data: { subtotal, tax, total }
 		});
 
 		// Étape 7: Retour final de la commande avec items + custom

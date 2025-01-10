@@ -96,37 +96,20 @@
 		}
 	});
 
-	// Fonction qui met à jour le stock lorsqu'on sélectionne un produit
-	function updateStock(productId: string) {
-		const product = products.find((p) => p.id === productId);
-		selectedProductStock = product ? product.stock : 0;
-	}
+	let quantityOptions = $state([
+		{ label: '24 packs de 24 canettes (576 unités)', value: 576 },
+		{ label: '1/4 de palette : 30 packs (720 unités)', value: 720 },
+		{ label: '1/2 palette : 60 packs (1 440 unités)', value: 1440 },
+		{ label: '1 palette : 120 packs (2 880 unités)', value: 2880 },
+		{ label: '3 palettes : 360 packs (8 640 unités)', value: 8640 }
+	]);
 
-	/**
-	 * Contrôle la quantité saisie et la corrige si elle
-	 * dépasse le stock ou si elle est inférieure à 1.
-	 */
-	function handleQuantityInput(event: Event) {
-		const inputEl = event.target as HTMLInputElement;
-		const rawValue = parseInt(inputEl.value, 10);
-
-		// Si la valeur n'est pas un nombre valide, on force 1
-		if (isNaN(rawValue) || rawValue < 1) {
-			inputEl.value = '1';
-			$createCustomData.quantity = 1;
-			return;
+	// Fonction pour mettre à jour la quantité basée sur l'option sélectionnée
+	function handleQuantityOptionChange(event: Event) {
+		const selectedValue = parseInt((event.target as HTMLSelectElement).value, 10);
+		if (!isNaN(selectedValue)) {
+			$createCustomData.quantity = selectedValue;
 		}
-
-		// Si la valeur dépasse le stock, on force la valeur du stock
-		if (rawValue > selectedProductStock) {
-			inputEl.value = String(selectedProductStock);
-			$createCustomData.quantity = selectedProductStock;
-			toast.error('Quantité maximale atteinte');
-			return;
-		}
-
-		// Sinon, on met à jour la valeur saisie
-		$createCustomData.quantity = rawValue;
 	}
 </script>
 
@@ -214,7 +197,6 @@
 								name="productId"
 								class="border rounded px-3 py-2 w-full"
 								bind:value={$createCustomData.productId}
-								onchange={(e) => updateStock(e.target.value)}
 							>
 								<option value="" disabled selected>Select a product...</option>
 								{#each products as product}
@@ -225,18 +207,19 @@
 						<Form.FieldErrors />
 					</Form.Field>
 
-					<!-- Quantity field -->
 					<Form.Field name="quantity" form={createCustom}>
 						<Form.Control>
-							<Form.Label>Quantity</Form.Label>
-							<Input
+							<Form.Label>Special Quantity Options</Form.Label>
+							<select
 								name="quantity"
-								type="number"
-								bind:value={$createCustomData.quantity}
-								min="1"
-								max={selectedProductStock}
-								oninput={handleQuantityInput}
-							/>
+								class="border rounded px-3 py-2 w-full"
+								onchange={handleQuantityOptionChange}
+							>
+								<option value="" disabled selected>Select a quantity option...</option>
+								{#each quantityOptions as option}
+									<option value={option.value}>{option.label}</option>
+								{/each}
+							</select>
 						</Form.Control>
 						<Form.FieldErrors />
 					</Form.Field>

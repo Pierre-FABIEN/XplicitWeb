@@ -1,3 +1,5 @@
+<!-- src/lib/components/Cart/Cart.svelte -->
+
 <script lang="ts">
 	import '@fontsource-variable/open-sans';
 	import '@fontsource-variable/raleway';
@@ -13,18 +15,32 @@
 	let { data } = $props();
 	const user = data?.user ?? null;
 
-	// Gère la suppression d'un article du panier
-	function handleRemoveFromCart(productId: string) {
-		removeFromCart(productId);
+	/**
+	 * Handle the removal of an item from the cart.
+	 *
+	 * @param productId - The ID of the product to remove
+	 * @param customId - Optional custom ID to remove a specific custom item
+	 */
+	function handleRemoveFromCart(productId: string, customId?: string) {
+		removeFromCart(productId, customId);
 	}
 
-	// Met à jour la quantité d'un article
-	function changeQuantity(productId: string, quantity: number) {
-		const product = $cart.items.find((item) => item.product.id === productId)?.product;
+	/**
+	 * Handle the change in quantity for a cart item.
+	 *
+	 * @param productId - The ID of the product to update
+	 * @param quantity - The new quantity
+	 * @param customId - Optional custom ID to update a specific custom item
+	 */
+	function changeQuantity(productId: string, quantity: number, customId?: string) {
+		const product = $cart.items.find(
+			(item) => item.product.id === productId && (customId ? item.custom?.id === customId : true)
+		)?.product;
 		if (product && quantity <= Math.min(product.stock, 10)) {
-			updateCartItemQuantity(productId, quantity);
+			// Assuming max 10 for demonstration
+			updateCartItemQuantity(productId, quantity, customId);
 		} else {
-			toast.error('Quantité maximale atteinte');
+			toast.error('Quantité maximale atteinte ou stock insuffisant.');
 		}
 	}
 </script>
@@ -54,7 +70,7 @@
 						{#each $cart.items as item (item.id)}
 							<div class="p-4 border rounded-lg shadow-sm flex justify-between items-center mb-2">
 								<img
-									src={(item.custom?.length > 0 && item.custom[0].image) ||
+									src={item.custom?.image ||
 										(Array.isArray(item.product.images)
 											? item.product.images[0]
 											: item.product.images) ||
@@ -66,18 +82,23 @@
 								<div class="flex-1 mx-4">
 									<h3 class="text-lg font-semibold">
 										{item.product.name}
-										{#if item.custom?.length > 0}
+										{#if item.custom}
 											<span class="text-sm font-normal text-gray-500">Custom</span>
 										{/if}
 									</h3>
-									<p class="text-gray-600">${item.product.price.toFixed(1)}€</p>
+									<p class="text-gray-600">${item.product.price.toFixed(2)}€</p>
 									<div>
 										<div>
 											<Input
 												type="number"
 												class="border p-2 rounded w-[60px]"
 												value={item.quantity}
-												oninput={(e) => changeQuantity(item.product.id, parseInt(e.target.value))}
+												oninput={(e) =>
+													changeQuantity(
+														item.product.id,
+														parseInt(e.target.value),
+														item.custom?.id
+													)}
 												min="1"
 												max={item.product.stock}
 											/>
@@ -86,10 +107,10 @@
 								</div>
 								<div class="flex flex-col items-end">
 									<p class="text-lg font-semibold">
-										{(item.price * item.quantity).toFixed(1)}€
+										{(item.price * item.quantity).toFixed(2)}€
 									</p>
 									<button
-										onclick={() => handleRemoveFromCart(item.product.id)}
+										onclick={() => handleRemoveFromCart(item.product.id, item.custom?.id)}
 										class="text-red-600 hover:text-red-800"
 									>
 										<Trash />
@@ -99,11 +120,28 @@
 						{/each}
 					</div>
 					<div class="mt-4 border-t pt-4">
-						<div class="flex justify-between">
-							<span class="text-xl font-semibold">Total:</span>
-							<span class="text-xl font-semibold">
-								{$cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(1)}€
-							</span>
+						<div class="mt-4 border-t pt-4">
+							<!-- Subtotal -->
+							<div class="flex justify-between">
+								<span class="text-lg">Subtotal:</span>
+								<span class="text-lg">
+									${$cart.subtotal?.toFixed(2) || '0.00'}€
+								</span>
+							</div>
+							<!-- Tax (TVA) -->
+							<div class="flex justify-between mt-2">
+								<span class="text-lg">TVA (5,5%):</span>
+								<span class="text-lg">
+									${$cart.tax?.toFixed(2) || '0.00'}€
+								</span>
+							</div>
+							<!-- Total -->
+							<div class="flex justify-between mt-2">
+								<span class="text-xl font-semibold">Total:</span>
+								<span class="text-xl font-semibold">
+									${$cart.total?.toFixed(2) || '0.00'}€
+								</span>
+							</div>
 						</div>
 					</div>
 					<Button>
@@ -114,12 +152,12 @@
 				{/if}
 
 				{#if user}
-					<!-- Si l'utilisateur est connecté -->
+					<!-- If the user is logged in -->
 					<Button>
 						<a href="/auth">Mes paramètres</a>
 					</Button>
 				{:else}
-					<!-- Si l'utilisateur n'est pas connecté -->
+					<!-- If the user is not logged in -->
 					<div class="text-center mt-4">
 						<p class=" mb-2">
 							Veuillez vous <a href="/auth/login" class="text-blue-500 underline">connecter</a>

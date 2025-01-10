@@ -93,6 +93,8 @@ model Order {
   id            String            @id @default(auto()) @map("_id") @db.ObjectId
   userId        String            @db.ObjectId
   addressId     String?           @db.ObjectId  
+  subtotal      Float             @default(0) // Nouveau champ pour le sous-total
+  tax           Float             @default(0) // Nouveau champ pour la TVA
   total         Float             @default(0)
   status        OrderStatus       @default(PENDING)
   createdAt     DateTime          @default(now())
@@ -105,6 +107,7 @@ model Order {
 
   @@map("orders")
 }
+
 
 model OrderItem {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
