@@ -220,38 +220,56 @@ export const removeFromCart = (productId: string, customId?: string) => {
 export const updateCartItemQuantity = (productId: string, quantity: number, customId?: string) => {
 	cart.update((currentCart) => {
 		const itemIndex = currentCart.items.findIndex(
-			(item) => item.product.id === productId && (!customId || item.custom?.id === customId)
+			(item) =>
+				item.product.id === productId && // Vérifie le Product ID
+				(!customId || item.custom?.some((custom) => custom.id === customId)) // Vérifie le Custom ID dans le tableau
 		);
 
-		if (itemIndex !== -1) {
-			// Calculate total quantity in the cart for this product (excluding this item)
-			const otherItemsQuantity = currentCart.items
-				.filter((item, index) => index !== itemIndex && item.product.id === productId)
-				.reduce((sum, item) => sum + item.quantity, 0);
-
-			// Check available stock for this product
-			const maxAvailable = currentCart.items[itemIndex].product.stock - otherItemsQuantity;
-
-			// Update quantity, respecting stock limits
-			currentCart.items[itemIndex].quantity = Math.min(quantity, maxAvailable);
+		if (itemIndex === -1) {
+			console.warn('Item not found in cart for Product ID:', productId, 'and Custom ID:', customId);
+			return currentCart; // Pas de mise à jour si l'élément n'est pas trouvé
 		}
 
-		// Recalculate subtotal
+		console.log('Item found at index:', itemIndex);
+
+		// Calcul de la quantité des autres articles du même produit
+		const otherItemsQuantity = currentCart.items
+			.filter((item, index) => index !== itemIndex && item.product.id === productId)
+			.reduce((sum, item) => sum + item.quantity, 0);
+
+		console.log('Other items quantity for the same product:', otherItemsQuantity);
+
+		// Vérifie le stock disponible
+		const maxAvailable = currentCart.items[itemIndex].product.stock - otherItemsQuantity;
+
+		console.log('Maximum available stock for this item:', maxAvailable);
+
+		// Mise à jour de la quantité
+		currentCart.items[itemIndex].quantity = Math.min(quantity, maxAvailable);
+
+		// Recalcul du sous-total
 		const newSubtotal = currentCart.items.reduce(
 			(sum, item) => sum + item.product.price * item.quantity,
 			0
 		);
 
-		// Calculate tax (5.5% of subtotal)
+		console.log('New subtotal calculated:', newSubtotal);
+
+		// Calcul de la TVA
 		const newTax = parseFloat((newSubtotal * 0.055).toFixed(2));
+		console.log('New tax calculated:', newTax);
 
-		// Calculate total (subtotal + tax)
+		// Calcul du total
 		const newTotal = parseFloat((newSubtotal + newTax).toFixed(2));
+		console.log('New total calculated:', newTotal);
 
+		// Mise à jour de l'état du panier
 		currentCart.subtotal = newSubtotal;
 		currentCart.tax = newTax;
 		currentCart.total = newTotal;
 		currentCart.lastModified = Date.now();
+
+		console.log('Updated cart state:', JSON.stringify(currentCart, null, 2));
 
 		return currentCart;
 	});

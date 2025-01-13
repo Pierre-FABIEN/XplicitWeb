@@ -93,7 +93,13 @@
 		}
 	});
 
-	console.log(data);
+	let quantityOptions = $state([
+		{ label: '24 packs de 24 canettes (576 unités)', value: 576 },
+		{ label: '1/4 de palette : 30 packs (720 unités)', value: 720 },
+		{ label: '1/2 palette : 60 packs (1 440 unités)', value: 1440 },
+		{ label: '1 palette : 120 packs (2 880 unités)', value: 2880 },
+		{ label: '3 palettes : 360 packs (8 640 unités)', value: 8640 }
+	]);
 </script>
 
 <!-- Interface utilisateur -->
@@ -154,14 +160,33 @@
 								</h3>
 								<p class="text-gray-600">${item.product.price.toFixed(1)}€</p>
 								<div>
-									<Input
-										type="number"
-										class="border p-2 rounded w-[60px]"
-										bind:value={item.quantity}
-										oninput={(e) => validateQuantity(item, e)}
-										min="1"
-										max={item.product.stock}
-									/>
+									{#if item.custom?.length > 0}
+										<select
+											class="border rounded px-3 py-2 w-full"
+											onchange={(e) =>
+												changeQuantity(
+													item.product.id,
+													parseInt(e.target.value),
+													item.custom[0]?.id
+												)}
+										>
+											<option value="" disabled selected>Select a quantity option...</option>
+											{#each quantityOptions as option}
+												<option value={option.value} selected={item.quantity === option.value}>
+													{option.label}
+												</option>
+											{/each}
+										</select>
+									{:else}
+										<Input
+											type="number"
+											class="border p-2 rounded w-[60px]"
+											value={item.quantity}
+											oninput={(e) => validateQuantity(item, e)}
+											min="1"
+											max={item.product.stock}
+										/>
+									{/if}
 								</div>
 							</div>
 							<div class="text-right crb items-end h-[100%]">
@@ -179,10 +204,25 @@
 					{/each}
 				</div>
 				<div class="mt-4 p-4 border-t rounded-none">
-					<div class="flex justify-between items-center">
+					<!-- Subtotal -->
+					<div class="flex justify-between">
+						<span class="text-lg">Subtotal:</span>
+						<span class="text-lg">
+							${$cart.subtotal?.toFixed(2) || '0.00'}€
+						</span>
+					</div>
+					<!-- Tax (TVA) -->
+					<div class="flex justify-between mt-2">
+						<span class="text-lg">TVA (5,5%):</span>
+						<span class="text-lg">
+							${$cart.tax?.toFixed(2) || '0.00'}€
+						</span>
+					</div>
+					<!-- Total -->
+					<div class="flex justify-between mt-2">
 						<span class="text-xl font-semibold">Total:</span>
 						<span class="text-xl font-semibold">
-							{$cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(1)}€
+							${$cart.total?.toFixed(2) || '0.00'}€
 						</span>
 					</div>
 				</div>

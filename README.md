@@ -144,19 +144,9 @@ Délai de fabrication :
 
 sur la custom pas de frais de livraison(prix a fournir livraison )
 Sur les natif réalise une req api boxtal pour donner un prix de livraison
-impossible de réaliser une commande custom et native 
 
 
-sur toute commande rajouter 5.5% (tva). sur la cart réaliser sur l'ensemble de la commande une addition de 5.5% (hors livraison)
+
 sur la page checkout faire un appel API boxtal a partir de la selection de l'adresse.
 
-ON NE PEUT PAS MELANGER LES COMMANDE CUSTOM ET NATIVE
-
 POUR CUSTOM PRECISER LES DELAIS DE LIVRAISONS ET QUE LES TARIFS COMPRENNENT BAT ET LIVRAISONS COMPRISES
-
-
-
-
-
-
-

@@ -11,6 +11,7 @@
 	import { ShoppingCart } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import Input from '../shadcn/ui/input/input.svelte';
+	import { Select } from '../shadcn/ui/select';
 
 	let { data } = $props();
 	const user = data?.user ?? null;
@@ -33,16 +34,16 @@
 	 * @param customId - Optional custom ID to update a specific custom item
 	 */
 	function changeQuantity(productId: string, quantity: number, customId?: string) {
-		const product = $cart.items.find(
-			(item) => item.product.id === productId && (customId ? item.custom?.id === customId : true)
-		)?.product;
-		if (product && quantity <= Math.min(product.stock, 10)) {
-			// Assuming max 10 for demonstration
-			updateCartItemQuantity(productId, quantity, customId);
-		} else {
-			toast.error('Quantité maximale atteinte ou stock insuffisant.');
-		}
+		updateCartItemQuantity(productId, quantity, customId);
 	}
+
+	let quantityOptions = $state([
+		{ label: '24 packs de 24 canettes (576 unités)', value: 576 },
+		{ label: '1/4 de palette : 30 packs (720 unités)', value: 720 },
+		{ label: '1/2 palette : 60 packs (1 440 unités)', value: 1440 },
+		{ label: '1 palette : 120 packs (2 880 unités)', value: 2880 },
+		{ label: '3 palettes : 360 packs (8 640 unités)', value: 8640 }
+	]);
 </script>
 
 <div class="cartButton relative w-70 h-70 mx-7 ccc">
@@ -70,11 +71,7 @@
 						{#each $cart.items as item (item.id)}
 							<div class="p-4 border rounded-lg shadow-sm flex justify-between items-center mb-2">
 								<img
-									src={item.custom?.image ||
-										(Array.isArray(item.product.images)
-											? item.product.images[0]
-											: item.product.images) ||
-										''}
+									src={item.custom?.[0]?.image ? item.custom[0].image : item.product.images[0]}
 									alt={item.product.name}
 									class="w-20 h-20 object-cover"
 								/>
@@ -87,23 +84,36 @@
 										{/if}
 									</h3>
 									<p class="text-gray-600">${item.product.price.toFixed(2)}€</p>
-									<div>
-										<div>
-											<Input
-												type="number"
-												class="border p-2 rounded w-[60px]"
-												value={item.quantity}
-												oninput={(e) =>
-													changeQuantity(
-														item.product.id,
-														parseInt(e.target.value),
-														item.custom?.id
-													)}
-												min="1"
-												max={item.product.stock}
-											/>
-										</div>
-									</div>
+
+									{#if item.custom}
+										<!-- Custom items: Use predefined quantity options -->
+										<select
+											class="border rounded px-3 py-2 w-full"
+											onchange={(e) =>
+												changeQuantity(
+													item.product.id,
+													parseInt(e.target.value),
+													item.custom?.[0]?.id
+												)}
+										>
+											<option value="" disabled selected>Select a quantity option...</option>
+											{#each quantityOptions as option}
+												<option value={option.value} selected={item.quantity === option.value}>
+													{option.label}
+												</option>
+											{/each}
+										</select>
+									{:else}
+										<Input
+											type="number"
+											class="border p-2 rounded w-[60px]"
+											value={item.quantity}
+											oninput={(e) =>
+												changeQuantity(item.product.id, parseInt(e.target.value), item.custom?.id)}
+											min="1"
+											max={item.product.stock}
+										/>
+									{/if}
 								</div>
 								<div class="flex flex-col items-end">
 									<p class="text-lg font-semibold">
