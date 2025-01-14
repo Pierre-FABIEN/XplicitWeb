@@ -33,6 +33,17 @@
 			actionText: 'Terminé'
 		}
 	];
+
+	let currentState = $state(localStorage.getItem('disableTutorial') === 'true');
+
+	/**
+	 * Toggles the "do not show again" preference
+	 * and saves it to localStorage.
+	 */
+	function dontShowAgain() {
+		currentState = !currentState;
+		localStorage.setItem('disableTutorial', currentState ? 'true' : 'false');
+	}
 </script>
 
 <AlertDialog.Root bind:open={showTutoriel}>
@@ -44,17 +55,26 @@
 			>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Action onclick={closeTutoriel}>Fermer</AlertDialog.Action>
-			{#if currentStep > 0}
-				<AlertDialog.Action onclick={() => (currentStep -= 1)}>Précédent</AlertDialog.Action>
-			{/if}
-			{#if currentStep < tutorialSteps.length - 1}
-				<AlertDialog.Action onclick={() => (currentStep += 1)}>
-					{tutorialSteps[currentStep]?.actionText}
-				</AlertDialog.Action>
-			{:else}
-				<AlertDialog.Action onclick={closeTutoriel}>Terminé</AlertDialog.Action>
-			{/if}
+			<div class="rcb w-[100%]">
+				<!-- Checkbox with proper binding -->
+				<label>
+					<input type="checkbox" bind:checked={currentState} onclick={dontShowAgain} />
+					Ne plus afficher ce message
+				</label>
+				<div class="">
+					<AlertDialog.Action onclick={closeTutoriel}>Fermer</AlertDialog.Action>
+					{#if currentStep > 0}
+						<AlertDialog.Action onclick={() => (currentStep -= 1)}>Précédent</AlertDialog.Action>
+					{/if}
+					{#if currentStep < tutorialSteps.length - 1}
+						<AlertDialog.Action onclick={() => (currentStep += 1)}>
+							{tutorialSteps[currentStep]?.actionText}
+						</AlertDialog.Action>
+					{:else}
+						<AlertDialog.Action onclick={closeTutoriel}>Terminé</AlertDialog.Action>
+					{/if}
+				</div>
+			</div>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>

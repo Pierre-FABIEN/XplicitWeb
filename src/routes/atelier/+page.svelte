@@ -1,6 +1,5 @@
 <script lang="ts">
 	import * as Form from '$shadcn/form';
-	import { Input } from '$shadcn/input';
 	import { Button } from '$shadcn/button';
 	import { Textarea } from '$shadcn/textarea';
 	import * as Sheet from '$shadcn/sheet';
@@ -50,8 +49,6 @@
 	const fileProxy = filesFieldProxy(createCustom, 'image');
 	const { values: fileValues } = fileProxy;
 
-	let selectedProductStock = $state(0);
-
 	// We have an array of products from the load function
 	// We will allow the user to select one productId
 	let products = $state(data.products || []);
@@ -72,15 +69,13 @@
 	};
 
 	$effect(() => {
-		// if (data.user === null) {
-		// 	console.log('User is not logged in');
-		// 	showTutoriel = true;
-		// } else {
-		// 	showTutoriel = false;
-		// }
+		const disableTutorial = localStorage.getItem('disableTutorial') === 'true';
+
+		if (data.user === null && !disableTutorial) {
+			openTutoriel();
+		}
 	});
 
-	// On success, if a message is returned, we can redirect or show a toast
 	$effect(() => {
 		if ($createCustomMessage === 'Custom created successfully') {
 			toast.success($createCustomMessage);

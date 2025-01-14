@@ -71,9 +71,13 @@
 						{#each $cart.items as item (item.id)}
 							<div class="p-4 border rounded-lg shadow-sm flex justify-between items-center mb-2">
 								<img
-									src={item.custom?.[0]?.image ? item.custom[0].image : item.product.images[0]}
+									src={(item.custom?.length > 0 && item.custom[0].image) ||
+										(Array.isArray(item.product.images)
+											? item.product.images[0]
+											: item.product.images) ||
+										''}
 									alt={item.product.name}
-									class="w-20 h-20 object-cover"
+									class="w-20 h-20 object-cover mr-5"
 								/>
 
 								<div class="flex-1 mx-4">

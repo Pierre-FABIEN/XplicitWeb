@@ -100,6 +100,24 @@
 		{ label: '1 palette : 120 packs (2 880 unités)', value: 2880 },
 		{ label: '3 palettes : 360 packs (8 640 unités)', value: 8640 }
 	]);
+
+	$effect(() => {
+		const allNonCustom = $cart.items.every((item) => !item.custom || item.custom.length === 0);
+
+		if (allNonCustom) {
+			console.log('Tous les articles sont non-custom.');
+			// Appliquez le traitement spécifique ici
+			// Exemple : ajuster le prix de livraison
+			const livraisonBase = 10; // Prix de base de la livraison
+			const livraisonReduction = 0.8; // Réduction de 20% si tous les articles sont non-custom
+			const livraisonPrix = livraisonBase * livraisonReduction;
+
+			console.log(`Prix de livraison ajusté : ${livraisonPrix}€`);
+		} else {
+			console.log('La commande contient des articles custom.');
+			// Appliquez un traitement différent si nécessaire
+		}
+	});
 </script>
 
 <!-- Interface utilisateur -->

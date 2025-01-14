@@ -149,4 +149,4 @@ Sur les natif réalise une req api boxtal pour donner un prix de livraison
 
 sur la page checkout faire un appel API boxtal a partir de la selection de l'adresse.
 
-POUR CUSTOM PRECISER LES DELAIS DE LIVRAISONS ET QUE LES TARIFS COMPRENNENT BAT ET LIVRAISONS COMPRISES
+POUR CUSTOM PRECISER LES DELAIS DE LIVRAISONS ET QUE LES TARIFS COMPRENNENT BAT
