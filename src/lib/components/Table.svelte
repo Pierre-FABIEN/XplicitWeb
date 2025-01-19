@@ -14,7 +14,7 @@
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import { Plus } from 'lucide-svelte';
 
-	let { data, columns, name, actions, addLink } = $props();
+	let { data, columns, name, actions = null, addLink = null } = $props();
 
 	let dialogOpen = $state(false);
 	let searchQuery = $state('');
@@ -194,7 +194,11 @@
 									<td class="border border-gray-300 p-2">
 										{#if column.key === 'images'}
 											{@html item[column.key]}
+										{:else if column.formatter}
+											<!-- Si la colonne a un formatter, appliquez-le -->
+											{column.formatter(item[column.key])}
 										{:else}
+											<!-- Sinon, affichez la valeur brute -->
 											{item[column.key]}
 										{/if}
 									</td>

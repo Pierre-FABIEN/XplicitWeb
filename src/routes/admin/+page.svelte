@@ -80,66 +80,62 @@
 			data: monthlyData
 		}
 	];
-
-	console.log(data, 'dsrkjghrsiguh');
 </script>
 
-<h1 class="text-2xl font-bold mb-4">Accueil</h1>
+<div class="csc m-5">
+	<h1 class="text-2xl font-bold mb-4">Accueil</h1>
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-	<!-- (1) Smooth Line Chart simple -->
-	<div class="border p-5 rounded aspect-video">
-		<Chart
-			data={transactions}
-			options={{
-				title: {
-					text: 'Smooth Line Chart of Transactions',
-					align: 'center'
-				},
-				chart: {
-					type: 'line'
-				},
-				stroke: {
-					curve: 'smooth'
-				}
-			}}
-		/>
-	</div>
-
-	<!-- (2) Line Chart cumul mensuel -->
-	<div class="border p-5 rounded aspect-video">
-		<ChartMonthly
-			data={monthlySeries}
-			options={{
-				title: {
-					text: 'Monthly Cumulative Orders',
-					align: 'center'
-				},
-				chart: {
-					type: 'line'
-				},
-				stroke: {
-					curve: 'smooth'
-				},
-				xaxis: {
-					type: 'numeric',
+	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+		<!-- (1) Smooth Line Chart simple -->
+		<div class="border p-5 rounded aspect-video">
+			<Chart
+				data={transactions}
+				options={{
 					title: {
-						text: 'Day of Month'
+						text: 'Smooth Line Chart of Transactions',
+						align: 'center'
+					},
+					chart: {
+						type: 'line'
+					},
+					stroke: {
+						curve: 'smooth'
 					}
-				},
-				yaxis: {
-					title: {
-						text: 'Cumulative Amount'
-					}
-				}
-			}}
-		/>
-	</div>
-	<LastInscriptions users={data.latestUsersFetch} />
-</div>
+				}}
+			/>
+		</div>
 
-<div class="bg-gray-200 rounded mt-4 min-h-[100vh] p-5">
-	<!-- Placez ici tout autre contenu -->
+		<!-- (2) Line Chart cumul mensuel -->
+		<div class="border p-5 rounded aspect-video">
+			<ChartMonthly
+				data={monthlySeries}
+				options={{
+					title: {
+						text: 'Monthly Cumulative Orders',
+						align: 'center'
+					},
+					chart: {
+						type: 'line'
+					},
+					stroke: {
+						curve: 'smooth'
+					},
+					xaxis: {
+						type: 'numeric',
+						title: {
+							text: 'Day of Month'
+						}
+					},
+					yaxis: {
+						title: {
+							text: 'Cumulative Amount'
+						}
+					}
+				}}
+			/>
+		</div>
+		<LastInscriptions users={data.latestUsersFetch} />
+	</div>
 </div>
 
 <style>
