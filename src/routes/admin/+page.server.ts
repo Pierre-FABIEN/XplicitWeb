@@ -1,10 +1,13 @@
+import { getAllTransactionsDashboard } from '$lib/prisma/transaction/getAllTransactionsDashboard';
+import { latestUsers } from '$lib/prisma/user/user';
+
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 
 export const load = (async ({ locals }) => {
 	// Vérifie si l'utilisateur est connecté
 	if (!locals.user) {
-		throw redirect(302, '/login'); // Redirige vers la page de connexion
+		throw redirect(302, '/auth/login'); // Redirige vers la page de connexion
 	}
 
 	// Vérifie le rôle
@@ -12,8 +15,13 @@ export const load = (async ({ locals }) => {
 		throw redirect(302, '/'); // Redirige vers la page d'accueil
 	}
 
+	const transactions = await getAllTransactionsDashboard();
+
+	const latestUsersFetch = await latestUsers();
 	// Retourne les données nécessaires pour l'admin
 	return {
+		latestUsersFetch,
+		transactions,
 		user: locals.user,
 		role: locals.role
 	};

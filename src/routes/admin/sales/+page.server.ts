@@ -1,17 +1,10 @@
-import { zod } from 'sveltekit-superforms/adapters';
+import { getAllTransactions } from '$lib/prisma/transaction/getAllTransactions';
 import type { PageServerLoad } from './$types';
-import { superValidate } from 'sveltekit-superforms';
-import { deleteUserSchema } from '$lib/schema/users/userSchema';
-import { getAllUsers } from '$lib/prisma/user/user';
 
-// Fonction de chargement côté serveur
-export const load: PageServerLoad = async () => {
-	const IdeleteUserSchema = await superValidate(zod(deleteUserSchema));
-
-	const allUsers = await getAllUsers();
+export const load = (async () => {
+	const transactions = await getAllTransactions();
 
 	return {
-		IdeleteUserSchema,
-		allUsers
+		transactions
 	};
-};
+}) satisfies PageServerLoad;

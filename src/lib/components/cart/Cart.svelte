@@ -9,9 +9,7 @@
 	import * as Sheet from '$shadcn/sheet/index.js';
 	import { Trash } from 'lucide-svelte';
 	import { ShoppingCart } from 'lucide-svelte';
-	import { toast } from 'svelte-sonner';
 	import Input from '../shadcn/ui/input/input.svelte';
-	import { Select } from '../shadcn/ui/select';
 
 	let { data } = $props();
 	const user = data?.user ?? null;

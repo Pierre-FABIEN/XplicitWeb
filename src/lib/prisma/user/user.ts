@@ -1,16 +1,20 @@
 import { prisma } from '$lib/server';
-import { TrendingUpIcon } from 'lucide-svelte';
 
 export const findUserWithRecoveryCode = async (userId: string) => {
 	return await prisma.user.findUnique({
 		where: { id: userId },
-		select: { recoveryCode: true }
+		select: {
+			recoveryCode: true
+			// Ajoutez createdAt: true si nécessaire
+		}
 	});
 };
 
 export const findUserByGoogleId = async (googleId: string) => {
 	return await prisma.user.findUnique({
 		where: { googleId }
+		// Ajoutez createdAt: true si nécessaire, par exemple :
+		// select: { googleId: true, email: true, createdAt: true, ... }
 	});
 };
 
@@ -22,10 +26,10 @@ export const createUserWithGoogleOAuth = async (
 ) => {
 	return await prisma.user.create({
 		data: {
-			googleId: googleId,
-			email: email,
-			name: name,
-			picture: picture,
+			googleId,
+			email,
+			name,
+			picture,
 			role: 'CLIENT',
 			emailVerified: true,
 			addresses: {
@@ -72,6 +76,7 @@ export const createUserInDatabase = async (
 	});
 };
 
+// 1. On ajoute createdAt dans la sélection, car on retourne déjà un ensemble de champs utilisateur
 export const getUserByEmailPrisma = async (email: string) => {
 	return await prisma.user.findUnique({
 		where: { email },
@@ -84,11 +89,13 @@ export const getUserByEmailPrisma = async (email: string) => {
 			googleId: true,
 			name: true,
 			picture: true,
-			isMfaEnabled: true
+			isMfaEnabled: true,
+			createdAt: true // Ajout de la date de création
 		}
 	});
 };
 
+// 2. Idem ici
 export const getUserByGoogleIdPrisma = async (googleId: string) => {
 	return await prisma.user.findUnique({
 		where: { googleId },
@@ -100,7 +107,8 @@ export const getUserByGoogleIdPrisma = async (googleId: string) => {
 			totpKey: true,
 			googleId: true,
 			name: true,
-			picture: true
+			picture: true,
+			createdAt: true // Ajout de la date de création
 		}
 	});
 };
@@ -159,6 +167,7 @@ export const getUserTotpKey = async (
 		where: { id: userId },
 		select: {
 			totpKey: true // Récupère uniquement la clé TOTP
+			// Ajoutez createdAt: true si nécessaire
 		}
 	});
 };
@@ -171,6 +180,7 @@ export const getUserPasswordHashPrisma = async (whereClause: {
 		where: whereClause,
 		select: {
 			passwordHash: true // Récupère uniquement le hash du mot de passe
+			// Ajoutez createdAt: true si nécessaire
 		}
 	});
 };
@@ -183,12 +193,14 @@ export const getUserRecoveryAndGoogleId = async (
 		select: {
 			recoveryCode: true,
 			googleId: true
+			// Ajoutez createdAt: true si nécessaire
 		}
 	});
 };
 
 export const getAllUsers = async () => {
 	try {
+		// Comme on utilise include, Prisma renvoie tous les champs scalaires, dont createdAt
 		const users = await prisma.user.findMany({
 			include: {
 				addresses: true,
@@ -250,6 +262,7 @@ export const updateUserRole = async (id: string, role: string) => {
 };
 
 export async function getUsersById(userId: string) {
+	// Ici, on récupère déjà tout par défaut
 	return await prisma.user.findUnique({
 		where: { id: userId }
 	});
@@ -267,4 +280,26 @@ export async function updateUserMFA(userId: string, data: { isMfaEnabled: boolea
 		where: { id: userId },
 		data: { isMfaEnabled: data.isMfaEnabled }
 	});
+}
+
+export async function latestUsers() {
+	const users = await prisma.user.findMany({
+		orderBy: { id: 'desc' },
+		take: 5,
+		select: {
+			id: true,
+			email: true,
+			username: true,
+			createdAt: true,
+			totpKey: true,
+			name: true
+		}
+	});
+
+	// Sérialisation des champs nécessaires
+	return users.map((user) => ({
+		...user,
+		createdAt: user.createdAt.toISOString(), // Date en ISO
+		totpKey: user.totpKey ? Array.from(user.totpKey) : null // Uint8Array -> tableau
+	}));
 }

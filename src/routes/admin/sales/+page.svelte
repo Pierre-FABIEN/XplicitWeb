@@ -12,58 +12,30 @@
 
 	console.log(data);
 
-	// Form handling with superForm
-	const deleteUser = superForm(data?.IdeleteUserSchema ?? {}, {
-		validators: zodClient(deleteUserSchema),
-		id: 'deleteUser'
-	});
-
-	const {
-		form: deleteUserData,
-		enhance: deleteUserEnhance,
-		message: deleteUserMessage
-	} = deleteUser;
-
 	// Define table columns
 	const userColumns = $state([
-		{ key: 'username', label: 'Nom' },
-		{ key: 'email', label: 'Email' },
-		{ key: 'role', label: 'Role' }
+		{ key: 'amount', label: 'amount' },
+		{ key: 'customer_details_name', label: 'name order' },
+		{ key: 'customer_details_email', label: 'email order' },
+		{ key: 'app_user_email', label: 'name' },
+		{ key: 'app_user_name', label: 'email' },
+		{ key: 'status', label: 'status' },
+		{ key: 'createdAt', label: 'Date de création', formatter: formatDate }
 	]);
 
-	// Define actions with icons
-	const userActions = $state([
-		{
-			type: 'link',
-			name: 'edit',
-			url: (item: any) => `/admin/users/${item.id}`,
-			icon: Pencil
-		},
-		{
-			type: 'form',
-			name: 'delete',
-			url: '?/deleteUser',
-			dataForm: deleteUserData.id,
-			enhanceAction: deleteUserEnhance,
-			icon: Trash
-		}
-	]);
+	function formatDate(dateString: string): string {
+		const date = new Date(dateString);
+		const day = String(date.getDate()).padStart(2, '0');
+		const month = String(date.getMonth() + 1).padStart(2, '0');
+		const year = String(date.getFullYear()).slice(-2);
+		const hours = String(date.getHours()).padStart(2, '0');
+		const minutes = String(date.getMinutes()).padStart(2, '0');
 
-	// Show toast on delete message
-	$effect(() => {
-		if ($deleteUserMessage) {
-			toast.success($deleteUserMessage);
-		}
-	});
+		return `${day}/${month}/${year} à ${hours}:${minutes}`;
+	}
 </script>
 
 <!-- UI Table -->
 <div class="ccc w-xl m-5">
-	<Table
-		name="Utilisateurs"
-		columns={userColumns}
-		data={data.allUsers ?? []}
-		actions={userActions}
-		addLink="/admin/users/create"
-	/>
+	<Table name="Ventes" columns={userColumns} data={data.transactions ?? []} />
 </div>

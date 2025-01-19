@@ -6,10 +6,6 @@ export const getAllTransactions = async () => {
 	try {
 		// Requête pour obtenir toutes les transactions
 		const transactions = await prisma.transaction.findMany();
-
-		// Affiche les transactions récupérées
-		console.log(transactions);
-
 		return transactions;
 	} catch (error) {
 		console.error('Error retrieving transactions: ', error);

@@ -107,11 +107,7 @@ revoir la sécurité sur les données
 
 Sur l'admin il faut pouvoir changer le role indépendant dans un form mais aussi les adresses et pouvoir changer le mot de passe et mettre une option pour activer le M2FA
 
-
-Pouvoir faire la gestion des catégories dans les gestion produit
-et aussi dans le blog
-
-faire attention de voir si on peut fusionner le google avec l'email
+faire fusionner le google avec l'email
 
 
 Faire une verification de la order avant d'envoyer sur stripe dans page.server
@@ -124,16 +120,6 @@ faire les bordereaux et factures
 
 
 
-
-quantité pour les customs: 
-24 packs de 24 canettes (576 unités) : 0,99 € HT/unité (condition EXW, hors frais de livraison).
-Tarifs dégressifs selon volume :
-
-1/4 de palette : 30 packs (720 unités).
-1/2 palette : 60 packs (1 440 unités).
-1 palette : 120 packs (2 880 unités).
-3 palettes : 360 packs (8 640 unités).
-(Pour les tarifs exacts, veuillez vous référer à la fiche tarifaire jointe.)
 
 
 
