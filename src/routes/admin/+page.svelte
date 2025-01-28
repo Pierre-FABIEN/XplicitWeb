@@ -16,23 +16,10 @@
 	 */
 	let { data } = $props();
 
+	console.log(data, 'iugoiluhg');
+
 	// Sécuriser l'accès au tableau de transactions
 	const transactions = Array.isArray(data.transactions) ? data.transactions : [];
-
-	//---------------------------------------------------
-	// 1) PREMIER GRAPH : SMOOTH LINE CHART CLASSIQUE
-	//---------------------------------------------------
-
-	// (Aucun regroupement ou transformation particulier, on passe directement au composant)
-
-	//---------------------------------------------------
-	// 2) DEUXIÈME GRAPH : CUMUL PAR JOUR DU MOIS
-	//---------------------------------------------------
-	// - On suppose toutes les transactions dans le même mois/année
-	// - L'axe X représente le jour du mois (1..31)
-	// - Le Y représente la somme cumulée jusqu'à ce jour
-	// - Si plusieurs transactions tombent le même jour, on les additionne
-	// - Si un jour n'a pas de transaction, le cumul reste celui de la veille
 
 	let monthlyData: { x: number; y: number }[] = [];
 
@@ -70,16 +57,42 @@
 		});
 	}
 
-	/**
-	 * Notre deuxième chart aura donc une seule série,
-	 * dont data = monthlyData (un tableau de { x, y })
-	 */
 	const monthlySeries = [
 		{
 			name: 'Cumulative Orders',
 			data: monthlyData
 		}
 	];
+
+	// Extraction et agrégation des quantités vendues par produit
+	let productSalesData: { x: string; y: number }[] = [];
+
+	if (transactions.length > 0) {
+		// Utiliser un Map pour regrouper par produit
+		const productSalesMap = new Map<string, number>();
+
+		for (const tx of transactions) {
+			if (tx.products && Array.isArray(tx.products)) {
+				for (const product of tx.products) {
+					const productName = product.name;
+					const productQuantity = product.quantity || 0;
+
+					// Ajouter au total dans le Map
+					if (productSalesMap.has(productName)) {
+						productSalesMap.set(productName, productSalesMap.get(productName)! + productQuantity);
+					} else {
+						productSalesMap.set(productName, productQuantity);
+					}
+				}
+			}
+		}
+
+		// Convertir le Map en tableau de données pour le graphique
+		productSalesData = Array.from(productSalesMap.entries()).map(([key, value]) => ({
+			x: key,
+			y: value
+		}));
+	}
 </script>
 
 <div class="csc m-5">
@@ -135,6 +148,39 @@
 			/>
 		</div>
 		<LastInscriptions users={data.latestUsersFetch} />
+
+		<!-- Nouveau graphique à barres -->
+		<div class="border p-5 rounded aspect-video">
+			<Chart
+				data={productSalesData}
+				options={{
+					title: {
+						text: 'Produits vendus',
+						align: 'center'
+					},
+					chart: {
+						type: 'bar'
+					},
+					xaxis: {
+						categories: productSalesData.map((d) => d.x),
+						title: {
+							text: 'Produits'
+						}
+					},
+					yaxis: {
+						title: {
+							text: 'Quantité vendue'
+						}
+					},
+					series: [
+						{
+							name: 'Quantité',
+							data: productSalesData.map((d) => d.y)
+						}
+					]
+				}}
+			/>
+		</div>
 	</div>
 </div>
 

@@ -12,7 +12,7 @@
 
 	let { data } = $props();
 
-	console.log(data);
+	console.log(data, 'ihygihguiyguyg');
 
 	// Initialiser les formulaires Superform
 	const emailForm = superForm(data.emailForm, {

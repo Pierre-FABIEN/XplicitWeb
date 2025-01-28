@@ -18,13 +18,13 @@ export const load = async (event: PageServerLoadEvent) => {
 
 		console.log(event.locals.user, 'slkrjghxkgujh');
 
-		if (!event.locals.user.googleId || !event.locals.user.isMfaEnabled) {
+		if (!event.locals.user.googleId || !event.locals.user?.isMfaEnabled) {
 			if (!event.locals.user.registered2FA) {
-						if (event.locals.user.isMfaEnabled) {
-		return redirect(302, '/auth/2fa/setup');
-	}
+				if (event.locals.user.isMfaEnabled) {
+					return redirect(302, '/auth/2fa/setup');
+				}
 			}
-			if (!event.locals.session.twoFactorVerified) {
+			if (!event.locals.session?.twoFactorVerified) {
 				if (event.locals.user.isMfaEnabled) {
 					return redirect(302, '/auth/2fa');
 				}
@@ -99,10 +99,11 @@ export const actions: Actions = {
 		}
 
 		if (!user.registered2FA) {
-					if (event.locals.user.isMfaEnabled) {
-		return redirect(302, '/auth/2fa/setup');
-	}
+			if (user.isMfaEnabled) {
+				return redirect(302, '/auth/2fa/setup');
+			}
 		}
+
 		if (!user.isMfaEnabled) {
 			return redirect(302, '/auth');
 		}

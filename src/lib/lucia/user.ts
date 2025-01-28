@@ -45,7 +45,7 @@ export async function createUser(email: string, username: string, password: stri
 		'CLIENT',
 		false,
 		null,
-		undefined
+		null
 	);
 
 	// Convertit null en undefined pour correspondre au type User

@@ -47,8 +47,4 @@
 	<form method="post" use:enhance action="?/resendCode" class="mt-4">
 		<Button type="submit" class="w-full" variant="ghost">Renvoyer le code</Button>
 	</form>
-
-	<a href="/auth/settings" class="block mt-4 text-center text-sm text-orange-700 underline">
-		Modifier votre email
-	</a>
 </div>

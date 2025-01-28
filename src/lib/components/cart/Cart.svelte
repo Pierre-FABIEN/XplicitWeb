@@ -1,5 +1,3 @@
-<!-- src/lib/components/Cart/Cart.svelte -->
-
 <script lang="ts">
 	import '@fontsource-variable/open-sans';
 	import '@fontsource-variable/raleway';

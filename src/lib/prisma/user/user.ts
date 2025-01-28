@@ -53,8 +53,19 @@ export const createUserInDatabase = async (
 	role: string,
 	emailVerified: boolean,
 	totpKey: string | null,
-	googleId?: string
+	googleId?: string | null
 ) => {
+	console.log('Creating user:', {
+		email,
+		username,
+		passwordHash,
+		recoveryCode,
+		role,
+		emailVerified,
+		totpKey,
+		googleId
+	});
+
 	return await prisma.user.create({
 		data: {
 			email,

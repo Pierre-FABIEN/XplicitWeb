@@ -10,7 +10,8 @@ export const getAllTransactionsDashboard = async () => {
 				createdAt: true,
 				amount: true,
 				status: true,
-				app_user_email: true // Inclure l'email de l'utilisateur pour identifier les comptes
+				app_user_email: true,
+				products: true
 			}
 		});
 
