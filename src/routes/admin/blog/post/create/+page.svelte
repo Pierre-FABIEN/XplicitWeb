@@ -1,4 +1,5 @@
 <script lang="ts">
+	// Import necessary components and libraries
 	import { enhance } from '$app/forms';
 	import * as Form from '$shadcn/form';
 	import * as Popover from '$shadcn/popover';
@@ -16,16 +17,21 @@
 	import { createBlogPostSchema } from '$lib/schema/BlogPost/BlogPostSchema.js';
 	import { PUBLIC_TINYMCE_API_KEY } from '$env/static/public';
 
+	// Receive props from the server
 	let { data } = $props();
+
+	console.log(data, 'data');
 
 	// Variables pour catégories et tags
 	let categories = $state(data.AllCategoriesPost || []);
 	let tags = $state(data.AllTagsPost || []);
+	// Pour les catégories, seule la sélection du nom est stockée
 	let selectedCategory = $state([]);
-	let selectedTag = $state([]);
+	// Les popovers pour les catégories et tags
 	let openCategory = $state(false);
 	let openTag = $state(false);
 
+	// Initialisation du formulaire via SuperForm
 	const createPost = superForm(data.IcreateBlogPostSchema, {
 		validators: zodClient(createBlogPostSchema)
 	});
@@ -36,17 +42,26 @@
 		message: createPostMessage
 	} = createPost;
 
+	// On initialise l'auteur et s'assure que tagIds est un tableau
 	$createPostData.authorId = data.user.id;
+	if (!$createPostData.tagIds) {
+		$createPostData.tagIds = [];
+	}
 
+	// Affichage d'un toast et redirection en cas de succès
 	$effect(() => {
 		if ($createPostMessage === 'Post created successfully') {
-			toast.success($createPostMessage), setTimeout(() => goto('/admin/blog/'), 0);
+			toast.success($createPostMessage);
+			setTimeout(() => goto('/admin/blog/'), 0);
 		}
 	});
 
+	$effect(() => {
+		console.log($createPostData);
+	});
 	/*
-	 * Handles category selection in the Popover/Command list.
-	 * Only one category is allowed, so we overwrite selectedCategory with a single value array.
+	 * Sélection d'une catégorie
+	 * Seule une catégorie peut être sélectionnée, on affecte son nom et son ID.
 	 */
 	function handleSelectCategory(category) {
 		selectedCategory = category.name;
@@ -55,29 +70,12 @@
 	}
 
 	/*
-	 * Handles tag selection in the Popover/Command list.
-	 * We allow multiple tags, so we push the new tag into selectedTag.
-	 */
-	function handleSelectTag(tag) {
-		// Initialisez $createPostData.tagIds en tant que tableau s'il est undefined ou null
-		if (!$createPostData.tagIds || !Array.isArray($createPostData.tagIds)) {
-			$createPostData.tagIds = [];
-		}
-
-		// Ajoutez l'ID du tag à la liste
-		$createPostData.tagIds = [...$createPostData.tagIds, tag.id];
-		selectedTag = [...selectedTag, tag.name];
-
-		openTag = false;
-	}
-
-	/*
-	 * Toggle the selection of a tag.
-	 * If "checked" is true, add the tag ID to the array if not already present;
-	 * otherwise, remove it.
+	 * Fonction de basculement pour la sélection d'un tag.
+	 * Si "checked" est vrai, on ajoute l'ID du tag s'il n'est pas déjà présent ;
+	 * sinon, on le retire.
 	 */
 	function toggleTagSelection(tag, checked) {
-		// Ensure tagIds is an array
+		// Assure que tagIds est bien un tableau
 		if (!$createPostData.tagIds || !Array.isArray($createPostData.tagIds)) {
 			$createPostData.tagIds = [];
 		}
@@ -91,14 +89,15 @@
 	}
 
 	/*
-	 * Derived store to compute the names of selected tags
-	 * based on the tag IDs present in $createPostData.tagIds.
+	 * Store dérivé pour calculer les noms des tags sélectionnés
+	 * à partir des IDs stockés dans $createPostData.tagIds.
 	 */
 	const selectedTagNames = $derived.by(() => {
 		if (!$createPostData.tagIds || !Array.isArray($createPostData.tagIds)) return [];
 		return tags.filter((tag) => $createPostData.tagIds.includes(tag.id)).map((tag) => tag.name);
 	});
 
+	// Configuration de l'éditeur
 	let editorConfig = {
 		telemetry: false,
 		branding: false,
@@ -114,6 +113,7 @@
 <div class="ccc">
 	<div class="m-5 p-5 border w-[80vw]">
 		<form method="POST" action="?/createPost" use:createPostEnhance class="space-y-4">
+			<!-- Champ Titre -->
 			<div class="w-[100%]">
 				<Form.Field name="title" form={createPost}>
 					<Form.Control>
@@ -124,6 +124,7 @@
 				</Form.Field>
 			</div>
 
+			<!-- Checkbox pour Published -->
 			<div class="rcs w-[100%]">
 				<div class="flex items-center space-x-2">
 					<Form.Field name="published" form={createPost} class="rcc">
@@ -147,12 +148,12 @@
 					</Form.Field>
 				</div>
 
+				<!-- Popover pour la sélection de la catégorie -->
 				<div class="mx-2">
 					<Popover.Root bind:open={openCategory}>
 						<Popover.Trigger>
 							<Button>
-								Catégories :
-								{selectedCategory}
+								Catégories : {selectedCategory}
 							</Button>
 						</Popover.Trigger>
 						<Popover.Content>
@@ -167,29 +168,39 @@
 					</Popover.Root>
 				</div>
 
-				<div class="mx-2">
-					<Popover.Root bind:open={openTag}>
-						<Popover.Trigger>
-							<Button>
-								Tags : {selectedTagNames.join(', ')}
-							</Button>
-						</Popover.Trigger>
-						<Popover.Content>
-							<div class="p-4 space-y-2">
-								{#each tags as tag}
-									<div class="flex items-center space-x-2">
-										<!-- Checkbox is checked if the tag ID is in $createPostData.tagIds -->
-										<Checkbox
-											checked={$createPostData.tagIds && $createPostData.tagIds.includes(tag.id)}
-											onchange={(e) => toggleTagSelection(tag, e.target.checked)}
-										/>
-										<Label>{tag.name}</Label>
-									</div>
-								{/each}
+				<!-- Sélection de Tags avec un Checkbox.Group -->
+				<!-- Tags multi-sélection : inputs natifs -->
+				<Popover.Root bind:open={openTag}>
+					<Popover.Trigger>
+						<Button>
+							Tags : {$createPostData.tagIds.length} sélectionnés
+						</Button>
+					</Popover.Trigger>
+					<Popover.Content class="p-4 space-y-2">
+						{#each tags as tag}
+							<div class="flex items-center space-x-2">
+								<!-- Input natif, name="tagIds" -->
+								<input
+									type="checkbox"
+									name="tagIds"
+									value={tag.id}
+									id={'tag-' + tag.id}
+									checked={$createPostData.tagIds.includes(tag.id)}
+									onchange={(e) => {
+										if (e.target.checked) {
+											$createPostData.tagIds = [...$createPostData.tagIds, tag.id];
+										} else {
+											$createPostData.tagIds = $createPostData.tagIds.filter((id) => id !== tag.id);
+										}
+									}}
+								/>
+								<Label for={'tag-' + tag.id}>{tag.name}</Label>
 							</div>
-						</Popover.Content>
-					</Popover.Root>
-				</div>
+						{/each}
+					</Popover.Content>
+				</Popover.Root>
+
+				<!-- Champ Content avec éditeur -->
 				<div class="w-[100%]">
 					<Form.Field name="content" form={createPost}>
 						<Form.Control>
@@ -204,6 +215,8 @@
 						<Form.FieldErrors />
 					</Form.Field>
 				</div>
+
+				<!-- Inputs cachés pour transmettre les IDs et autres champs -->
 				<input type="text" name="tagIds" bind:value={$createPostData.tagIds} class="hidden" />
 				<input
 					type="text"
