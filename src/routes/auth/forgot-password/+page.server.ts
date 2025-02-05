@@ -13,6 +13,7 @@ import type { Actions, RequestEvent } from './$types';
 import { message, superValidate } from 'sveltekit-superforms';
 import { forgotPasswordSchema } from '$lib/schema/auth/forgotPasswordSchema';
 import { zod } from 'sveltekit-superforms/adapters';
+import { generateRandomRecoveryCode } from '$lib/lucia/utils';
 
 const ipBucket = new RefillingTokenBucket<string>(3, 60);
 const userBucket = new RefillingTokenBucket<number>(3, 60);
@@ -59,9 +60,34 @@ export const actions: Actions = {
 
 		await invalidateUserPasswordResetSessions(user.id);
 		const sessionToken = generateSessionToken();
-		const session = await createPasswordResetSessionPrisma(sessionToken, user.id, user.email);
-		sendPasswordResetEmail(session.email, session.code);
+		console.log(sessionToken);
+
+		const code = await generateRandomRecoveryCode();
+		console.log(code, 'code dkrjghdlsug hlg kftdjhlktjfdhk');
+		console.log(user, 'user lkjgtf tlhki jcftlohikjft clhk');
+		const expirationDate = new Date(Date.now() + 15 * 60 * 1000);
+
+		// Suppose que user existe et contient bien user.id, user.email, etc.
+		const sessionData = {
+			id: sessionToken,
+			userId: user.id,
+			email: user.email,
+			code: code,
+			expiresAt: expirationDate,
+			emailVerified: user.emailVerified ?? false, // ou false
+			twoFactorVerified: user.isMfaEnabled ?? false
+		};
+
+		// Crée la session
+		const session = await createPasswordResetSessionPrisma(sessionData);
+
+		console.log('Password reset session created:', session);
+
+		await sendPasswordResetEmail(session.email, session.code);
+
 		setPasswordResetSessionTokenCookie(event, sessionToken, session.expiresAt);
+
+		console.log('Redirecting to: /auth/reset-password/verify-email');
 		return redirect(302, '/auth/reset-password/verify-email');
 	}
 };

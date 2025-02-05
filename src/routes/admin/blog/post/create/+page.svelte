@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import * as Form from '$shadcn/form';
 	import * as Popover from '$shadcn/popover';
 	import * as Command from '$shadcn/command';
@@ -17,8 +18,6 @@
 
 	let { data } = $props();
 
-	console.log(data);
-
 	// Variables pour catégories et tags
 	let categories = $state(data.AllCategoriesPost || []);
 	let tags = $state(data.AllTagsPost || []);
@@ -28,8 +27,7 @@
 	let openTag = $state(false);
 
 	const createPost = superForm(data.IcreateBlogPostSchema, {
-		validators: zodClient(createBlogPostSchema),
-		id: 'createPost'
+		validators: zodClient(createBlogPostSchema)
 	});
 
 	const {
@@ -37,16 +35,12 @@
 		enhance: createPostEnhance,
 		message: createPostMessage
 	} = createPost;
-	$effect(() => {
-		console.log($createPostData);
-	});
 
 	$createPostData.authorId = data.user.id;
 
 	$effect(() => {
 		if ($createPostMessage === 'Post created successfully') {
-			toast($createPostMessage);
-			setTimeout(() => goto('/admin/blog/'), 0);
+			toast.success($createPostMessage), setTimeout(() => goto('/admin/blog/'), 0);
 		}
 	});
 
@@ -55,9 +49,8 @@
 	 * Only one category is allowed, so we overwrite selectedCategory with a single value array.
 	 */
 	function handleSelectCategory(category) {
-		console.log('ca passe!', category);
 		selectedCategory = category.name;
-		$createPostData.categoryId = category.id; // Store the category ID directly
+		$createPostData.categoryId = category.id;
 		openCategory = false;
 	}
 
@@ -66,8 +59,6 @@
 	 * We allow multiple tags, so we push the new tag into selectedTag.
 	 */
 	function handleSelectTag(tag) {
-		console.log('ca passe!', tag);
-
 		// Initialisez $createPostData.tagIds en tant que tableau s'il est undefined ou null
 		if (!$createPostData.tagIds || !Array.isArray($createPostData.tagIds)) {
 			$createPostData.tagIds = [];
@@ -79,6 +70,34 @@
 
 		openTag = false;
 	}
+
+	/*
+	 * Toggle the selection of a tag.
+	 * If "checked" is true, add the tag ID to the array if not already present;
+	 * otherwise, remove it.
+	 */
+	function toggleTagSelection(tag, checked) {
+		// Ensure tagIds is an array
+		if (!$createPostData.tagIds || !Array.isArray($createPostData.tagIds)) {
+			$createPostData.tagIds = [];
+		}
+		if (checked) {
+			if (!$createPostData.tagIds.includes(tag.id)) {
+				$createPostData.tagIds = [...$createPostData.tagIds, tag.id];
+			}
+		} else {
+			$createPostData.tagIds = $createPostData.tagIds.filter((id) => id !== tag.id);
+		}
+	}
+
+	/*
+	 * Derived store to compute the names of selected tags
+	 * based on the tag IDs present in $createPostData.tagIds.
+	 */
+	const selectedTagNames = $derived.by(() => {
+		if (!$createPostData.tagIds || !Array.isArray($createPostData.tagIds)) return [];
+		return tags.filter((tag) => $createPostData.tagIds.includes(tag.id)).map((tag) => tag.name);
+	});
 
 	let editorConfig = {
 		telemetry: false,
@@ -132,7 +151,8 @@
 					<Popover.Root bind:open={openCategory}>
 						<Popover.Trigger>
 							<Button>
-								{selectedCategory || ' catégorie'}
+								Catégories :
+								{selectedCategory}
 							</Button>
 						</Popover.Trigger>
 						<Popover.Content>
@@ -146,25 +166,30 @@
 						</Popover.Content>
 					</Popover.Root>
 				</div>
+
 				<div class="mx-2">
 					<Popover.Root bind:open={openTag}>
 						<Popover.Trigger>
 							<Button>
-								{selectedTag || 'tag'}
+								Tags : {selectedTagNames.join(', ')}
 							</Button>
 						</Popover.Trigger>
 						<Popover.Content>
-							<Command.Root>
+							<div class="p-4 space-y-2">
 								{#each tags as tag}
-									<Command.Item onSelect={() => handleSelectTag(tag)}>
-										{tag.name}
-									</Command.Item>
+									<div class="flex items-center space-x-2">
+										<!-- Checkbox is checked if the tag ID is in $createPostData.tagIds -->
+										<Checkbox
+											checked={$createPostData.tagIds && $createPostData.tagIds.includes(tag.id)}
+											onchange={(e) => toggleTagSelection(tag, e.target.checked)}
+										/>
+										<Label>{tag.name}</Label>
+									</div>
 								{/each}
-							</Command.Root>
+							</div>
 						</Popover.Content>
 					</Popover.Root>
 				</div>
-
 				<div class="w-[100%]">
 					<Form.Field name="content" form={createPost}>
 						<Form.Control>

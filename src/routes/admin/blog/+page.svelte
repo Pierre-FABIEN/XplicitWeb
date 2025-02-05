@@ -20,13 +20,11 @@
 		id: 'deleteBlogPost'
 	});
 
-	// Form handling with superForm
 	const deleteBlogCategory = superForm(data?.IdeleteBlogCategorySchema ?? {}, {
 		validators: zodClient(deleteBlogCategorySchema),
 		id: 'deleteBlogCategory'
 	});
 
-	// Form handling with superForm
 	const deleteBlogTag = superForm(data?.IdeleteBlogTagSchema ?? {}, {
 		validators: zodClient(deleteBlogTagSchema),
 		id: 'deleteBlogTag'
@@ -50,20 +48,51 @@
 		message: deleteBlogTagMessage
 	} = deleteBlogTag;
 
+	/**
+	 * categoryMap: a Map that associates categoryId -> categoryName
+	 */
+	const categoryMap = $derived.by(() => {
+		const map = new Map();
+		(data.AllCategoriesPost ?? []).forEach((cat) => {
+			map.set(cat.id, cat.name);
+		});
+		return map;
+	});
+
+	/**
+	 * formattedBlogPosts: an array of blog posts
+	 * with additional fields `category` and `tagsString` for display
+	 */
+	const formattedBlogPosts = $derived.by(() => {
+		return (data.BlogPost ?? []).map((post) => {
+			const categoryName = categoryMap.get(post.categoryId) ?? 'Non classé';
+			const tagNames = (post.tags ?? [])
+				.map((rel) => rel.tag?.name ?? '')
+				.filter(Boolean)
+				.join(', ');
+
+			return {
+				...post,
+				category: categoryName,
+				tagsString: tagNames
+			};
+		});
+	});
+
 	// Define table columns
 	const PostsColumns = $state([
 		{ key: 'title', label: 'Title' },
-		{ key: 'slug', label: 'Slug' },
-		{ key: 'published', label: 'Published' },
-		{ key: 'categories', label: 'Categories' }
+		{ key: 'category', label: 'Category' },
+		{ key: 'tagsString', label: 'Tags' },
+		{ key: 'published', label: 'Published' }
 	]);
 
 	const CategoriesColumns = $state([
-		{ key: 'name', label: 'name' },
-		{ key: 'description', label: 'description' }
+		{ key: 'name', label: 'Name' },
+		{ key: 'description', label: 'Description' }
 	]);
 
-	const TagsColumns = $state([{ key: 'name', label: 'name' }]);
+	const TagsColumns = $state([{ key: 'name', label: 'Name' }]);
 
 	// Define actions with icons
 	const PostsActions = $state([
@@ -132,12 +161,13 @@
 </script>
 
 <h1 class="m-5 text-4xl">Gestion du blog</h1>
+
 <!-- UI Table -->
 <div class="ccc w-xl m-5">
 	<Table
 		name="Articles"
 		columns={PostsColumns}
-		data={data.BlogPost ?? []}
+		data={formattedBlogPosts}
 		actions={PostsActions}
 		addLink="/admin/blog/post/create"
 	/>

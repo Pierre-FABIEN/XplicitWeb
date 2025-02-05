@@ -51,18 +51,47 @@ export const updatePost = async (data: {
 	tagIds: string[];
 	published: boolean;
 }) => {
-	return prisma.blogPost.update({
-		where: { id: data.id },
-		data: {
-			title: data.title,
-			content: data.content,
-			categoryId: data.categoryId,
-			published: data.published,
-			tags: {
-				set: data.tagIds.map((tagId) => ({ id: tagId }))
+	try {
+		return await prisma.$transaction(async (tx) => {
+			// Mise à jour des champs du post
+			const post = await tx.blogPost.update({
+				where: { id: data.id },
+				data: {
+					title: data.title,
+					content: data.content,
+					categoryId: data.categoryId,
+					published: data.published
+					// On peut mettre à jour d'autres champs si nécessaire
+				}
+			});
+
+			// Supprimer les relations existantes dans BlogPostTag pour ce post
+			await tx.blogPostTag.deleteMany({
+				where: { postId: data.id }
+			});
+
+			// Créer les nouvelles relations pour les tags
+			if (data.tagIds && data.tagIds.length > 0) {
+				await Promise.all(
+					data.tagIds.map(async (tagId) => {
+						await tx.blogPostTag.create({
+							data: {
+								postId: data.id,
+								tagId: tagId
+							}
+						});
+					})
+				);
 			}
-		}
-	});
+
+			return post;
+		});
+	} catch (error) {
+		console.error('Error updating post:', error);
+		throw error;
+	} finally {
+		await prisma.$disconnect();
+	}
 };
 
 export const getPostById = async (id: string) => {
@@ -82,14 +111,20 @@ export const getPostById = async (id: string) => {
 	}
 };
 
+// createPost.ts
+// Cette fonction crée un post en enregistrant également la catégorie et les tags associés,
+// en gérant séparément les relations puisque les nested writes ne sont pas supportées avec MongoDB.
 export const createPost = async (
 	title: string,
 	content: string,
 	authorId: string,
 	slug: string,
-	published: boolean
+	published: boolean,
+	categoryId?: string,
+	tagIds?: string[]
 ) => {
 	try {
+		// Création du post principal en assignant directement categoryId
 		const post = await prisma.blogPost.create({
 			data: {
 				title,
@@ -97,29 +132,64 @@ export const createPost = async (
 				authorId,
 				slug,
 				published,
-				createdAt: new Date()
+				createdAt: new Date(),
+				// On affecte directement la clé étrangère
+				categoryId: categoryId ? categoryId : null
 			}
 		});
+
+		// Si des tags sont fournis, on crée une entrée dans BlogPostTag pour chacun
+		if (tagIds && tagIds.length > 0) {
+			await Promise.all(
+				tagIds.map(async (tagId) => {
+					await prisma.blogPostTag.create({
+						data: {
+							postId: post.id,
+							tagId: tagId
+						}
+					});
+				})
+			);
+		}
+
 		return post;
 	} catch (error) {
 		console.error('Error creating post:', error);
+		throw error;
 	} finally {
+		// Note : Dans un environnement serveur (et surtout en serverless), il est généralement
+		// préférable de gérer la connexion Prisma au niveau global et de ne pas se déconnecter après chaque requête.
 		await prisma.$disconnect();
 	}
 };
 
+import { prisma } from '$lib/server';
+
 export const deletePost = async (id: string) => {
 	console.log('Deleting post with id:', id);
-
 	try {
-		const post = await prisma.blogPost.delete({
-			where: { id }
+		// Utiliser une transaction pour supprimer d'abord les relations, puis le post
+		const deletedPost = await prisma.$transaction(async (tx) => {
+			// 1. Supprimer toutes les entrées liées dans BlogPostTag
+			await tx.blogPostTag.deleteMany({
+				where: { postId: id }
+			});
+
+			// 2. Supprimer le post
+			const post = await tx.blogPost.delete({
+				where: { id }
+			});
+			return post;
 		});
-		return post;
+
+		console.log('Post deleted successfully:', deletedPost);
+		return deletedPost;
 	} catch (error) {
 		console.error('Error deleting post:', error);
+		throw error;
 	} finally {
-		await prisma.$disconnect();
+		// Dans un environnement serveur, il est préférable de gérer la connexion Prisma globalement
+		// await prisma.$disconnect();
 	}
 };
 

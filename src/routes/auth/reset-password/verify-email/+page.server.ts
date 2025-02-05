@@ -13,14 +13,22 @@ const bucket = new ExpiringTokenBucket<number>(5, 60 * 30);
 
 export const load = async (event: RequestEvent) => {
 	const { session } = await validatePasswordResetSessionRequest(event);
+	console.log(
+		session,
+		'uhguy C:/Web/XplicitWeb/src/routes/auth/reset-password/verify-email/+page.server.ts'
+	);
 	if (session === null) {
+		console.log('Session is null, redirecting to /auth/forgot-password');
 		return redirect(302, '/auth/forgot-password');
 	}
-	if (session.emailVerified) {
-		if (!session.twoFactorVerified) {
-			return redirect(302, '/auth/reset-password/2fa');
-		}
-		return redirect(302, '/auth/reset-password');
+
+	if (session.emailVerified && !session.twoFactorVerified) {
+		console.log('Email is verified but 2FA is not verified. Redirecting to 2FA setup.');
+		return redirect(302, '/auth/reset-password/2fa');
+	}
+
+	if (!session.emailVerified) {
+		console.log('Email is not verified, staying on verify email page.');
 	}
 	const verifyForm = await superValidate(event, zod(verifyCodeSchema));
 

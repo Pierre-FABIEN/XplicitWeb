@@ -24,8 +24,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			const ll = await createTag(form.data.name);
-			console.log(ll);
+			await createTag(form.data.name);
 
 			return message(form, 'Tag created successfully');
 		} catch (error) {

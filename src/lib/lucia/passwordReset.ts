@@ -7,6 +7,7 @@ import {
 	deletePasswordResetSession,
 	findPasswordResetSession
 } from '$lib/prisma/passwordResetSession/passwordResetSession';
+import nodemailer from 'nodemailer';
 
 export interface PasswordResetSession {
 	id: string;
@@ -126,6 +127,108 @@ export function deletePasswordResetSessionTokenCookie(event: RequestEvent): void
 }
 
 // Envoie un email de réinitialisation de mot de passe
-export function sendPasswordResetEmail(email: string, code: string): void {
-	console.log(`To ${email}: Your reset code is ${code}`);
+
+export async function sendPasswordResetEmail(email: string, code: string): Promise<void> {
+	// Configuration du transporteur SMTP avec Brevo
+	const transporter = nodemailer.createTransport({
+		host: process.env.SMTP_HOST, // Serveur SMTP de Brevo
+		port: parseInt(process.env.SMTP_PORT || '587', 10), // Port SMTP
+		secure: false, // STARTTLS
+		auth: {
+			user: process.env.SMTP_USER, // Ton e-mail inscrit sur Brevo
+			pass: process.env.SMTP_PASS // Clé API SMTP
+		},
+		logger: true, // Ajoute des logs détaillés
+		debug: true // Active le mode debug
+	});
+
+	try {
+		const mailOptions = {
+			from: '"Xplicit Drink Website" <xplicitdrink.dev@gmail.com>', // Expéditeur
+			to: email, // Destinataire
+			subject: 'Password Reset Request', // Objet de l'email
+			text: `Your password reset code is: ${code}`, // Corps texte brut (fallback)
+			html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Xplicit Drink - Password Reset</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f6f6f6;
+      font-family: Arial, sans-serif;
+    }
+    table {
+      border-collapse: collapse;
+      margin: 0 auto;
+    }
+    img {
+      display: block;
+      margin: 0 auto;
+      max-width: 180px;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      width: 600px;
+      max-width: 95%;
+      margin: 20px auto;
+      padding: 20px;
+      text-align: center;
+    }
+    .title {
+      font-size: 24px;
+      color: #333333;
+      margin-bottom: 20px;
+    }
+    .code {
+      font-size: 28px;
+      font-weight: bold;
+      color: #e3342f; /* Couleur de la marque */
+      margin: 20px 0;
+    }
+    .footer {
+      font-size: 14px;
+      color: #999999;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+      <td align="center" style="padding: 20px;">
+        <!-- Logo -->
+        <img src="https://example.com/logo.png" alt="Xplicit Drink Logo" />
+
+        <!-- Contenu principal -->
+        <div class="container">
+          <h1 class="title">Password Reset Request</h1>
+          <p>We received a request to reset your password. Use the code below to reset it:</p>
+          <p class="code">${code}</p>
+          <p>This code will expire in 10 minutes.</p>
+          
+          <div class="footer">
+            <p>If you did not request this, please ignore this email.</p>
+            <p>— The Xplicit Drink Team</p>
+          </div>
+        </div>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+		};
+
+		// Envoi de l'email
+		const info = await transporter.sendMail(mailOptions);
+
+		console.log(`Password reset email sent to ${email}: ${info.response}`);
+	} catch (error) {
+		console.error('Failed to send password reset email:', error);
+		throw new Error('Email sending failed');
+	}
 }

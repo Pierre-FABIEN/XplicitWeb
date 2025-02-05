@@ -101,7 +101,7 @@ export const getUserByEmailPrisma = async (email: string) => {
 			name: true,
 			picture: true,
 			isMfaEnabled: true,
-			createdAt: true // Ajout de la date de création
+			createdAt: true
 		}
 	});
 };
