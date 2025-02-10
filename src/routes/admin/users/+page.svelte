@@ -10,12 +10,9 @@
 	// Props
 	let { data } = $props();
 
-	console.log(data);
-
 	// Form handling with superForm
 	const deleteUser = superForm(data?.IdeleteUserSchema ?? {}, {
-		validators: zodClient(deleteUserSchema),
-		id: 'deleteUser'
+		validators: zodClient(deleteUserSchema)
 	});
 
 	const {

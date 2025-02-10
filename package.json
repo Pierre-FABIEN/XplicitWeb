@@ -136,6 +136,8 @@
 		"embla-carousel-react": "^8.5.1",
 		"gsap": "^3.12.5",
 		"input-otp": "^1.4.1",
+		"jspdf": "^2.5.2",
+		"jspdf-autotable": "^3.8.4",
 		"lucia": "^3.2.2",
 		"lucia-auth": "^1.8.0",
 		"lucide-react": "^0.469.0",

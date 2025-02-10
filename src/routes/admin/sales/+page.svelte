@@ -1,6 +1,8 @@
 <script lang="ts">
 	import Table from '$components/Table.svelte';
 	import { formatDate } from '$lib/utils/formatDate';
+	import FileText from 'lucide-svelte/icons/file-text';
+	import Receipt from 'lucide-svelte/icons/receipt';
 
 	// Props
 	let { data } = $props();
@@ -14,9 +16,32 @@
 		{ key: 'app_user_name', label: 'name' },
 		{ key: 'createdAt', label: 'Date de création', formatter: formatDate }
 	]);
+
+	// Define actions for each transaction
+	const transactionActions = $state([
+		{
+			type: 'link',
+			name: 'facture',
+			url: (item: any) => `/admin/sales/facture/${item.id}`,
+			icon: Receipt,
+			condition: (item: any) => item.hasFacture // Affiche le lien si une facture existe
+		},
+		{
+			type: 'link',
+			name: 'bordereau',
+			url: (item: any) => `/admin/sales/bordereau/${item.id}`,
+			icon: FileText,
+			condition: (item: any) => item.hasBorderau // Affiche le lien si un bordereau existe
+		}
+	]);
 </script>
 
 <!-- UI Table -->
 <div class="ccc w-xl m-5">
-	<Table name="Ventes" columns={userColumns} data={data.transactions ?? []} />
+	<Table
+		name="Ventes"
+		columns={userColumns}
+		data={data.transactions ?? []}
+		actions={transactionActions}
+	/>
 </div>

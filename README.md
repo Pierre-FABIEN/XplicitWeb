@@ -106,18 +106,16 @@ Mettre a jour Lucia
 revoir la sécurité sur les données sur Admin
 
 
-Sur l'admin il faut pouvoir changer le role indépendant dans un form mais aussi les adresses et pouvoir changer le mot de passe et mettre une option pour activer le M2FA
+
 
 faire fusionner le google avec l'email
 
 
 Faire une verification de la order avant d'envoyer sur stripe dans page.server
 
-
-
-
 Mettre a jour les transaction order
 faire les bordereaux et factures
+Sur l'admin il faut pouvoir changer le role indépendant dans un form mais aussi les adresses et pouvoir changer le mot de passe et mettre une option pour activer le M2FA
 
 
 

@@ -4,7 +4,7 @@
 // export const load = (async ({ locals }) => {
 // 	// Vérifie si l'utilisateur est connecté
 // 	if (!locals.user) {
-// 		throw redirect(302, '/login'); // Redirige vers la page de connexion
+// 		throw redirect(302, '/auth/login'); // Redirige vers la page de connexion
 // 	}
 
 // 	// Vérifie le rôle
