@@ -1,7 +1,5 @@
 import { prisma } from '$lib/server';
 
-// POST
-
 export const getAllPosts = async () => {
 	try {
 		const posts = await prisma.blogPost.findMany({
@@ -162,8 +160,6 @@ export const createPost = async (
 		await prisma.$disconnect();
 	}
 };
-
-import { prisma } from '$lib/server';
 
 export const deletePost = async (id: string) => {
 	console.log('Deleting post with id:', id);

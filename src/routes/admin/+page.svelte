@@ -183,11 +183,3 @@
 		</div>
 	</div>
 </div>
-
-<style>
-	.chartCSS {
-		height: 80%;
-		width: 80%;
-		margin: auto;
-	}
-</style>
