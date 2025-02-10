@@ -42,17 +42,42 @@ export const load: PageServerLoad = async ({ params }) => {
 export const actions: Actions = {
 	updatePost: async ({ request }) => {
 		const formData = await request.formData();
-		console.log('Form data:', formData);
+		console.log('Raw Form data:', formData);
 
-		const form = await superValidate(formData, zod(updateBlogPostSchema));
-		console.log('Form data:', form);
+		// Convertir formData en objet exploitable
+		const cleanData = Object.fromEntries(formData.entries());
+
+		// Vérifier et nettoyer tagIds (éviter [undefined])
+		if (cleanData.tagIds) {
+			// Si c'est une seule valeur, la convertir en tableau
+			if (!Array.isArray(cleanData.tagIds)) {
+				cleanData.tagIds = [cleanData.tagIds];
+			}
+
+			// Filtrer les valeurs nulles ou undefined
+			cleanData.tagIds = cleanData.tagIds.filter(Boolean);
+		} else {
+			// S'assurer que c'est toujours un tableau vide
+			cleanData.tagIds = [];
+		}
+
+		const raw = Object.fromEntries(formData);
+		// Convert the "published" field to a boolean
+		raw.published = raw.published === 'on';
+
+		console.log('Cleaned Form data:', cleanData);
+
+		// Maintenant, on passe les données propres à superValidate
+		const form = await superValidate(cleanData, zod(updateBlogPostSchema));
+		console.log('Validated Form data:', form);
 
 		if (!form.valid) {
 			return fail(400, { form });
 		}
 
 		try {
-			await updatePost(form.data);
+			const result = await updatePost(form.data);
+			console.log(result);
 
 			return message(form, 'Post updated successfully');
 		} catch (error) {

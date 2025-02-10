@@ -26,10 +26,11 @@
 
 	const {
 		form: updateData, // The reactive form data
-		enhance: updateEnhance, // The progressive enhancement
-		message: updateMessage // The success/failure message
+		enhance: updateEnhance,
+		message: updateMessage
 	} = updateForm;
 
+	// On success, show toast and redirect
 	$effect(() => {
 		if ($updateMessage === 'Post updated successfully') {
 			toast.success($updateMessage);
@@ -37,7 +38,7 @@
 		}
 	});
 
-	// ----- Prepare categories -----
+	// ----- Categories -----
 	let categories = $state(data.AllCategoriesPost || []);
 	let selectedCategoryName = $state('');
 
@@ -48,17 +49,17 @@
 		}
 	});
 
-	// ----- Prepare tags -----
-	// `allTags` contient tous les tags depuis la base (relation BlogTag)
+	// ----- Tags -----
 	let allTags = $state(data.AllTagsPost || []);
 
 	/**
-	 * Pour chaque `tag`, on vérifie si la relation M2M (tag.posts) contient un
-	 * BlogPostTag dont le `postId` correspond à $updateData.id (le post en édition).
-	 * Si oui, on coche la case (`checked = true`).
+	 * Initialize local `tags` array with a `checked` property
+	 * based on the relation. For example, if the post is linked to the tag,
+	 * set checked = true.
 	 */
 	let tags = $state(
 		allTags.map((tag) => {
+			// On vérifie si l'ID du post figure dans la relation many-to-many du tag
 			const isLinked = tag.posts.some((rel) => rel.postId === $updateData.id);
 			return {
 				...tag,
@@ -67,9 +68,29 @@
 		})
 	);
 
-	// A chaque fois que `tags` est modifié, on met à jour $updateData.tagIds
+	/**
+	 * New variable that holds only the IDs of the checked tags.
+	 * This is separate from $updateData.tagIds, so you can use it
+	 * for display or other logic as needed.
+	 */
+	let checkedTagIds = $state<string[]>([]);
+
+	/**
+	 * Whenever `tags` changes, we update:
+	 * - $updateData.tagIds: needed for the form submission
+	 * - checkedTagIds: a new array containing only the checked tag IDs
+	 */
 	$effect(() => {
-		$updateData.tagIds = tags.filter((t) => t.checked).map((t) => t.id); // On récupère les ID de la table BlogTag
+		const newCheckedIds = tags
+			.filter((t) => t.checked)
+			.map((t) => t.id)
+			.filter(Boolean);
+
+		// Update the superform data
+		$updateData.tagIds = newCheckedIds;
+
+		// Also update our separate local variable
+		checkedTagIds = newCheckedIds;
 	});
 
 	// ----- TinyMCE config -----
@@ -92,6 +113,10 @@
 		$updateData.categoryId = cat.id;
 		openCategory = false;
 	}
+
+	$effect(() => {
+		console.log(JSON.stringify($updateData, null, 2), JSON.stringify(checkedTagIds, null, 2));
+	});
 </script>
 
 <form method="POST" action="?/updatePost" use:updateEnhance class="space-y-4">
@@ -145,7 +170,7 @@
 							id={'tag-' + tag.id}
 							checked={tag.checked}
 							onchange={(e) => {
-								// Mise à jour "immuable" pour forcer la réactivité
+								// Immutable update to force Svelte to register changes
 								tags[i] = { ...tag, checked: e.target.checked };
 							}}
 						/>
@@ -170,7 +195,7 @@
 		<Form.FieldErrors />
 	</Form.Field>
 
-	<!-- Hidden fields -->
+	<!-- Hidden fields for the form submission -->
 	<input type="hidden" name="id" value={$updateData.id} />
 	<input type="hidden" name="authorId" bind:value={$updateData.authorId} />
 	<input type="hidden" name="categoryId" bind:value={$updateData.categoryId} />
