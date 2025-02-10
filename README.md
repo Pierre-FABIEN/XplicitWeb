@@ -100,10 +100,11 @@ Réaliser les stat sur la consultation
 Performances sur le server pour cache
 commencer le blog et TinyMCE
 Mettre a jour Lucia
-Mettre en place Nodemailer
 
 
-revoir la sécurité sur les données
+
+revoir la sécurité sur les données sur Admin
+
 
 Sur l'admin il faut pouvoir changer le role indépendant dans un form mais aussi les adresses et pouvoir changer le mot de passe et mettre une option pour activer le M2FA
 

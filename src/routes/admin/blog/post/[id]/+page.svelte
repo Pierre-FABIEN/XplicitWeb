@@ -1,102 +1,78 @@
 <script lang="ts">
-	/*
-	 * This Svelte component allows editing an existing blog post.
-	 * It uses Shadcn components, sveltekit-superforms for form handling,
-	 * TinyMCE for rich text editing, and Zod for validation.
-	 */
-
+	// ----- Imports -----
 	import * as Form from '$shadcn/form';
 	import * as Popover from '$shadcn/popover';
 	import * as Command from '$shadcn/command';
 	import { Input } from '$shadcn/input';
 	import { Button } from '$shadcn/button';
-	import { Checkbox } from '$shadcn/checkbox/index.js';
-	import { Label } from '$shadcn/label/index.js';
+	import { Checkbox } from '$shadcn/checkbox';
+	import { Label } from '$shadcn/label';
+	import Editor from '@tinymce/tinymce-svelte';
+	import { toast } from 'svelte-sonner';
+	import { goto } from '$app/navigation';
 
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { goto } from '$app/navigation';
-
-	// TinyMCE
-	import Editor from '@tinymce/tinymce-svelte';
+	import { updateBlogPostSchema } from '$lib/schema/BlogPost/BlogPostSchema.js';
 	import { PUBLIC_TINYMCE_API_KEY } from '$env/static/public';
 
-	// Toast notifications
-	import { toast } from 'svelte-sonner';
-
-	// Zod schema (used for validation)
-	import { updateBlogPostSchema } from '$lib/schema/BlogPost/BlogPostSchema.js';
-
-	// Data coming from the load function in +page.server.ts
+	// ----- Props from the server -----
 	let { data } = $props();
-	console.log('Data loaded in update page:', data);
 
-	// Reactive state for categories and tags lists
-	let categories = $state(data.AllCategoriesPost || []);
-	let tags = $state(data.AllTagsPost || []);
-
-	// Pre-fill selectedCategory and selectedTag from the loaded blog post data
-	let selectedCategory = $state(data.IupdateBlogPostSchema?.data?.categoryId || null);
-	let selectedTag = $state(data.IupdateBlogPostSchema?.data?.tagIds || []);
-
-	// Control the opening of the popovers
-	let openCategory = $state(false);
-	let openTag = $state(false);
-
-	/*
-	 * Initialize the superForm using the validated data from IupdateBlogPostSchema,
-	 * applying Zod for client-side validations.
-	 */
-	const updatePost = superForm(data.IupdateBlogPostSchema, {
-		validators: zodClient(updateBlogPostSchema),
-		id: 'updatePost'
+	// ----- Prepare superForm for update -----
+	const updateForm = superForm(data.IupdateBlogPostSchema, {
+		validators: zodClient(updateBlogPostSchema)
 	});
 
 	const {
-		form: updatePostData,
-		enhance: updatePostEnhance,
-		message: updatePostMessage
-	} = updatePost;
+		form: updateData, // The reactive form data
+		enhance: updateEnhance, // The progressive enhancement
+		message: updateMessage // The success/failure message
+	} = updateForm;
 
 	$effect(() => {
-		console.log('updatePostData:', $updatePostData);
-	});
-	/*
-	 * When the server action returns "Post updated successfully", display a success toast
-	 * then navigate the user back to the main blog admin page.
-	 */
-	$effect(() => {
-		if ($updatePostMessage === 'Post updated successfully') {
-			toast($updatePostMessage);
-			setTimeout(() => goto('/admin/blog/'), 0);
+		if ($updateMessage === 'Post updated successfully') {
+			toast.success($updateMessage);
+			setTimeout(() => goto('/admin/blog'), 0);
 		}
 	});
 
-	/*
-	 * Handles category selection in the Popover/Command list.
-	 * Only one category is allowed, so we overwrite selectedCategory with a single value array.
-	 */
-	function handleSelectCategory(category) {
-		console.log('ca passe!', category);
-		selectedCategory = category.name;
-		$updatePostData.categoryId = category.id; // Store the category ID directly
-		openCategory = false;
-	}
+	// ----- Prepare categories -----
+	let categories = $state(data.AllCategoriesPost || []);
+	let selectedCategoryName = $state('');
 
-	/*
-	 * Handles tag selection in the Popover/Command list.
-	 * We allow multiple tags, so we push the new tag into selectedTag.
-	 */
-	function handleSelectTag(tag) {
-		console.log('ca passe!');
-		selectedTag = [...selectedTag, tag.name];
-		$updatePostData.tagIds = [...($updatePostData.tagIds as any[]), tag.id];
-		openTag = false;
-	}
+	$effect(() => {
+		if ($updateData.categoryId && categories.length) {
+			const found = categories.find((cat) => cat.id === $updateData.categoryId);
+			if (found) selectedCategoryName = found.name;
+		}
+	});
 
-	/*
-	 * TinyMCE configuration object for the Editor component.
+	// ----- Prepare tags -----
+	// `allTags` contient tous les tags depuis la base (relation BlogTag)
+	let allTags = $state(data.AllTagsPost || []);
+
+	/**
+	 * Pour chaque `tag`, on vérifie si la relation M2M (tag.posts) contient un
+	 * BlogPostTag dont le `postId` correspond à $updateData.id (le post en édition).
+	 * Si oui, on coche la case (`checked = true`).
 	 */
+	let tags = $state(
+		allTags.map((tag) => {
+			const isLinked = tag.posts.some((rel) => rel.postId === $updateData.id);
+			return {
+				...tag,
+				checked: isLinked
+			};
+		})
+	);
+
+	// A chaque fois que `tags` est modifié, on met à jour $updateData.tagIds
+	$effect(() => {
+		$updateData.tagIds = tags.filter((t) => t.checked).map((t) => t.id); // On récupère les ID de la table BlogTag
+	});
+
+	// ----- TinyMCE config -----
 	let editorConfig = {
 		telemetry: false,
 		branding: false,
@@ -107,114 +83,100 @@
 		toolbar:
 			'undo redo | blocks | bold italic forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help'
 	};
+
+	let openCategory = $state(false);
+	let openTag = $state(false);
+
+	function handleSelectCategory(cat) {
+		selectedCategoryName = cat.name;
+		$updateData.categoryId = cat.id;
+		openCategory = false;
+	}
 </script>
 
-<!-- Main container -->
-<div class="m-5 p-5 border w-[80vw]">
-	<!-- "use:updatePostEnhance" is from sveltekit-superforms to handle progressive enhancement -->
-	<form method="POST" action="?/updatePost" use:updatePostEnhance class="space-y-4">
-		<!-- Title field -->
-		<div class="w-full">
-			<Form.Field name="title" form={updatePost}>
-				<Form.Control>
-					<Form.Label>Title</Form.Label>
-					<Input name="title" type="text" bind:value={$updatePostData.title} />
-				</Form.Control>
-				<Form.FieldErrors />
-			</Form.Field>
-		</div>
+<form method="POST" action="?/updatePost" use:updateEnhance class="space-y-4">
+	<!-- Title -->
+	<Form.Field name="title" form={updateForm}>
+		<Form.Control>
+			<Form.Label>Title</Form.Label>
+			<Input name="title" type="text" bind:value={$updateData.title} />
+		</Form.Control>
+		<Form.FieldErrors />
+	</Form.Field>
 
-		<!-- Published checkbox -->
-		<div class="flex items-center space-x-2">
-			<Form.Field name="published" form={updatePost}>
-				<Form.Control>
-					<div class="flex items-center">
-						<Checkbox
-							name="published"
-							aria-labelledby="published"
-							bind:checked={$updatePostData.published as boolean | undefined}
+	<!-- Published -->
+	<Form.Field name="published" form={updateForm}>
+		<Form.Control>
+			<div class="flex items-center">
+				<Checkbox name="published" bind:checked={$updateData.published as boolean} />
+				<Label class="ml-2">Published</Label>
+			</div>
+		</Form.Control>
+		<Form.FieldErrors />
+	</Form.Field>
+
+	<!-- Category Popover -->
+	<div class="flex items-center space-x-4">
+		<Popover.Root bind:open={openCategory}>
+			<Popover.Trigger>
+				<Button>Category: {selectedCategoryName}</Button>
+			</Popover.Trigger>
+			<Popover.Content class="p-4">
+				<Command.Root>
+					{#each categories as cat}
+						<Command.Item onSelect={() => handleSelectCategory(cat)}>
+							{cat.name}
+						</Command.Item>
+					{/each}
+				</Command.Root>
+			</Popover.Content>
+		</Popover.Root>
+
+		<!-- Tags Popover -->
+		<Popover.Root bind:open={openTag}>
+			<Popover.Trigger>
+				<Button>Tags: {$updateData.tagIds.length} selected</Button>
+			</Popover.Trigger>
+			<Popover.Content class="p-4 space-y-2">
+				{#each tags as tag, i}
+					<div class="flex items-center space-x-2">
+						<input
+							type="checkbox"
+							id={'tag-' + tag.id}
+							checked={tag.checked}
+							onchange={(e) => {
+								// Mise à jour "immuable" pour forcer la réactivité
+								tags[i] = { ...tag, checked: e.target.checked };
+							}}
 						/>
-						<Label
-							id="published"
-							for="published"
-							class="text-sm ml-2 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-						>
-							Published
-						</Label>
+						<Label for={'tag-' + tag.id}>{tag.name}</Label>
 					</div>
-				</Form.Control>
-				<Form.FieldErrors />
-			</Form.Field>
-		</div>
+				{/each}
+			</Popover.Content>
+		</Popover.Root>
+	</div>
 
-		<!-- Category selection (uses Shadcn Popover + Command) -->
-		<div class="mx-2 inline-block">
-			<Popover.Root bind:open={openCategory}>
-				<Popover.Trigger>
-					<Button>
-						{selectedCategory?.length > 0 ? selectedCategory : 'Select Category'}
-					</Button>
-				</Popover.Trigger>
-				<Popover.Content>
-					<Command.Root>
-						{#each categories as category}
-							<Command.Item onSelect={() => handleSelectCategory(category)}>
-								{category.name}
-							</Command.Item>
-						{/each}
-					</Command.Root>
-				</Popover.Content>
-			</Popover.Root>
+	<!-- Content -->
+	<Form.Field name="content" form={updateForm}>
+		<Form.Control>
+			<Form.Label>Content</Form.Label>
+			<Editor
+				{editorConfig}
+				scriptSrc="/tinymce/tinymce.min.js"
+				apiKey={PUBLIC_TINYMCE_API_KEY}
+				bind:value={$updateData.content}
+			/>
+		</Form.Control>
+		<Form.FieldErrors />
+	</Form.Field>
 
-			<!-- Hidden input that stores the categoryId for form submission -->
-			<input type="text" name="categoryId" bind:value={selectedCategory} class="hidden" />
-		</div>
+	<!-- Hidden fields -->
+	<input type="hidden" name="id" value={$updateData.id} />
+	<input type="hidden" name="authorId" bind:value={$updateData.authorId} />
+	<input type="hidden" name="categoryId" bind:value={$updateData.categoryId} />
+	<input type="hidden" name="content" bind:value={$updateData.content} />
+	<input type="hidden" name="tagIds" bind:value={$updateData.tagIds} />
 
-		<!-- Tag selection (multiple) -->
-		<div class="mx-2 inline-block">
-			<Popover.Root bind:open={openTag}>
-				<Popover.Trigger>
-					<Button>
-						{selectedTag?.length > 0 ? selectedTag.join(', ') : 'Select Tags'}
-					</Button>
-				</Popover.Trigger>
-				<Popover.Content>
-					<Command.Root>
-						{#each tags as tag}
-							<Command.Item onSelect={() => handleSelectTag(tag)}>
-								{tag.name}
-							</Command.Item>
-						{/each}
-					</Command.Root>
-				</Popover.Content>
-			</Popover.Root>
-		</div>
-
-		<!-- Rich text content field using TinyMCE -->
-		<div class="w-full">
-			<Form.Field name="content" form={updatePost}>
-				<Form.Control>
-					<Form.Label>Content</Form.Label>
-					<Editor
-						{editorConfig}
-						scriptSrc="/tinymce/tinymce.min.js"
-						apiKey={PUBLIC_TINYMCE_API_KEY}
-						bind:value={$updatePostData.content}
-					/>
-				</Form.Control>
-				<Form.FieldErrors />
-			</Form.Field>
-		</div>
-
-		<!-- Hidden field for the blog post ID -->
-		<input type="hidden" name="id" value={$updatePostData.id} />
-		<input type="hidden" name="content" value={$updatePostData.content} />
-		<!-- Hidden input that stores the tagIds for form submission -->
-		<input type="text" name="tagIds" bind:value={$updatePostData.tagIds} class="hidden" />
-		<input type="text" name="categoryId" bind:value={$updatePostData.categoryId} class="hidden" />
-		<input type="text" name="authorId" bind:value={$updatePostData.authorId} class="hidden" />
-
-		<!-- Submit button -->
-		<Button type="submit" class="mt-4">Save changes</Button>
-	</form>
-</div>
+	<!-- Submit -->
+	<Button type="submit">Save changes</Button>
+</form>

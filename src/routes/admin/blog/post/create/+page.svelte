@@ -1,6 +1,4 @@
 <script lang="ts">
-	// Import necessary components and libraries
-	import { enhance } from '$app/forms';
 	import * as Form from '$shadcn/form';
 	import * as Popover from '$shadcn/popover';
 	import * as Command from '$shadcn/command';
@@ -19,8 +17,6 @@
 
 	// Receive props from the server
 	let { data } = $props();
-
-	console.log(data, 'data');
 
 	// Variables pour catégories et tags
 	let categories = $state(data.AllCategoriesPost || []);
@@ -56,9 +52,6 @@
 		}
 	});
 
-	$effect(() => {
-		console.log($createPostData);
-	});
 	/*
 	 * Sélection d'une catégorie
 	 * Seule une catégorie peut être sélectionnée, on affecte son nom et son ID.
@@ -68,34 +61,6 @@
 		$createPostData.categoryId = category.id;
 		openCategory = false;
 	}
-
-	/*
-	 * Fonction de basculement pour la sélection d'un tag.
-	 * Si "checked" est vrai, on ajoute l'ID du tag s'il n'est pas déjà présent ;
-	 * sinon, on le retire.
-	 */
-	function toggleTagSelection(tag, checked) {
-		// Assure que tagIds est bien un tableau
-		if (!$createPostData.tagIds || !Array.isArray($createPostData.tagIds)) {
-			$createPostData.tagIds = [];
-		}
-		if (checked) {
-			if (!$createPostData.tagIds.includes(tag.id)) {
-				$createPostData.tagIds = [...$createPostData.tagIds, tag.id];
-			}
-		} else {
-			$createPostData.tagIds = $createPostData.tagIds.filter((id) => id !== tag.id);
-		}
-	}
-
-	/*
-	 * Store dérivé pour calculer les noms des tags sélectionnés
-	 * à partir des IDs stockés dans $createPostData.tagIds.
-	 */
-	const selectedTagNames = $derived.by(() => {
-		if (!$createPostData.tagIds || !Array.isArray($createPostData.tagIds)) return [];
-		return tags.filter((tag) => $createPostData.tagIds.includes(tag.id)).map((tag) => tag.name);
-	});
 
 	// Configuration de l'éditeur
 	let editorConfig = {
@@ -173,7 +138,7 @@
 				<Popover.Root bind:open={openTag}>
 					<Popover.Trigger>
 						<Button>
-							Tags : {$createPostData.tagIds.length} sélectionnés
+							Tags : {($createPostData?.tagIds || []).length} sélectionnés
 						</Button>
 					</Popover.Trigger>
 					<Popover.Content class="p-4 space-y-2">
