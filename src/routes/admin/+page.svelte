@@ -65,7 +65,7 @@
 	];
 
 	// Extraction et agrégation des quantités vendues par produit
-	let productSalesData: { x: string; y: number }[] = [];
+	let productSalesData: { x: string; y: number }[] = $state([]);
 
 	if (transactions.length > 0) {
 		// Utiliser un Map pour regrouper par produit
