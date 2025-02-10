@@ -73,7 +73,7 @@
 
 	<!-- Bouton pour télécharger le PDF -->
 	<button
-		on:click={generatePDF}
+		onclick={generatePDF}
 		class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-5"
 	>
 		Télécharger le Bordereau PDF

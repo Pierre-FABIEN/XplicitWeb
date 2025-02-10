@@ -86,7 +86,7 @@
 
 	<!-- Bouton pour télécharger la Facture PDF -->
 	<button
-		on:click={generateInvoicePDF}
+		onclick={generateInvoicePDF}
 		class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-5"
 	>
 		Télécharger la Facture PDF
