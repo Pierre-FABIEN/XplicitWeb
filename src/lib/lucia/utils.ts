@@ -13,3 +13,12 @@ export function generateRandomRecoveryCode(): string {
 	const recoveryCode = encodeBase32UpperCaseNoPadding(recoveryCodeBytes);
 	return recoveryCode;
 }
+
+export function generateForgotPasswordCode(): string {
+	const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; // Lettres majuscules + chiffres
+	let code = '';
+	for (let i = 0; i < 8; i++) {
+		code += charset.charAt(Math.floor(Math.random() * charset.length));
+	}
+	return code;
+}

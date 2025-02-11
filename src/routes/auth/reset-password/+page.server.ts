@@ -57,11 +57,6 @@ export const actions: Actions = {
 		if (typeof password !== 'string') {
 			return message(form, 'Invalid or missing fields');
 		}
-
-		const strongPassword = await verifyPasswordStrength(password);
-		if (!strongPassword) {
-			return message(form, 'Weak password');
-		}
 		await invalidateUserPasswordResetSessions(passwordResetSession.userId);
 		await invalidateUserSessions(passwordResetSession.userId);
 		await updateUserPassword(passwordResetSession.userId, password);

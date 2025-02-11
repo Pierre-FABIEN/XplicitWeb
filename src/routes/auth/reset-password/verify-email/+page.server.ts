@@ -22,11 +22,6 @@ export const load = async (event: RequestEvent) => {
 		return redirect(302, '/auth/forgot-password');
 	}
 
-	if (session.emailVerified && !session.twoFactorVerified) {
-		console.log('Email is verified but 2FA is not verified. Redirecting to 2FA setup.');
-		return redirect(302, '/auth/reset-password/2fa');
-	}
-
 	if (!session.emailVerified) {
 		console.log('Email is not verified, staying on verify email page.');
 	}
@@ -42,7 +37,10 @@ export const actions: Actions = {
 	verify: async (event: RequestEvent) => {
 		const { session } = await validatePasswordResetSessionRequest(event);
 		const formData = await event.request.formData();
+		console.log(formData, 'form data');
+
 		const form = await superValidate(formData, zod(verifyCodeSchema));
+		console.log(form, 'oiuhoiuh');
 
 		if (session === null) {
 			return message(form, 'Not authenticated');

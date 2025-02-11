@@ -13,7 +13,7 @@ import type { Actions, RequestEvent } from './$types';
 import { message, superValidate } from 'sveltekit-superforms';
 import { forgotPasswordSchema } from '$lib/schema/auth/forgotPasswordSchema';
 import { zod } from 'sveltekit-superforms/adapters';
-import { generateRandomRecoveryCode } from '$lib/lucia/utils';
+import { generateForgotPasswordCode, generateRandomRecoveryCode } from '$lib/lucia/utils';
 
 const ipBucket = new RefillingTokenBucket<string>(3, 60);
 const userBucket = new RefillingTokenBucket<number>(3, 60);
@@ -60,9 +60,9 @@ export const actions: Actions = {
 
 		await invalidateUserPasswordResetSessions(user.id);
 		const sessionToken = generateSessionToken();
-		console.log(sessionToken);
+		console.log(sessionToken, 'sessionToken');
 
-		const code = await generateRandomRecoveryCode();
+		const code = await generateForgotPasswordCode();
 		console.log(code, 'code dkrjghdlsug hlg kftdjhlktjfdhk');
 		console.log(user, 'user lkjgtf tlhki jcftlohikjft clhk');
 		const expirationDate = new Date(Date.now() + 15 * 60 * 1000);
@@ -74,9 +74,11 @@ export const actions: Actions = {
 			email: user.email,
 			code: code,
 			expiresAt: expirationDate,
-			emailVerified: user.emailVerified ?? false, // ou false
+			emailVerified: false,
 			twoFactorVerified: user.isMfaEnabled ?? false
 		};
+
+		console.log('sessionData reset sessionData created:', sessionData);
 
 		// Crée la session
 		const session = await createPasswordResetSessionPrisma(sessionData);
