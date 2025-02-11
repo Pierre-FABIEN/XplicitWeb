@@ -96,27 +96,23 @@ taskkill /PID 2816 /F
 
 
 
-Réaliser les stat sur la consultation
-Performances sur le server pour cache
-commencer le blog et TinyMCE
-Mettre a jour Lucia
 
 
 
 revoir la sécurité sur les données sur Admin
-
-
-
-
 faire fusionner le google avec l'email
 
 
 Faire une verification de la order avant d'envoyer sur stripe dans page.server
 
 Mettre a jour les transaction order
-faire les bordereaux et factures
+rendre les facture sur le coté client dispo
 Sur l'admin il faut pouvoir changer le role indépendant dans un form mais aussi les adresses et pouvoir changer le mot de passe et mettre une option pour activer le M2FA
 
+
+Les commandes sont minimum de 24 unités pour les natives
+les commande au maximum sont de 3*24 pour natives
+Ajouter le poids de 24 - 3kg
 
 
 

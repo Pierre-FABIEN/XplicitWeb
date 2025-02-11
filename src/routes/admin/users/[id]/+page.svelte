@@ -13,6 +13,8 @@
 
 	let { data } = $props();
 
+	console.log(data, 'oiuhoiuhoiuh');
+
 	if (!data || !data.IupdateUserAndAddressSchema || !data.IupdateUserAndAddressSchema.data) {
 		throw new Error('Missing data for the form');
 	}
@@ -24,7 +26,7 @@
 		onResult: (data) => {
 			if (data.result.data.form.message === 'User and addresses updated successfully') {
 				toast.success(data.result.data.form.message);
-				setTimeout(() => goto('/dashboard/users'), 0);
+				setTimeout(() => goto('/admin/users'), 0);
 			}
 		}
 	});
@@ -43,11 +45,17 @@
 		}
 
 		try {
-			const response = await fetch(`/api/open-cage?q=${encodeURIComponent(query)}`);
-			const data = await response.json();
-			addressSuggestions = data.suggestions;
+			const response = await fetch(`/api/open-cage-data?q=${encodeURIComponent(query)}`);
+			const { suggestions } = await response.json();
+
+			if (Array.isArray(suggestions) && suggestions.length > 0) {
+				addressSuggestions = suggestions;
+			} else {
+				addressSuggestions = []; // Aucun résultat
+			}
 		} catch (error) {
 			console.error('Error fetching address suggestions:', error);
+			addressSuggestions = [];
 		}
 	}
 
@@ -71,7 +79,11 @@
 		addressSuggestions = [];
 	}
 
-	const roleOptions = ['admin', 'user'];
+	$effect(() => {
+		console.log($form, 'uihoiuho');
+	});
+
+	const roleOptions = ['ADMIN', 'CLIENT'];
 </script>
 
 <div class="min-h-screen min-w-[100vw] absolute">
@@ -101,6 +113,22 @@
 				<Form.FieldErrors />
 			</Form.Field>
 
+			<Form.Field name="isMfaEnabled" form={updateUserAndAddresses}>
+				<Form.Control>
+					<Form.Label>2FA Activé</Form.Label>
+					<input type="checkbox" bind:checked={$form.isMfaEnabled} />
+				</Form.Control>
+				<Form.FieldErrors />
+			</Form.Field>
+
+			<Form.Field name="passwordHash" form={updateUserAndAddresses}>
+				<Form.Control>
+					<Form.Label>Mot de passe</Form.Label>
+					<Input type="password" bind:value={$form.passwordHash} />
+				</Form.Control>
+				<Form.FieldErrors />
+			</Form.Field>
+
 			<div class="rts">
 				{#each $form.addresses as address, index}
 					<div class="address-form rounded border m-5 p-5 min-w-[500px]">
@@ -123,7 +151,7 @@
 
 						<h2 class="text-2xl font-bold mb-4">{address.recipient}</h2>
 
-						<Form.Field form={updateUserAndAddresses}>
+						<Form.Field name={`addresses[${index}].recipient`} form={updateUserAndAddresses}>
 							<Form.Control>
 								<Form.Label>Recipient</Form.Label>
 								<Input
@@ -147,7 +175,7 @@
 							<Form.FieldErrors />
 						</Form.Field>
 
-						<Form.Field form={updateUserAndAddresses}>
+						<Form.Field name={`addresses[${index}].city`} form={updateUserAndAddresses}>
 							<Form.Control>
 								<Form.Label>City</Form.Label>
 								<Input
@@ -160,7 +188,7 @@
 							<Form.FieldErrors />
 						</Form.Field>
 
-						<Form.Field form={updateUserAndAddresses}>
+						<Form.Field name={`addresses[${index}].state`} form={updateUserAndAddresses}>
 							<Form.Control>
 								<Form.Label>State</Form.Label>
 								<Input
@@ -173,7 +201,7 @@
 							<Form.FieldErrors />
 						</Form.Field>
 
-						<Form.Field form={updateUserAndAddresses}>
+						<Form.Field name={`addresses[${index}].zip`} form={updateUserAndAddresses}>
 							<Form.Control>
 								<Form.Label>ZIP Code</Form.Label>
 								<Input
@@ -186,7 +214,7 @@
 							<Form.FieldErrors />
 						</Form.Field>
 
-						<Form.Field form={updateUserAndAddresses}>
+						<Form.Field name={`addresses[${index}].country`} form={updateUserAndAddresses}>
 							<Form.Control>
 								<Form.Label>Country</Form.Label>
 								<Input

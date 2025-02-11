@@ -15,6 +15,8 @@ const addressSchema = z.object({
 const updateUserAndAddressSchema = z.object({
 	id: z.string(),
 	role: z.string().min(1, 'Role is required'),
+	isMfaEnabled: z.boolean(),
+	passwordHash: z.string().nullable().optional(),
 	addresses: z.array(addressSchema)
 });
 

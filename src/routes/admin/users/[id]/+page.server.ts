@@ -6,40 +6,49 @@ import { zod } from 'sveltekit-superforms/adapters';
 import { updateUserAndAddressSchema } from '$lib/schema/addresses/updateUserAndAddressSchema';
 import { getUsersById, updateUserRole } from '$lib/prisma/user/user';
 import { getUserAddresses, updateAddress } from '$lib/prisma/addresses/addresses';
+import { updateUserSecurity } from '$lib/prisma/user/updateUserSecurity';
 
 export const load: PageServerLoad = async ({ params }) => {
 	console.log('Loading user data for ID:', params.id);
 
-	const user = await getUsersById(params.id);
+	const userFetched = await getUsersById(params.id);
 	const addresses = await getUserAddresses(params.id);
 
-	if (!user) {
+	console.log(userFetched, 'userFetched');
+	console.log(addresses, 'addresses');
+
+	if (!userFetched) {
 		console.log('User not found');
 		return fail(404, { message: 'User not found' });
 	}
 
 	const initialData = {
-		id: user.id,
-		role: user.role,
+		id: userFetched?.id || '',
+		role: userFetched?.role || 'USER',
+		isMfaEnabled: userFetched.isMfaEnabled || false,
+		passwordHash: '',
 		addresses: addresses.map((address) => ({
-			id: address.id,
-			recipient: address.recipient,
-			street: address.street,
-			city: address.city,
-			state: address.state,
-			zip: address.zip,
-			country: address.country
+			id: address?.id || '',
+			recipient: address?.recipient || '',
+			street: address?.street || '',
+			city: address?.city || '',
+			state: address?.state || '',
+			zip: address?.zip || '',
+			country: address?.country || ''
 		}))
 	};
 
+	console.log('Initial Data:', initialData);
 	const IupdateUserAndAddressSchema = await superValidate(
 		initialData,
 		zod(updateUserAndAddressSchema)
 	);
+	console.log('Schema Data:', IupdateUserAndAddressSchema);
 
 	return {
 		initialData,
-		IupdateUserAndAddressSchema
+		IupdateUserAndAddressSchema,
+		userFetched
 	};
 };
 
@@ -50,15 +59,13 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		console.log('Received form data:', formData);
 
-		// Extract JSON data from formData
+		// Extraction des données JSON
 		const jsonData = formData.get('__superform_json');
 		if (!jsonData) {
 			return fail(400, { message: 'Invalid form data' });
 		}
 
-		// Parse the JSON data
 		let parsedData;
-
 		try {
 			parsedData = JSON.parse(jsonData.toString());
 		} catch (error) {
@@ -68,54 +75,64 @@ export const actions: Actions = {
 
 		console.log('Parsed form data:', parsedData);
 
-		// Extract user and addresses information
+		// Extraction des données utilisateur
 		const userId = parsedData[1];
-		const userType = parsedData[2];
-		const addressesIndexes = parsedData[3]; // This contains the indexes of addresses in the parsedData
+		const userRole = parsedData[2];
+		const isMfaEnabled = parsedData[3];
+		const passwordHash = parsedData[4] ? parsedData[4].trim() : null;
+		const addressesIndexes = parsedData[5];
 
-		const addresses = addressesIndexes.map((index: number) => {
-			const address = parsedData[index];
-			console.log('Address:', address);
+		// Vérifier si addressesIndexes est bien un tableau avant de faire `.map()`
+		const addresses = Array.isArray(addressesIndexes)
+			? addressesIndexes.map((index: number) => ({
+					id: parsedData[index + 1], // Décalage pour récupérer l'adresse
+					recipient: parsedData[index + 2],
+					street: parsedData[index + 3],
+					city: parsedData[index + 4],
+					state: parsedData[index + 5],
+					zip: parsedData[index + 6],
+					country: parsedData[index + 7]
+				}))
+			: [];
 
-			return {
-				id: parsedData[address.id],
-				recipient: parsedData[address.recipient],
-				street: parsedData[address.street],
-				city: parsedData[address.city],
-				state: parsedData[address.state],
-				zip: parsedData[address.zip],
-				country: parsedData[address.country]
-			};
-		});
-
-		// Structuring the final data
+		// Structuration des données finales
 		const finalData = {
 			id: userId,
-			role: userType,
+			role: userRole,
+			isMfaEnabled,
+			passwordHash,
 			addresses
 		};
 
 		console.log('Structured data:', finalData);
 
+		// Validation des données avec Zod
 		const form = await superValidate(finalData, zod(updateUserAndAddressSchema));
-
 		if (!form.valid) {
 			console.log('Validation errors:', form.errors);
 			return fail(400, { form });
 		}
 
 		try {
-			const { id, role, addresses } = form.data;
+			const { id, role, isMfaEnabled, passwordHash, addresses } = form.data;
 			console.log('Updating user and addresses with ID:', id, 'and role:', role);
+
+			// Vérifier si l'utilisateur existe
 			const user = await getUsersById(id);
+			if (!user) {
+				return fail(404, { message: 'User not found' });
+			}
 
-			console.log('User:', user);
+			// Mise à jour du rôle utilisateur
+			await updateUserRole(id, role);
 
-			// Update user data
-			const userUpdateResult = await updateUserRole(id, role);
+			if (passwordHash !== null) {
+				await updateUserSecurity(id, { isMfaEnabled, passwordHash });
+			}
+			// Mise à jour de la sécurité (MFA & mot de passe chiffré)
 
-			// Update each address
-			const addressUpdateResults = await Promise.all(
+			// Mise à jour des adresses
+			await Promise.all(
 				addresses.map((address) =>
 					updateAddress(address.id, {
 						recipient: address.recipient,
@@ -128,9 +145,7 @@ export const actions: Actions = {
 				)
 			);
 
-			console.log('User update result:', userUpdateResult);
-			console.log('Address update results:', addressUpdateResults);
-
+			console.log('User and addresses updated successfully');
 			return message(form, 'User and addresses updated successfully');
 		} catch (error) {
 			console.error('Error updating user and addresses:', error);

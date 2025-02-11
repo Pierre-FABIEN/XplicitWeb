@@ -191,8 +191,4 @@
 		position: absolute;
 		z-index: 1;
 	}
-
-	.wrapper {
-		transition: background-color 0.5s ease-in-out;
-	}
 </style>

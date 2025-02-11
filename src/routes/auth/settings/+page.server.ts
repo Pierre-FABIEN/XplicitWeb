@@ -33,6 +33,10 @@ export const load = async (event: RequestEvent) => {
 		return redirect(302, '/auth/login');
 	}
 
+	if (!event.locals.user.emailVerified) {
+		return redirect(302, '/auth/verify-email');
+	}
+
 	if (!event.locals.user.googleId) {
 		if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
 			if (event.locals.user.isMfaEnabled) {
