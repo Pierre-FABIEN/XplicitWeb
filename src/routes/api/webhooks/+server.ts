@@ -3,7 +3,6 @@ import Stripe from 'stripe';
 import { prisma } from '$lib/server/index';
 import dotenv from 'dotenv';
 import { getUserIdByOrderId } from '$lib/prisma/order/prendingOrder';
-import { createTransactionInvalidated } from '$lib/prisma/transaction/createTransactionInvalidated';
 import { getAllProducts } from '$lib/prisma/products/products';
 
 dotenv.config();
@@ -115,9 +114,8 @@ async function handleCheckoutSession(session) {
 				customer_details_phone: session.customer_details ? session.customer_details.phone : '',
 				status: session.payment_status,
 				orderId: orderId,
-				userId: userId,
 				createdAt: new Date(session.created * 1000),
-				app_user_name: order.user.name,
+				app_user_name: order.user.name ?? order.user.username ?? 'Unknown',
 				app_user_email: order.user.email,
 				app_user_recipient: order.address.recipient,
 				app_user_street: order.address.street,
@@ -140,7 +138,8 @@ async function handleCheckoutSession(session) {
 						createdAt: custom.createdAt,
 						updatedAt: custom.updatedAt
 					}))
-				}))
+				})),
+				user: { connect: { id: userId } }
 			};
 
 			console.log('ℹ️ Transaction data prepared:', transactionData);
@@ -200,78 +199,78 @@ async function handleCheckoutSession(session) {
 	}
 }
 
-async function handleChargeFailed(charge) {
-	const paymentIntentId = charge.payment_intent;
+// async function handleChargeFailed(charge) {
+// 	const paymentIntentId = charge.payment_intent;
 
-	const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-	console.log('⚠️ Payment Intent:', paymentIntent);
+// 	const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+// 	console.log('⚠️ Payment Intent:', paymentIntent);
 
-	const amount = paymentIntent.amount;
+// 	const amount = paymentIntent.amount;
 
-	const currency = paymentIntent.currency;
+// 	const currency = paymentIntent.currency;
 
-	const status = charge.status;
+// 	const status = charge.status;
 
-	const stripePaymentId = paymentIntent.id;
+// 	const stripePaymentId = paymentIntent.id;
 
-	const userId = paymentIntent.metadata.user_id;
+// 	const userId = paymentIntent.metadata.user_id;
 
-	const orderId = paymentIntent.metadata.order_id;
+// 	const orderId = paymentIntent.metadata.order_id;
 
-	const order = await prisma.order.findUnique({
-		where: { id: orderId },
-		include: {
-			user: true,
-			address: true,
-			items: {
-				include: {
-					product: true
-				}
-			}
-		}
-	});
+// 	const order = await prisma.order.findUnique({
+// 		where: { id: orderId },
+// 		include: {
+// 			user: true,
+// 			address: true,
+// 			items: {
+// 				include: {
+// 					product: true
+// 				}
+// 			}
+// 		}
+// 	});
 
-	if (!order) {
-		throw new Error(`Order ${orderId} not found`);
-	}
+// 	if (!order) {
+// 		throw new Error(`Order ${orderId} not found`);
+// 	}
 
-	if (!order.address) {
-		throw new Error(`Order ${orderId} has no associated address`);
-	}
+// 	if (!order.address) {
+// 		throw new Error(`Order ${orderId} has no associated address`);
+// 	}
 
-	const dataTransaction = {
-		stripePaymentId: stripePaymentId,
-		amount: amount,
-		currency: currency,
-		customer_details_email: charge.billing_details.email,
-		customer_details_name: charge.billing_details.name,
-		customer_details_phone: charge.billing_details.phone,
-		status: status,
-		orderId: orderId,
-		userId: userId,
-		createdAt: Date.now(),
-		app_user_name: order.user.name,
-		app_user_email: order.user.email,
-		app_user_recipient: order.address.recipient,
-		app_user_street: order.address.street,
-		app_user_city: order.address.city,
-		app_user_state: order.address.state,
-		app_user_zip: order.address.zip,
-		app_user_country: order.address.country,
-		products: order.items.map((item) => ({
-			id: item.productId,
-			name: item.product.name,
-			price: item.product.price,
-			quantity: item.quantity
-		}))
-	};
+// 	const dataTransaction = {
+// 		stripePaymentId: stripePaymentId,
+// 		amount: amount,
+// 		currency: currency,
+// 		customer_details_email: charge.billing_details.email,
+// 		customer_details_name: charge.billing_details.name,
+// 		customer_details_phone: charge.billing_details.phone,
+// 		status: status,
+// 		orderId: orderId,
+// 		userId: userId,
+// 		createdAt: Date.now(),
+// 		app_user_name: order.user.name,
+// 		app_user_email: order.user.email,
+// 		app_user_recipient: order.address.recipient,
+// 		app_user_street: order.address.street,
+// 		app_user_city: order.address.city,
+// 		app_user_state: order.address.state,
+// 		app_user_zip: order.address.zip,
+// 		app_user_country: order.address.country,
+// 		products: order.items.map((item) => ({
+// 			id: item.productId,
+// 			name: item.product.name,
+// 			price: item.product.price,
+// 			quantity: item.quantity
+// 		}))
+// 	};
 
-	try {
-		// Log the failed payment attempt
-		await createTransactionInvalidated(dataTransaction, userId, orderId);
+// 	try {
+// 		// Log the failed payment attempt
+// 		await createTransactionInvalidated(dataTransaction, userId, orderId);
 
-		console.log(`⚠️ Payment failed for paymentIntent ${paymentIntent.id} has been logged.`);
-	} catch (error) {
-		console.error(`⚠️ Error handling payment intent failed for order ${orderId}:`, error);
-	}
-}
+// 		console.log(`⚠️ Payment failed for paymentIntent ${paymentIntent.id} has been logged.`);
+// 	} catch (error) {
+// 		console.error(`⚠️ Error handling payment intent failed for order ${orderId}:`, error);
+// 	}
+// }
