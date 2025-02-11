@@ -1,7 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
+import { prisma } from '$lib/server';
 export const getTransactionById = async (id: string) => {
 	try {
 		// Requête pour obtenir une transaction par ID

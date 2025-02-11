@@ -137,6 +137,13 @@
 		<Button href="/auth/settings/address" class="w-full">Mes addresses</Button>
 	</section>
 
+	<!-- Formulaire de mise à jour du mot de passe -->
+	<section class="mb-8">
+		<h2 class="text-xl font-semibold mb-4">Consulter mes factures</h2>
+
+		<Button href="/auth/settings/factures" class="w-full">Mes Facture</Button>
+	</section>
+
 	<!-- Section pour la mise à jour de l'authentification à deux facteurs -->
 	{#if !data.user.googleId}
 		<section class="mb-8">

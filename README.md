@@ -100,10 +100,6 @@ taskkill /PID 2816 /F
 
 
 revoir la sécurité sur les données sur Admin
-faire fusionner le google avec l'email
-
-
-Faire une verification de la order avant d'envoyer sur stripe dans page.server
 
 Mettre a jour les transaction order
 rendre les facture sur le coté client dispo

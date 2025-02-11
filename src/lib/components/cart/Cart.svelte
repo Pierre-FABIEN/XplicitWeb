@@ -10,7 +10,11 @@
 	import Input from '../shadcn/ui/input/input.svelte';
 
 	let { data } = $props();
-	const user = data?.user ?? null;
+	let user;
+
+	$effect(() => {
+		user = data?.user ?? null;
+	});
 
 	/**
 	 * Handle the removal of an item from the cart.

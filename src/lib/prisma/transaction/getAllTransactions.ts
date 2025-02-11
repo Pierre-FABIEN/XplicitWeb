@@ -1,7 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
+import { prisma } from '$lib/server';
 export const getAllTransactions = async () => {
 	try {
 		// Requête pour obtenir toutes les transactions
