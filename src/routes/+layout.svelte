@@ -22,6 +22,7 @@
 	import Threltre from '$lib/components/threlte/Threltre.svelte';
 	import BackgroundCanvas from '$lib/components/BackgroundCanvas.svelte';
 	import Options from '$lib/components/navigation/Options.svelte';
+	import SmoothScrollBarStore from '$lib/store/SmoothScrollBarStore';
 
 	let { children, data } = $props();
 	let cartInitialized = $state(false);
@@ -50,6 +51,34 @@
 
 		return unsubscribe;
 	});
+
+	let contentRef: HTMLElement | null = $state(null);
+	let contentHeight = $state(0);
+
+	$effect(() => {
+		if (!contentRef) return;
+
+		const observer = new ResizeObserver(() => {
+			contentHeight = contentRef.clientHeight;
+			updateSmoothScroll();
+		});
+		observer.observe(contentRef);
+
+		return () => observer.disconnect();
+	});
+
+	function updateSmoothScroll() {
+		let scrollbarInstance;
+		SmoothScrollBarStore.update((state) => {
+			scrollbarInstance = state.smoothScroll;
+			return state;
+		});
+
+		if (scrollbarInstance) {
+			scrollbarInstance.update();
+			console.log('smoothScroll a recalculé la hauteur :', contentHeight);
+		}
+	}
 </script>
 
 <svelte:head>
@@ -102,7 +131,7 @@
 						<div class="canva">
 							<Threltre />
 						</div>
-						<div class="content ccc">
+						<div class="content ccc" bind:this={contentRef}>
 							{@render children()}
 						</div>
 					</main>
