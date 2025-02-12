@@ -17,6 +17,9 @@
 	$effect(() => {
 		user = data?.user;
 	});
+
+	let sidebarOpen: boolean = $state(false);
+
 	/**
 	 * Handle the removal of an item from the cart.
 	 *
@@ -62,6 +65,7 @@
 				// 🚀 Invalide toutes les données pour que SvelteKit recharge dynamiquement
 				await invalidateAll();
 
+				sidebarOpen = false;
 				// 🔄 Redirige l'utilisateur vers l'accueil ou la page souhaitée
 				goto('/');
 			} else {
@@ -75,7 +79,7 @@
 
 <div class="cartButton relative w-70 h-70 mx-7 ccc">
 	<div class="absolute z-50 ccc">
-		<Sheet.Root>
+		<Sheet.Root bind:open={sidebarOpen}>
 			<Sheet.Trigger>
 				<button class="m-5 ccc">
 					<ShoppingCart class="w-8 h-8 z-0 absolute right-0 top-0 stroke-white" />
@@ -195,7 +199,7 @@
 				{#if user}
 					<!-- If the user is logged in -->
 					<Button>
-						<a href="/auth/settings">Mes paramètres</a>
+						<a href="/auth/settings" onclick={() => (sidebarOpen = false)}>Mes paramètres</a>
 					</Button>
 
 					<Button type="button" variant="destructive" class="w-full" onclick={handleSignOut}>
@@ -205,9 +209,17 @@
 					<!-- If the user is not logged in -->
 					<div class="text-center mt-4">
 						<p class=" mb-2">
-							Veuillez vous <a href="/auth/login" class="text-blue-500 underline">connecter</a>
-							ou <a href="/auth/signup" class="text-blue-500 underline">vous inscrire</a> pour finaliser
-							votre commande.
+							Veuillez vous <a
+								href="/auth/login"
+								onclick={() => (sidebarOpen = false)}
+								class="text-blue-500 underline">connecter</a
+							>
+							ou
+							<a
+								href="/auth/signup"
+								onclick={() => (sidebarOpen = false)}
+								class="text-blue-500 underline">vous inscrire</a
+							> pour finaliser votre commande.
 						</p>
 					</div>
 				{/if}
