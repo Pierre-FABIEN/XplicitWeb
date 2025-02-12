@@ -117,7 +117,13 @@
 
 			<Form.Field name="passwordHash" form={updateUserAndAddresses}>
 				<Form.Control>
-					<Form.Label>Mot de passe</Form.Label>
+					<Form.Label
+						>Mot de passe:<br />
+						<span style="color: red"
+							>Attention, il faut minimum 8 caractères, majuscule, minuscule, chiffre et caractère
+							special, exemple: Password0</span
+						>
+					</Form.Label>
 					<Input type="password" bind:value={$form.passwordHash} />
 				</Form.Control>
 				<Form.FieldErrors />

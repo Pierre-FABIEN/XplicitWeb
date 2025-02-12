@@ -102,16 +102,11 @@ taskkill /PID 2816 /F
 revoir la sécurité sur les données sur Admin
 
 Mettre a jour les transaction order
-rendre les facture sur le coté client dispo
-Sur l'admin il faut pouvoir changer le role indépendant dans un form mais aussi les adresses et pouvoir changer le mot de passe et mettre une option pour activer le M2FA
 
 
 Les commandes sont minimum de 24 unités pour les natives
 les commande au maximum sont de 3*24 pour natives
 Ajouter le poids de 24 - 3kg
-
-
-
 
 
 mettre dans le tuto et dans la selection custom le delais de livraisons

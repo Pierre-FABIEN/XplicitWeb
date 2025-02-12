@@ -29,7 +29,8 @@ export const getPostBySlug = async (slug: string) => {
 		const post = await prisma.blogPost.findUnique({
 			where: { slug },
 			include: {
-				author: true
+				author: true,
+				category: true
 			}
 		});
 		return post;
