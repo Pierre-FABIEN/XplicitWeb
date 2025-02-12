@@ -19,9 +19,9 @@ export const load = async (event: PageServerLoadEvent) => {
 		}
 
 		if (!event.locals.user.registered2FA) {
-					if (event.locals.user.isMfaEnabled) {
-		return redirect(302, '/auth/2fa/setup');
-	}
+			if (event.locals.user.isMfaEnabled) {
+				return redirect(302, '/auth/2fa/setup');
+			}
 		}
 		if (!event.locals.session.twoFactorVerified) {
 			if (event.locals.user.isMfaEnabled) {
@@ -32,16 +32,4 @@ export const load = async (event: PageServerLoadEvent) => {
 	return {
 		user: event.locals.user
 	};
-};
-export const actions: Actions = {
-	signout: async (event: RequestEvent) => {
-		if (event.locals.session === null) {
-			return fail(401, {
-				message: 'Not authenticated'
-			});
-		}
-		invalidateSession(event.locals.session.id);
-		deleteSessionTokenCookie(event);
-		return redirect(302, 'auth/login');
-	}
 };

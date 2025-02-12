@@ -105,7 +105,7 @@ export const actions: Actions = {
 		}
 
 		if (!user.isMfaEnabled) {
-			return redirect(302, '/auth');
+			return redirect(302, '/');
 		}
 		redirect(302, '/auth/2fa');
 	}

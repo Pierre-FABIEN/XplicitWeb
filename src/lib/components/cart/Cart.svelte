@@ -9,16 +9,14 @@
 	import { ShoppingCart } from 'lucide-svelte';
 	import Input from '../shadcn/ui/input/input.svelte';
 	import { goto, invalidateAll } from '$app/navigation';
-	import { enhance } from '$app/forms';
 
 	let { data } = $props();
-	let user;
+
+	let user = $state(null);
 
 	$effect(() => {
-		user = data?.user ?? null;
-		console.log(user);
+		user = data?.user;
 	});
-
 	/**
 	 * Handle the removal of an item from the cart.
 	 *
