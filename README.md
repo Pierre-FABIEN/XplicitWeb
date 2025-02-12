@@ -101,9 +101,6 @@ taskkill /PID 2816 /F
 
 revoir la sécurité sur les données sur Admin
 
-Mettre a jour les transaction order
-
-
 Les commandes sont minimum de 24 unités pour les natives
 les commande au maximum sont de 3*24 pour natives
 Ajouter le poids de 24 - 3kg

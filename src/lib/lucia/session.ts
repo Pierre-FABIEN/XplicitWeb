@@ -152,7 +152,7 @@ export function deleteSessionTokenCookie(event: RequestEvent): void {
 		path: '/',
 		secure: import.meta.env.PROD,
 		sameSite: 'lax',
-		maxAge: 0
+		maxAge: -1
 	});
 }
 

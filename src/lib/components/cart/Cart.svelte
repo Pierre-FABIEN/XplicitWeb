@@ -8,12 +8,15 @@
 	import { Trash } from 'lucide-svelte';
 	import { ShoppingCart } from 'lucide-svelte';
 	import Input from '../shadcn/ui/input/input.svelte';
+	import { goto, invalidateAll } from '$app/navigation';
+	import { enhance } from '$app/forms';
 
 	let { data } = $props();
 	let user;
 
 	$effect(() => {
 		user = data?.user ?? null;
+		console.log(user);
 	});
 
 	/**
@@ -44,6 +47,32 @@
 		{ label: '1 palette : 120 packs (2 880 unités)', value: 2880 },
 		{ label: '3 palettes : 360 packs (8 640 unités)', value: 8640 }
 	]);
+
+	async function handleSignOut() {
+		try {
+			const res = await fetch('/auth/signout', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' }
+			});
+
+			if (res.ok) {
+				console.log('Déconnexion réussie');
+
+				// 🟢 Met à jour l'état `user` localement sans rechargement
+				user = null;
+
+				// 🚀 Invalide toutes les données pour que SvelteKit recharge dynamiquement
+				await invalidateAll();
+
+				// 🔄 Redirige l'utilisateur vers l'accueil ou la page souhaitée
+				goto('/');
+			} else {
+				console.error('Échec de la déconnexion');
+			}
+		} catch (error) {
+			console.error('Erreur lors de la déconnexion:', error);
+		}
+	}
 </script>
 
 <div class="cartButton relative w-70 h-70 mx-7 ccc">
@@ -168,7 +197,11 @@
 				{#if user}
 					<!-- If the user is logged in -->
 					<Button>
-						<a href="/auth">Mes paramètres</a>
+						<a href="/auth/settings">Mes paramètres</a>
+					</Button>
+
+					<Button type="button" variant="destructive" class="w-full" onclick={handleSignOut}>
+						Se déconnecter
 					</Button>
 				{:else}
 					<!-- If the user is not logged in -->
@@ -178,9 +211,6 @@
 							ou <a href="/auth/signup" class="text-blue-500 underline">vous inscrire</a> pour finaliser
 							votre commande.
 						</p>
-						<Button>
-							<a href="/auth/login">Se connecter</a>
-						</Button>
 					</div>
 				{/if}
 			</Sheet.Content>
