@@ -6,9 +6,9 @@ export const load = (async ({ locals }) => {
 	const userId = locals.user.id;
 
 	// Récupérer la transaction
-	const transaction = await getTransactionsByUserId(userId);
+	const transactions = await getTransactionsByUserId(userId);
 
 	return {
-		transaction
+		transactions
 	};
 }) satisfies PageServerLoad;

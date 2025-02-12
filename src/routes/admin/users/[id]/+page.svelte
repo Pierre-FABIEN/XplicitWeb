@@ -13,8 +13,6 @@
 
 	let { data } = $props();
 
-	console.log(data, 'oiuhoiuhoiuh');
-
 	if (!data || !data.IupdateUserAndAddressSchema || !data.IupdateUserAndAddressSchema.data) {
 		throw new Error('Missing data for the form');
 	}
@@ -78,10 +76,6 @@
 		$form.addresses[index].country = country || '';
 		addressSuggestions = [];
 	}
-
-	$effect(() => {
-		console.log($form, 'uihoiuho');
-	});
 
 	const roleOptions = ['ADMIN', 'CLIENT'];
 </script>

@@ -4,9 +4,10 @@ import { superValidate, fail, message } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 
 import { updateUserAndAddressSchema } from '$lib/schema/addresses/updateUserAndAddressSchema';
-import { getUsersById, updateUserRole } from '$lib/prisma/user/user';
+import { getUsersById, updateUserMFA, updateUserRole } from '$lib/prisma/user/user';
 import { getUserAddresses, updateAddress } from '$lib/prisma/addresses/addresses';
 import { updateUserSecurity } from '$lib/prisma/user/updateUserSecurity';
+import { serializeData } from '$lib/utils/serializeData';
 
 export const load: PageServerLoad = async ({ params }) => {
 	console.log('Loading user data for ID:', params.id);
@@ -22,10 +23,12 @@ export const load: PageServerLoad = async ({ params }) => {
 		return fail(404, { message: 'User not found' });
 	}
 
+	const userSelected = serializeData(userFetched);
+
 	const initialData = {
-		id: userFetched?.id || '',
-		role: userFetched?.role || 'USER',
-		isMfaEnabled: userFetched.isMfaEnabled || false,
+		id: userSelected?.id || '',
+		role: userSelected?.role || 'USER',
+		isMfaEnabled: userSelected.isMfaEnabled || false,
 		passwordHash: '',
 		addresses: addresses.map((address) => ({
 			id: address?.id || '',
@@ -38,17 +41,15 @@ export const load: PageServerLoad = async ({ params }) => {
 		}))
 	};
 
-	console.log('Initial Data:', initialData);
 	const IupdateUserAndAddressSchema = await superValidate(
 		initialData,
 		zod(updateUserAndAddressSchema)
 	);
-	console.log('Schema Data:', IupdateUserAndAddressSchema);
 
 	return {
 		initialData,
 		IupdateUserAndAddressSchema,
-		userFetched
+		userSelected
 	};
 };
 
@@ -72,8 +73,6 @@ export const actions: Actions = {
 			console.error('Error parsing JSON data:', error);
 			return fail(400, { message: 'Invalid JSON data' });
 		}
-
-		console.log('Parsed form data:', parsedData);
 
 		// Extraction des données utilisateur
 		const userId = parsedData[1];
@@ -129,6 +128,11 @@ export const actions: Actions = {
 			if (passwordHash !== null) {
 				await updateUserSecurity(id, { isMfaEnabled, passwordHash });
 			}
+
+			await updateUserMFA(id, {
+				isMfaEnabled: isMfaEnabled
+			});
+
 			// Mise à jour de la sécurité (MFA & mot de passe chiffré)
 
 			// Mise à jour des adresses
