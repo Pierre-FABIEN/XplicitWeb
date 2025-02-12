@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import jsPDF from 'jspdf';
 	import autoTable from 'jspdf-autotable';
 
@@ -66,29 +67,10 @@
 		// Sauvegarde du PDF
 		doc.save(`Facture_${transaction.id}.pdf`);
 	}
+	$effect(() => {
+		setTimeout(generateInvoicePDF, 10);
+		goto('/auth/settings/factures');
+	});
 </script>
 
-<h1 class="text-2xl font-bold m-5">Facture</h1>
-
-<div class="m-5 border p-5 rounded-lg shadow-lg">
-	<p><strong>Numéro de Facture :</strong> {data.transaction.id}</p>
-	<p><strong>Date :</strong> {new Date(data.transaction.createdAt).toLocaleString()}</p>
-	<p><strong>Montant Total :</strong> {data.transaction.amount} €</p>
-
-	<!-- Adresse de facturation -->
-	<h2 class="mt-4 font-bold">Adresse de Facturation</h2>
-	<p>{data.transaction.customer_details_name}</p>
-	<p>
-		{data.transaction.app_user_street}, {data.transaction.app_user_zip}
-		{data.transaction.app_user_city}
-	</p>
-	<p>{data.transaction.app_user_state}, {data.transaction.app_user_country}</p>
-
-	<!-- Bouton pour télécharger la Facture PDF -->
-	<button
-		onclick={generateInvoicePDF}
-		class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-5"
-	>
-		Télécharger la Facture PDF
-	</button>
-</div>
+<h1 class="text-2xl font-bold m-5">Préparation de la facture</h1>

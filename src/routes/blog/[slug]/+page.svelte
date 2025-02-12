@@ -3,7 +3,6 @@
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
-	console.log(data);
 </script>
 
 <main class="container mx-auto px-4 py-6 max-w-xl">

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import jsPDF from 'jspdf';
 	import autoTable from 'jspdf-autotable';
 
@@ -53,29 +54,11 @@
 		// Sauvegarde du PDF
 		doc.save(`Bordereau_${transaction.id}.pdf`);
 	}
+
+	$effect(() => {
+		setTimeout(generatePDF, 10);
+		goto('/admin/sales/');
+	});
 </script>
 
-<h1 class="text-2xl font-bold m-5">Bordereau d'Expédition</h1>
-
-<div class="m-5 border p-5 rounded-lg shadow-lg">
-	<p><strong>ID Transaction :</strong> {data.transaction.id}</p>
-	<p><strong>Montant :</strong> {data.transaction.amount} €</p>
-	<p><strong>Date de création :</strong> {new Date(data.transaction.createdAt).toLocaleString()}</p>
-
-	<!-- Adresse d'expédition -->
-	<h2 class="mt-4 font-bold">Adresse de livraison</h2>
-	<p>{data.transaction.customer_details_name}</p>
-	<p>
-		{data.transaction.app_user_street}, {data.transaction.app_user_zip}
-		{data.transaction.app_user_city}
-	</p>
-	<p>{data.transaction.app_user_state}, {data.transaction.app_user_country}</p>
-
-	<!-- Bouton pour télécharger le PDF -->
-	<button
-		onclick={generatePDF}
-		class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-5"
-	>
-		Télécharger le Bordereau PDF
-	</button>
-</div>
+<h1 class="text-2xl font-bold m-5">Préparation du Bordereau d'Expédition</h1>
