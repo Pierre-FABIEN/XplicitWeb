@@ -131,18 +131,23 @@
 		</section>
 	{/if}
 	<!-- Formulaire de mise à jour du mot de passe -->
-	<section class="mb-8">
-		<h2 class="text-xl font-semibold mb-4">Manager mes adresses de livraisons</h2>
 
-		<Button href="/auth/settings/address" class="w-full">Mes addresses</Button>
-	</section>
+	{#if data.user.role === 'CLIENT'}
+		<section class="mb-8">
+			<h2 class="text-xl font-semibold mb-4">Manager mes adresses de livraisons</h2>
+
+			<Button href="/auth/settings/address" class="w-full">Mes addresses</Button>
+		</section>
+	{/if}
 
 	<!-- Formulaire de mise à jour du mot de passe -->
-	<section class="mb-8">
-		<h2 class="text-xl font-semibold mb-4">Consulter mes factures</h2>
+	{#if data.user.role === 'CLIENT'}
+		<section class="mb-8">
+			<h2 class="text-xl font-semibold mb-4">Consulter mes factures</h2>
 
-		<Button href="/auth/settings/factures" class="w-full">Mes Facture</Button>
-	</section>
+			<Button href="/auth/settings/factures" class="w-full">Mes Facture</Button>
+		</section>
+	{/if}
 
 	<!-- Section pour la mise à jour de l'authentification à deux facteurs -->
 	{#if !data.user.googleId}

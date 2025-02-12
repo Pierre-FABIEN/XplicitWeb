@@ -205,6 +205,12 @@
 					<Button type="button" variant="destructive" class="w-full" onclick={handleSignOut}>
 						Se déconnecter
 					</Button>
+
+					{#if data.user.role === 'ADMIN'}
+						<div class="w-full ccc">
+							<Button class="m-5" href="/admin">Dashboard</Button>
+						</div>
+					{/if}
 				{:else}
 					<!-- If the user is not logged in -->
 					<div class="text-center mt-4">
