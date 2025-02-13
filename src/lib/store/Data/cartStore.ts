@@ -78,7 +78,6 @@ export const setCart = (
 		lastModified: Date.now()
 	});
 };
-
 export const addToCart = (product: OrderItem) => {
 	cart.update((currentCart) => {
 		if (!Array.isArray(currentCart.items)) {
@@ -102,6 +101,19 @@ export const addToCart = (product: OrderItem) => {
 				'Les articles personnalisés et non-personnalisés ne peuvent pas être mélangés dans une même commande.'
 			);
 			return currentCart;
+		}
+
+		// 📌 Vérification de la limite pour les commandes natives (max 72 unités)
+		if (!isProductCustom) {
+			const totalNativeQuantity = currentCart.items
+				.filter((item) => !Array.isArray(item.custom) || item.custom.length === 0) // 🟢 Filtre les commandes natives
+				.reduce((sum, item) => sum + item.quantity, 0);
+
+			if (totalNativeQuantity + product.quantity > 72) {
+				console.error('Cannot add product: native orders are limited to 72 units.');
+				toast.error('Les commandes non personnalisées sont limitées à 72 unités.');
+				return currentCart;
+			}
 		}
 
 		// 🟢 Calcul du stock disponible
