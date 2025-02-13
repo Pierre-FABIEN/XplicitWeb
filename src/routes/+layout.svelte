@@ -59,7 +59,8 @@
 		if (!contentRef) return;
 
 		const observer = new ResizeObserver(() => {
-			contentHeight = contentRef.clientHeight;
+			if (contentRef) {contentHeight = contentRef.clientHeight;}
+			
 			updateSmoothScroll();
 		});
 		observer.observe(contentRef);
@@ -76,7 +77,6 @@
 
 		if (scrollbarInstance) {
 			scrollbarInstance.update();
-			console.log('smoothScroll a recalculé la hauteur :', contentHeight);
 		}
 	}
 </script>

@@ -25,7 +25,7 @@
 			// Crée un objet structuré pour le panier
 			const result = {
 				id: crypto.randomUUID(), // Identifiant unique pour l'article
-				quantity: 1, // Par défaut, ajoute 1 unité
+				quantity: 24, // Par défaut, ajoute 1 unité
 				price: item.price,
 				product: {
 					id: item.id,

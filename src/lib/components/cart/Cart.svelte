@@ -97,6 +97,11 @@
 
 			<Sheet.Content class="p-4 max-w-md w-full">
 				<h2 class="text-2xl font-bold mb-4">Your Cart</h2>
+
+				<p class="mb-4">
+					Pour les commandes non-custom, les quantités sont fixées à 24 canettes par paquet et 3
+					paquets de 24 maximum.
+				</p>
 				{#if $cart && $cart.items && $cart.items.length > 0}
 					<div class="max-h-[500px] overflow-y-auto">
 						{#each $cart.items as item (item.id)}
@@ -114,13 +119,13 @@
 								<div class="flex-1 mx-4">
 									<h3 class="text-lg font-semibold">
 										{item.product.name}
-										{#if item.custom}
+										{#if item.custom && item.custom.length > 0}
 											<span class="text-sm font-normal text-gray-500">Custom</span>
 										{/if}
 									</h3>
 									<p class="text-gray-600">${item.product.price.toFixed(2)}€</p>
 
-									{#if item.custom}
+									{#if item.custom && item.custom.length > 0}
 										<!-- Custom items: Use predefined quantity options -->
 										<select
 											class="border rounded px-3 py-2 w-full"
@@ -145,8 +150,9 @@
 											value={item.quantity}
 											oninput={(e) =>
 												changeQuantity(item.product.id, parseInt(e.target.value), item.custom?.id)}
-											min="1"
-											max={item.product.stock}
+											min="24"
+											max="72"
+											step="24"
 										/>
 									{/if}
 								</div>
@@ -198,19 +204,21 @@
 
 				{#if user}
 					<!-- If the user is logged in -->
-					<Button>
-						<a href="/auth/settings" onclick={() => (sidebarOpen = false)}>Mes paramètres</a>
-					</Button>
+					<div class="ccc">
+						<Button href="/auth/settings" onclick={() => (sidebarOpen = false)}>
+							Mes paramètres
+						</Button>
 
-					<Button type="button" variant="destructive" class="w-full" onclick={handleSignOut}>
-						Se déconnecter
-					</Button>
+						{#if data.user.role === 'ADMIN'}
+							<Button class="m-5" href="/admin" onclick={() => (sidebarOpen = false)}
+								>Dashboard</Button
+							>
+						{/if}
 
-					{#if data.user.role === 'ADMIN'}
-						<div class="w-full ccc">
-							<Button class="m-5" href="/admin">Dashboard</Button>
-						</div>
-					{/if}
+						<Button type="button" variant="destructive" class="m-5" onclick={handleSignOut}>
+							Se déconnecter
+						</Button>
+					</div>
 				{:else}
 					<!-- If the user is not logged in -->
 					<div class="text-center mt-4">
