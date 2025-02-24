@@ -27,28 +27,38 @@ export const actions: Actions = {
 	checkout: async ({ request }) => {
 		const formData = await request.formData();
 
+		console.log('formData', formData);
+
 		const form = await superValidate(formData, zod(OrderSchema));
 
-		const orderId = form.data.orderId;
-		const addressId = form.data.addressId;
+		console.log(form, '🔍 Validation des données');
+
+		// Récupération des champs validés
+		const { orderId, addressId, shippingOption, shippingCost } = form.data;
+
+		if (!orderId || !addressId || !shippingOption || !shippingCost) {
+			return json(
+				{ error: 'Données invalides. Veuillez sélectionner une option de livraison.' },
+				{ status: 400 }
+			);
+		}
 
 		const order = await getOrderById(orderId);
+		if (!order) {
+			return json({ error: 'Commande introuvable' }, { status: 404 });
+		}
 
 		const userId = order.userId;
 
-		if (!order) {
-			return json({ error: 'Order not found' }, { status: 404 });
-		}
+		// ✅ Mise à jour de la commande avec l'option de livraison choisie
+		await updateOrder(orderId, addressId, shippingOption, shippingCost);
 
-		await updateOrder(orderId, addressId);
-
+		// Création des éléments Stripe
 		const lineItems = order.items.map((item) => ({
 			price_data: {
-				currency: 'eur', // Changer 'usd' en 'eur' pour utiliser les euros
-				product_data: {
-					name: item.product.name
-				},
-				unit_amount: item.price * 100 // Stripe s'attend à des montants en centimes
+				currency: 'eur',
+				product_data: { name: item.product.name },
+				unit_amount: item.price * 100
 			},
 			quantity: item.quantity
 		}));
@@ -60,7 +70,9 @@ export const actions: Actions = {
 			success_url: `${request.headers.get('origin')}/auth`,
 			cancel_url: `${request.headers.get('origin')}/auth`,
 			metadata: {
-				order_id: orderId
+				order_id: orderId,
+				shipping_option: shippingOption,
+				shipping_cost: shippingCost
 			},
 			payment_intent_data: {
 				metadata: {

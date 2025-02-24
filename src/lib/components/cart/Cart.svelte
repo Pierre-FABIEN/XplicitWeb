@@ -20,6 +20,15 @@
 
 	let sidebarOpen: boolean = $state(false);
 
+	let isNativeOrder: boolean = $state(false);
+
+	$effect(() => {
+		// 🟢 Vérifie si TOUS les produits du panier sont natifs (aucun `custom`)
+		isNativeOrder = $cart.items.every(
+			(item) => !Array.isArray(item.custom) || item.custom.length === 0
+		);
+	});
+
 	/**
 	 * Handle the removal of an item from the cart.
 	 *
@@ -98,10 +107,12 @@
 			<Sheet.Content class="p-4 max-w-md w-full">
 				<h2 class="text-2xl font-bold mb-4">Your Cart</h2>
 
-				<p class="mb-4">
-					Pour les commandes non-custom, les quantités sont fixées à 24 canettes par paquet et 3
-					paquets de 24 maximum.
-				</p>
+				{#if isNativeOrder}
+					<p class="mb-4">
+						Pour les commandes non-custom, les quantités sont fixées à 3 packs de 24 maximum.
+					</p>
+				{/if}
+
 				{#if $cart && $cart.items && $cart.items.length > 0}
 					<div class="max-h-[500px] overflow-y-auto">
 						{#each $cart.items as item (item.id)}

@@ -1,153 +1,225 @@
 <script lang="ts">
-	// Importations nécessaires
-	import * as Select from '$shadcn/select/index.js';
-	import Trash from 'lucide-svelte/icons/trash';
-
-	import { cart, removeFromCart, updateCartItemQuantity } from '$lib/store/Data/cartStore';
-	import Button from '$shadcn/button/button.svelte';
-
 	import { loadStripe } from '@stripe/stripe-js';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 
-	import { OrderSchema } from '$lib/schema/order/order.js';
-	import { toast } from 'svelte-sonner';
+	import Trash from 'lucide-svelte/icons/trash';
+	import Button from '$shadcn/button/button.svelte';
 	import { Input } from '$lib/components/shadcn/ui/input/index.js';
 
-	// Variables d'environnement
-	const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+	import { OrderSchema } from '$lib/schema/order/order.js';
+	import { toast } from 'svelte-sonner';
 
-	// Gestion des états avec `$state`
+	// Le store du panier
+	import {
+		cart as cartStore,
+		removeFromCart,
+		updateCartItemQuantity
+	} from '$lib/store/Data/cartStore';
+
+	// Runes Svelte 5
 	let stripe = $state(null);
 	let selectedAddressId = $state<string | undefined>(undefined);
+	let selectedAddressObj = $state<any>(undefined);
+
+	// Plus de cartValue local, on utilise $cartStore directement.
+	let shippingOptions = $state<any[]>([]);
+	let selectedShippingOption = $state<string | null>(null);
+	let shippingCost = $state<number>(0);
 
 	let { data } = $props();
 
+	// superForm
 	let createPayment = superForm(data.IOrderSchema, {
 		validators: zodClient(OrderSchema),
 		id: 'createPayment',
 		resetForm: true
 	});
 
-	// Déstructuration du formulaire
-	const {
-		form: createPaymentData,
-		enhance: createPaymentEnhance,
-		message: createPaymentMessage
-	} = createPayment;
+	const { form: createPaymentData, enhance: createPaymentEnhance } = createPayment;
 
-	// Charger Stripe à la montée du composant
 	$effect(() => {
 		(async () => {
-			stripe = await loadStripe(stripePublishableKey);
+			stripe = await loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 		})();
 	});
 
-	// Gestion des événements pour le panier
+	function selectAddress(addressId: string) {
+		selectedAddressId = addressId;
+		selectedAddressObj = data.addresses.find((a) => a.id === addressId);
+
+		selectedShippingOption = null;
+		shippingCost = 0;
+		shippingOptions = [];
+
+		fetchSendcloudShippingOptions();
+	}
+
+	// Calcul dynamique du poids, directement depuis $cartStore
+	function computeTotalWeight() {
+		return $cartStore.items.reduce((acc, item) => {
+			const baseWeight = item.quantity * 0.125;
+			const customExtra = item.custom?.length > 0 ? 0.666 : 0;
+			return acc + baseWeight + customExtra;
+		}, 0);
+	}
+
+	function computeTotalQuantity() {
+		return $cartStore.items.reduce((acc, item) => acc + item.quantity, 0);
+	}
+
+	async function fetchSendcloudShippingOptions() {
+		if (!selectedAddressObj) {
+			toast.error('Veuillez sélectionner une adresse.');
+			return;
+		}
+		if (!$cartStore.items.length) {
+			toast.error('Votre panier est vide.');
+			return;
+		}
+
+		try {
+			const totalWeight = computeTotalWeight();
+			const totalQuantity = computeTotalQuantity();
+			const isoCountry =
+				selectedAddressObj.country === 'France' ? 'FR' : selectedAddressObj.country;
+
+			const res = await fetch('/api/shipping/sendcloud', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					to_country_code: isoCountry,
+					to_postal_code: selectedAddressObj.zip,
+					weight: {
+						value: totalWeight.toFixed(3),
+						unit: 'kg'
+					},
+					quantity: totalQuantity
+				})
+			});
+
+			if (!res.ok) {
+				throw new Error('Erreur lors de la récupération des options.');
+			}
+
+			const result = await res.json();
+			shippingOptions = result.data || [];
+
+			if (!shippingOptions.length) {
+				toast.error("Aucune option de livraison n'a été trouvée.");
+			} else {
+				console.log('Options de livraison reçues:', shippingOptions);
+			}
+		} catch (err) {
+			console.error('❌ Erreur API Sendcloud:', err);
+			toast.error('Impossible de récupérer les options de livraison.');
+		}
+	}
+
+	function chooseShippingOption(optionCode: string) {
+		selectedShippingOption = optionCode;
+		const chosen = shippingOptions.find((opt) => opt.code === optionCode);
+
+		if (chosen?.quotes?.[0]?.price?.total?.value) {
+			shippingCost = parseFloat(chosen.quotes[0].price.total.value);
+		} else {
+			shippingCost = 0;
+		}
+	}
+
 	function handleRemoveFromCart(productId: string) {
 		removeFromCart(productId);
+
+		// Une fois le store mis à jour, on vérifie si le panier n'est pas vide
+		if ($cartStore.items.length === 0) {
+			// Pas de recalcul, on vide juste les infos
+			shippingOptions = [];
+			shippingCost = 0;
+			selectedShippingOption = null;
+		} else {
+			// Relance la requête pour mettre à jour les tarifs et options
+			fetchSendcloudShippingOptions();
+		}
 	}
 
 	function changeQuantity(productId: string, quantity: number) {
 		updateCartItemQuantity(productId, quantity);
 	}
 
-	/**
-	 * Valide la quantité saisie.
-	 * Si elle dépasse les limites (min ou stock), elle est corrigée.
-	 */
 	function validateQuantity(item, event) {
 		const inputElement = event.target as HTMLInputElement;
 		let quantity = parseInt(inputElement.value, 10);
 
-		// Correction automatique si la quantité dépasse les limites
 		if (isNaN(quantity) || quantity < 1) {
-			quantity = 1; // Valeur minimale autorisée
+			quantity = 1;
 		} else if (quantity > item.product.stock) {
-			quantity = item.product.stock; // Limite maximale (stock)
+			quantity = item.product.stock;
 		}
 
-		// Met à jour le champ et le store `cart`
 		inputElement.value = String(quantity);
 		changeQuantity(item.product.id, quantity);
 	}
 
-	function selectAddress(addressId: string) {
-		selectedAddressId = addressId;
-	}
+	function handleCheckout(event: Event) {
+		// Empêche le comportement par défaut de la soumission
+		event.preventDefault();
 
-	function handleCheckout() {
 		if (!selectedAddressId) {
 			toast.error('Veuillez choisir une adresse.');
+			return;
 		}
+		if (!selectedShippingOption) {
+			toast.error('Veuillez choisir un mode de livraison.');
+			return;
+		}
+
+		// Mise à jour des données du superform
+		$createPaymentData.shippingCost = shippingCost.toString();
+		$createPaymentData.shippingOption = selectedShippingOption;
+
+		console.log(
+			'Checkout avec option de livraison:',
+			selectedShippingOption,
+			'coût:',
+			shippingCost
+		);
 	}
 
-	// Synchroniser les données du formulaire
 	$effect(() => {
-		console.log(createPaymentData, 'uhiuhuih');
-
 		$createPaymentData.orderId = data.pendingOrder.id;
-
 		if (selectedAddressId) {
 			$createPaymentData.addressId = selectedAddressId;
 		}
 	});
-
-	let quantityOptions = $state([
-		{ label: '24 packs de 24 canettes (576 unités)', value: 576 },
-		{ label: '1/4 de palette : 30 packs (720 unités)', value: 720 },
-		{ label: '1/2 palette : 60 packs (1 440 unités)', value: 1440 },
-		{ label: '1 palette : 120 packs (2 880 unités)', value: 2880 },
-		{ label: '3 palettes : 360 packs (8 640 unités)', value: 8640 }
-	]);
-
-	$effect(() => {
-		const allNonCustom = $cart.items.every((item) => !item.custom || item.custom.length === 0);
-
-		if (allNonCustom) {
-			console.log('Tous les articles sont non-custom.');
-			// Appliquez le traitement spécifique ici
-			// Exemple : ajuster le prix de livraison
-			const livraisonBase = 10; // Prix de base de la livraison
-			const livraisonReduction = 0.8; // Réduction de 20% si tous les articles sont non-custom
-			const livraisonPrix = livraisonBase * livraisonReduction;
-
-			console.log(`Prix de livraison ajusté : ${livraisonPrix}€`);
-		} else {
-			console.log('La commande contient des articles custom.');
-			// Appliquez un traitement différent si nécessaire
-		}
-	});
 </script>
 
-<!-- Interface utilisateur -->
+<!-- =========================================== -->
+<!-- TEMPLATE / UI -->
+<!-- =========================================== -->
 <div class="ccc w-screen h-screen">
-	<div class="ctc w-[80vw]">
-		<!-- Liste des adresses -->
-		<div class="container mx-auto p-4 cart w-[100%]">
+	<div class="ctc w-[80vw] mb-[200px]">
+		<!-- Liste d'adresses -->
+		<div class="container mx-auto p-4">
 			<h2 class="text-2xl font-bold mb-4 mt-5">Vos adresses</h2>
 			<div class="clc">
 				{#if data?.addresses?.length > 0}
 					{#each data.addresses as address}
 						<button
-							class="cursor-pointer border rounded p-2 m-2 min-w-[400px] rcb {selectedAddressId ===
-							address.id
-								? 'border-green-400'
-								: ''}"
+							class="border rounded p-2 m-2 min-w-[400px]
+							{selectedAddressId === address.id ? 'border-green-400' : ''}"
 							onclick={() => selectAddress(address.id)}
 						>
-							<div class="clc">
-								<p class="text-sm text-muted-foreground">Destinataire: {address.recipient}</p>
-								<p class="text-sm text-muted-foreground">Rue: {address.street}</p>
-								<p class="text-sm text-muted-foreground">Ville: {address.city}</p>
-								<p class="text-sm text-muted-foreground">Code postal: {address.zip}</p>
-								<p class="text-sm text-muted-foreground">Pays: {address.country}</p>
-							</div>
+							<p class="text-sm text-muted-foreground">Destinataire: {address.recipient}</p>
+							<p class="text-sm text-muted-foreground">Rue: {address.street}</p>
+							<p class="text-sm text-muted-foreground">Ville: {address.city}</p>
+							<p class="text-sm text-muted-foreground">Code postal: {address.zip}</p>
+							<p class="text-sm text-muted-foreground">Pays: {address.country}</p>
 						</button>
 					{/each}
 				{:else}
-					<p class="text-gray-600">Aucune adresse présente.</p>
+					<p class="text-gray-600">Aucune adresse renseignée.</p>
 				{/if}
+
 				<Button class="mt-4">
 					<a data-sveltekit-preload-data href="/auth/settings/address">Créer une adresse</a>
 				</Button>
@@ -155,29 +227,27 @@
 		</div>
 
 		<!-- Panier -->
-		<div class="container mx-auto p-4 cart w-[100%]">
-			{#if $cart?.items?.length > 0}
+		<div class="container mx-auto p-4">
+			{#if $cartStore.items.length > 0}
+				<!-- Affichage des items en direct depuis $cartStore -->
 				<div class="ccc max-h-[80vh]">
-					{#each $cart.items as item (item.id)}
-						<div class="p-4 border rounded-lg shadow-sm flex rcb w-[100%] mb-2">
-							<img
-								src={(item.custom?.length > 0 && item.custom[0].image) ||
-									(Array.isArray(item.product.images)
-										? item.product.images[0]
-										: item.product.images) ||
-									''}
-								alt={item.product.name}
-								class="w-20 h-20 object-cover mr-5"
-							/>
-							<div class="flex-1 clb">
-								<h3 class="text-lg font-semibold">
-									{item.product.name}
-									{#if item.custom?.length > 0}
-										<span class="text-sm font-normal text-gray-500">Custom</span>
-									{/if}
-								</h3>
-								<p class="text-gray-600">${item.product.price.toFixed(1)}€</p>
-								<div>
+					{#each $cartStore.items as item (item.id)}
+						<div class="p-4 border rounded-lg shadow-sm flex justify-between w-[100%] mb-2">
+							<div class="flex">
+								<img
+									src={(item.custom?.length > 0 && item.custom[0].image) ||
+										(Array.isArray(item.product.images)
+											? item.product.images[0]
+											: item.product.images) ||
+										''}
+									alt={item.product.name}
+									class="w-20 h-20 object-cover mr-5"
+								/>
+								<div class="flex-1 flex flex-col justify-between">
+									<h3 class="text-lg font-semibold">{item.product.name}</h3>
+									<p class="text-gray-600">{item.product.price.toFixed(2)}€</p>
+
+									<!-- Quantité -->
 									{#if item.custom?.length > 0}
 										<select
 											class="border rounded px-3 py-2 w-full"
@@ -188,12 +258,13 @@
 													item.custom[0]?.id
 												)}
 										>
-											<option value="" disabled selected>Select a quantity option...</option>
-											{#each quantityOptions as option}
-												<option value={option.value} selected={item.quantity === option.value}>
-													{option.label}
-												</option>
-											{/each}
+											<option value="" disabled selected>Sélectionnez une quantité...</option>
+											<option value="576" selected={item.quantity === 576}>
+												24 packs de 24 canettes (576 unités)
+											</option>
+											<option value="720" selected={item.quantity === 720}>
+												1/4 de palette (720 unités)
+											</option>
 										</select>
 									{:else}
 										<Input
@@ -207,13 +278,13 @@
 									{/if}
 								</div>
 							</div>
-							<div class="text-right crb items-end h-[100%]">
+							<div class="text-right flex flex-col justify-between items-end">
 								<p class="text-lg font-semibold">
-									{(item.price * item.quantity).toFixed(1)}€
+									{(item.price * item.quantity).toFixed(2)}€
 								</p>
 								<button
 									onclick={() => handleRemoveFromCart(item.product.id)}
-									class="text-red-600 hover:text-red-800 mt-2"
+									class="text-red-600 hover:text-red-800"
 								>
 									<Trash />
 								</button>
@@ -221,27 +292,58 @@
 						</div>
 					{/each}
 				</div>
+
+				<hr class="my-5" />
+
+				<!-- Options de livraison -->
+				{#each shippingOptions as option (option.code)}
+					<div class="mb-4 p-2 border rounded">
+						<div class="flex items-center">
+							<input
+								id={option.code}
+								type="radio"
+								name="shippingOption"
+								value={option.code}
+								checked={selectedShippingOption === option.code}
+								onchange={() => chooseShippingOption(option.code)}
+							/>
+							<label for={option.code} class="ml-2">
+								<strong>{option.carrier.name}</strong> – {option.product.name}
+								({option.quotes?.[0]?.price?.total?.value
+									? option.quotes[0].price.total.value + ' €'
+									: 'Prix indisponible'})
+							</label>
+						</div>
+						<!-- Informations supplémentaires (deadline, signature, etc.) -->
+						<!-- ... -->
+					</div>
+				{/each}
+
+				<!-- Récapitulatif et paiement -->
 				<div class="mt-4 p-4 border-t rounded-none">
-					<!-- Subtotal -->
 					<div class="flex justify-between">
-						<span class="text-lg">Subtotal:</span>
+						<span class="text-lg">Sous-total (HT) :</span>
+						<span class="text-lg">{$cartStore.subtotal.toFixed(2)}€</span>
+					</div>
+					<div class="flex justify-between mt-2">
+						<span class="text-lg">Livraison :</span>
 						<span class="text-lg">
-							${$cart.subtotal?.toFixed(2) || '0.00'}€
+							{shippingCost > 0
+								? `${shippingCost.toFixed(2)}€`
+								: selectedShippingOption
+									? 'En cours...'
+									: 'Non sélectionné'}
 						</span>
 					</div>
-					<!-- Tax (TVA) -->
 					<div class="flex justify-between mt-2">
-						<span class="text-lg">TVA (5,5%):</span>
-						<span class="text-lg">
-							${$cart.tax?.toFixed(2) || '0.00'}€
-						</span>
-					</div>
-					<!-- Total -->
-					<div class="flex justify-between mt-2">
-						<span class="text-xl font-semibold">Total:</span>
+						<span class="text-xl font-semibold">Total TTC :</span>
 						<span class="text-xl font-semibold">
-							${$cart.total?.toFixed(2) || '0.00'}€
+							{($cartStore.total + shippingCost).toFixed(2)}€
 						</span>
+					</div>
+					<div class="flex justify-between mt-2">
+						<span class="text-lg">TVA (5,5%) :</span>
+						<span class="text-lg">{$cartStore.tax.toFixed(2)}€</span>
 					</div>
 				</div>
 			{:else}
@@ -249,10 +351,17 @@
 			{/if}
 
 			<!-- Formulaire de paiement -->
-			<div class="crc w-[100%]">
+			<div class="mt-4">
 				<form method="POST" action="?/checkout" use:createPaymentEnhance onsubmit={handleCheckout}>
 					<input type="hidden" name="orderId" bind:value={$createPaymentData.orderId} />
 					<input type="hidden" name="addressId" bind:value={$createPaymentData.addressId} />
+					<input
+						type="hidden"
+						name="shippingOption"
+						bind:value={$createPaymentData.shippingOption}
+					/>
+					<input type="hidden" name="shippingCost" bind:value={$createPaymentData.shippingCost} />
+
 					<Button type="submit">Payer</Button>
 				</form>
 			</div>

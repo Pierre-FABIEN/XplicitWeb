@@ -94,13 +94,16 @@ model Order {
   id            String            @id @default(auto()) @map("_id") @db.ObjectId
   userId        String            @db.ObjectId
   addressId     String?           @db.ObjectId  
-  subtotal      Float             @default(0) // Nouveau champ pour le sous-total
-  tax           Float             @default(0) // Nouveau champ pour la TVA
+  subtotal      Float             @default(0)
+  tax           Float             @default(0)
   total         Float             @default(0)
   status        OrderStatus       @default(PENDING)
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @default(now())
   items         OrderItem[]       
+
+  shippingOption String?
+  shippingCost    Float?
 
   user          User              @relation(fields: [userId], references: [id])
   address       Address?          @relation(fields: [addressId], references: [id])

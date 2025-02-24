@@ -101,10 +101,8 @@ taskkill /PID 2816 /F
 
 revoir la sécurité sur les données sur Admin
 
-Les commandes sont minimum de 24 unités pour les natives
-les commande au maximum sont de 3*24 pour natives
-Ajouter le poids de 24 - 3kg
-
+Mettre l'adresse de l'entrepot en data
+mettre en prod sendcloud et stripe
 
 mettre dans le tuto et dans la selection custom le delais de livraisons
 Délai de fabrication :

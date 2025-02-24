@@ -216,14 +216,22 @@ function extractPublicId(imageUrl: string): string {
 	return fileNameWithExtension.split('.')[0];
 }
 
-export const updateOrder = async (orderId, addressId) => {
+export async function updateOrder(
+	orderId: string,
+	addressId: string,
+	shippingOption: string,
+	shippingCost: string
+) {
 	return await prisma.order.update({
 		where: { id: orderId },
 		data: {
-			addressId: addressId // Ajouter l'adresse à la commande
+			addressId,
+			shippingOption,
+			shippingCost: parseFloat(shippingCost), // Convertir en Float
+			updatedAt: new Date()
 		}
 	});
-};
+}
 
 export async function getOrderById(orderId: string) {
 	return await prisma.order.findUnique({
