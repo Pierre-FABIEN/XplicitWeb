@@ -4,8 +4,10 @@ import { prisma } from '$lib/server/index';
 import dotenv from 'dotenv';
 import { getUserIdByOrderId } from '$lib/prisma/order/prendingOrder';
 import { getAllProducts } from '$lib/prisma/products/products';
+import { VITE_SENDCLOUD_PUBLIC_KEY, VITE_SENDCLOUD_SECRET_KEY } from '$env/static/private';
 
 dotenv.config();
+const sendcloudApiUrl = 'https://panel.sendcloud.sc/api/v2/parcels';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -41,11 +43,6 @@ export async function POST({ request }) {
 			console.log('✅ Charge succeeded:', charge);
 			break;
 
-		case 'charge.failed':
-			const failedCharge = event.data.object;
-			console.log('⚠️ Charge failed:', failedCharge);
-			break;
-
 		default:
 			console.warn(`⚠️ Unhandled event type: ${event.type}`);
 	}
@@ -54,223 +51,236 @@ export async function POST({ request }) {
 
 async function handleCheckoutSession(session) {
 	const orderId = session.metadata.order_id;
-
 	console.log('ℹ️ Session metadata:', session.metadata);
 
 	if (!orderId) {
 		console.error('⚠️ Order ID is missing in the session metadata');
 		return;
 	}
-	console.log(`ℹ️ Retrieved order ID: ${orderId}`);
 
+	// 🔍 Récupérer l'utilisateur lié à la commande
 	const user = await getUserIdByOrderId(orderId);
-	console.log('ℹ️ User fetched from order ID:', user);
-
 	if (!user || !user.userId) {
 		console.error('⚠️ User ID is missing for the provided order ID');
 		return;
 	}
-
 	const userId = user.userId;
-	console.log(`ℹ️ Retrieved user ID: ${userId}`);
 
 	try {
-		// Start a transaction to ensure atomicity
 		await prisma.$transaction(async (prisma) => {
-			console.log(`ℹ️ Starting transaction for order ID: ${orderId}`);
+			console.log(`ℹ️ Processing order ID: ${orderId}`);
 
-			// Fetch order and user details
+			// 🔍 Récupérer la commande et ses infos
 			const order = await prisma.order.findUnique({
 				where: { id: orderId },
-				include: {
-					user: true,
-					address: true,
-					items: {
-						include: {
-							product: true,
-							custom: true
-						}
-					}
+				include: { user: true, address: true, items: { include: { product: true, custom: true } } }
+			});
+			if (!order) throw new Error(`⚠️ Order ${orderId} not found`);
+			if (!order.address) throw new Error(`⚠️ Order ${orderId} has no associated address`);
+
+			// ✅ Enregistrer la transaction
+			const transaction = await prisma.transaction.create({
+				data: {
+					stripePaymentId: session.id,
+					amount: session.amount_total / 100,
+					currency: session.currency,
+					customer_details_email: session.customer_details?.email || '',
+					customer_details_name: session.customer_details?.name || '',
+					customer_details_phone: session.customer_details?.phone || '',
+					status: session.payment_status,
+					orderId: orderId,
+					createdAt: new Date(session.created * 1000),
+					shippingOption: order.shippingOption,
+					shippingCost: parseFloat(order.shippingCost?.toString() ?? '0'),
+					app_user_name: order.user.name ?? order.user.username ?? 'Unknown',
+					app_user_email: order.user.email,
+					app_user_recipient: order.address.recipient,
+					app_user_street: order.address.street,
+					app_user_city: order.address.city,
+					app_user_state: order.address.state,
+					app_user_zip: order.address.zip,
+					app_user_country: order.address.country,
+					products: order.items.map((item) => ({
+						id: item.productId,
+						name: item.product.name,
+						price: item.product.price,
+						quantity: item.quantity,
+						description: item.product.description,
+						stock: item.product.stock,
+						images: item.product.images,
+						customizations: item.custom.map((custom) => ({
+							id: custom.id,
+							image: custom.image,
+							userMessage: custom.userMessage,
+							createdAt: custom.createdAt,
+							updatedAt: custom.updatedAt
+						}))
+					})),
+					user: { connect: { id: userId } }
 				}
 			});
-
-			console.log(`ℹ️ Order details for order ID ${orderId}:`, JSON.stringify(order, null, 2));
-
-			if (!order) {
-				throw new Error(`Order ${orderId} not found`);
-			}
-
-			if (!order.address) {
-				throw new Error(`Order ${orderId} has no associated address`);
-			}
-
-			console.log('ℹ️ Preparing transaction data...');
-			const transactionData = {
-				stripePaymentId: session.id,
-				amount: session.amount_total / 100,
-				currency: session.currency,
-				customer_details_email: session.customer_details ? session.customer_details.email : '',
-				customer_details_name: session.customer_details ? session.customer_details.name : '',
-				customer_details_phone: session.customer_details ? session.customer_details.phone : '',
-				status: session.payment_status,
-				orderId: orderId,
-				createdAt: new Date(session.created * 1000),
-				app_user_name: order.user.name ?? order.user.username ?? 'Unknown',
-				app_user_email: order.user.email,
-				app_user_recipient: order.address.recipient,
-				app_user_street: order.address.street,
-				app_user_city: order.address.city,
-				app_user_state: order.address.state,
-				app_user_zip: order.address.zip,
-				app_user_country: order.address.country,
-				products: order.items.map((item) => ({
-					id: item.productId,
-					name: item.product.name,
-					price: item.product.price,
-					quantity: item.quantity,
-					description: item.product.description,
-					stock: item.product.stock,
-					images: item.product.images,
-					customizations: item.custom.map((custom) => ({
-						id: custom.id,
-						image: custom.image,
-						userMessage: custom.userMessage,
-						createdAt: custom.createdAt,
-						updatedAt: custom.updatedAt
-					}))
-				})),
-				user: { connect: { id: userId } }
-			};
-
-			console.log('ℹ️ Transaction data prepared:', transactionData);
-
-			// Create the transaction record
-			await prisma.transaction.create({ data: transactionData });
 			console.log(`✅ Transaction ${session.id} recorded successfully.`);
 
-			// Deduct the quantities from the products in stock
-			for (const item of order.items) {
-				const product = await prisma.product.findUnique({
-					where: { id: item.productId }
+			const sendcloudParcel = await createSendcloudParcel(order);
+			if (sendcloudParcel) {
+				console.log('📦 Colis créé sur Sendcloud:', sendcloudParcel);
+
+				// Mettre à jour la transaction avec le tracking
+				await prisma.transaction.update({
+					where: { id: transaction.id },
+					data: {
+						sendcloudParcelId: String(sendcloudParcel.id),
+						trackingNumber: sendcloudParcel.tracking_number,
+						trackingUrl: sendcloudParcel.tracking_url
+					}
 				});
 
-				const newStock = product.stock - item.quantity;
-
-				if (newStock < 0) {
-					throw new Error(`Not enough stock for product ID ${item.productId}`);
-				}
-
-				console.log(
-					`ℹ️ Updating stock for product ID ${item.productId}: ${product.stock} -> ${newStock}`
-				);
-
-				await prisma.product.update({
-					where: { id: item.productId },
-					data: { stock: newStock }
-				});
-
-				const updatedProduct = await prisma.product.findUnique({
-					where: { id: item.productId }
-				});
-				console.log(
-					`✅ Stock after update for product ID ${item.productId}: ${updatedProduct.stock}`
-				);
+				// 🏷 **Demander l’étiquette d’expédition**
+				await requestShippingLabel(sendcloudParcel.id);
+			} else {
+				console.error('❌ Erreur lors de la création du colis Sendcloud.');
 			}
-
-			const updatedProduct = await getAllProducts();
-			console.log(`ℹ️ dlkfjgjdloghdxliugh ${orderId}:`, JSON.stringify(updatedProduct, null, 2));
-
-			// Delete order items
-			console.log(`ℹ️ Deleting order items for order ID ${orderId}`);
-			await prisma.orderItem.deleteMany({
-				where: { orderId: orderId }
-			});
-			console.log(`✅ Order items for order ${orderId} deleted successfully.`);
-
-			// Delete the order
-			console.log(`ℹ️ Deleting order ID ${orderId}`);
-			await prisma.order.delete({
-				where: { id: orderId }
-			});
-			console.log(`✅ Order ${orderId} deleted successfully.`);
 		});
 	} catch (error) {
 		console.error(`⚠️ Failed to process order ${orderId}:`, error);
 	}
 }
 
-// async function handleChargeFailed(charge) {
-// 	const paymentIntentId = charge.payment_intent;
+/**
+ * Crée un colis dans Sendcloud sans demander immédiatement une étiquette.
+ */
+async function createSendcloudParcel(order) {
+	try {
+		const headers = {
+			'Content-Type': 'application/json',
+			Authorization:
+				'Basic ' +
+				Buffer.from(
+					`${process.env.SENDCLOUD_PUBLIC_KEY}:${process.env.SENDCLOUD_SECRET_KEY}`
+				).toString('base64')
+		};
 
-// 	const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-// 	console.log('⚠️ Payment Intent:', paymentIntent);
+		console.log(order, 'param order sdfgdfgssfdgf');
 
-// 	const amount = paymentIntent.amount;
+		// Exemple d'utilisation
+		const senderAddressId = await getSenderAddress();
+		console.log("ID de l'adresse d'expédition:", senderAddressId);
 
-// 	const currency = paymentIntent.currency;
+		const payload = {
+			parcel: {
+				name: order.address.recipient,
+				company_name: order.user.name ?? 'Inconnu',
+				address: order.address.street,
+				house_number: order.address.houseNumber ?? '',
+				city: order.address.city,
+				postal_code: order.address.zip,
+				country: order.address.country === 'France' ? 'FR' : order.address.country,
+				telephone: order.user.phone ?? '',
+				email: order.user.email,
+				weight: order.items.reduce((acc, item) => acc + item.quantity * 0.125, 0),
+				shipping_method_checkout_name: order.shippingOption,
+				total_order_value: order.items.reduce(
+					(sum, item) => sum + item.product.price * item.quantity,
+					0
+				),
+				total_order_value_currency: 'EUR',
+				sender_address: senderAddressId,
+				quantity: 1,
+				is_return: false,
+				request_label: false
+			}
+		};
 
-// 	const status = charge.status;
+		console.log('📦 Envoi de la demande de création de colis:', JSON.stringify(payload, null, 2));
 
-// 	const stripePaymentId = paymentIntent.id;
+		const response = await fetch(sendcloudApiUrl, {
+			method: 'POST',
+			headers,
+			body: JSON.stringify(payload)
+		});
 
-// 	const userId = paymentIntent.metadata.user_id;
+		const result = await response.json();
+		if (!response.ok) throw new Error(`Erreur Sendcloud: ${JSON.stringify(result)}`);
 
-// 	const orderId = paymentIntent.metadata.order_id;
+		console.log('✅ Colis créé:', result);
+		return {
+			id: result.parcel.id,
+			tracking_number: result.parcel.tracking_number,
+			tracking_url: result.parcel.tracking_url
+		};
+	} catch (error) {
+		console.error('⚠️ Erreur lors de la création du colis:', error);
+		return null;
+	}
+}
 
-// 	const order = await prisma.order.findUnique({
-// 		where: { id: orderId },
-// 		include: {
-// 			user: true,
-// 			address: true,
-// 			items: {
-// 				include: {
-// 					product: true
-// 				}
-// 			}
-// 		}
-// 	});
+/**
+ * Demande une étiquette d’expédition pour un colis existant dans Sendcloud.
+ */
+async function requestShippingLabel(parcelId) {
+	try {
+		const headers = {
+			'Content-Type': 'application/json',
+			Authorization:
+				'Basic ' +
+				Buffer.from(
+					`${process.env.SENDCLOUD_PUBLIC_KEY}:${process.env.SENDCLOUD_SECRET_KEY}`
+				).toString('base64')
+		};
 
-// 	if (!order) {
-// 		throw new Error(`Order ${orderId} not found`);
-// 	}
+		const payload = {
+			parcel: {
+				id: parcelId,
+				request_label: true
+			}
+		};
 
-// 	if (!order.address) {
-// 		throw new Error(`Order ${orderId} has no associated address`);
-// 	}
+		console.log('🏷 Demande d’étiquette d’expédition:', JSON.stringify(payload, null, 2));
 
-// 	const dataTransaction = {
-// 		stripePaymentId: stripePaymentId,
-// 		amount: amount,
-// 		currency: currency,
-// 		customer_details_email: charge.billing_details.email,
-// 		customer_details_name: charge.billing_details.name,
-// 		customer_details_phone: charge.billing_details.phone,
-// 		status: status,
-// 		orderId: orderId,
-// 		userId: userId,
-// 		createdAt: Date.now(),
-// 		app_user_name: order.user.name,
-// 		app_user_email: order.user.email,
-// 		app_user_recipient: order.address.recipient,
-// 		app_user_street: order.address.street,
-// 		app_user_city: order.address.city,
-// 		app_user_state: order.address.state,
-// 		app_user_zip: order.address.zip,
-// 		app_user_country: order.address.country,
-// 		products: order.items.map((item) => ({
-// 			id: item.productId,
-// 			name: item.product.name,
-// 			price: item.product.price,
-// 			quantity: item.quantity
-// 		}))
-// 	};
+		const response = await fetch(sendcloudApiUrl, {
+			method: 'PUT',
+			headers,
+			body: JSON.stringify(payload)
+		});
 
-// 	try {
-// 		// Log the failed payment attempt
-// 		await createTransactionInvalidated(dataTransaction, userId, orderId);
+		const result = await response.json();
+		if (!response.ok) throw new Error(`Erreur Sendcloud: ${JSON.stringify(result)}`);
 
-// 		console.log(`⚠️ Payment failed for paymentIntent ${paymentIntent.id} has been logged.`);
-// 	} catch (error) {
-// 		console.error(`⚠️ Error handling payment intent failed for order ${orderId}:`, error);
-// 	}
-// }
+		console.log('✅ Étiquette d’expédition demandée:', result);
+		return result;
+	} catch (error) {
+		console.error('⚠️ Erreur lors de la demande d’étiquette d’expédition:', error);
+		return null;
+	}
+}
+
+async function getSenderAddress() {
+	const authString = `${VITE_SENDCLOUD_PUBLIC_KEY}:${VITE_SENDCLOUD_SECRET_KEY}`;
+	const base64Auth = Buffer.from(authString).toString('base64');
+
+	try {
+		const response = await fetch('https://panel.sendcloud.sc/api/v2/user/addresses/sender', {
+			method: 'GET',
+			headers: {
+				Authorization: `Basic ${base64Auth}`,
+				'Content-Type': 'application/json',
+				Accept: 'application/json'
+			}
+		});
+
+		if (!response.ok) {
+			throw new Error(`Erreur Sendcloud: ${await response.text()}`);
+		}
+
+		const data = await response.json();
+
+		if (data.sender_addresses.length === 0) {
+			throw new Error("Aucune adresse d'expédition trouvée");
+		}
+
+		return data.sender_addresses[0].id; // Prend le premier ID disponible
+	} catch (error) {
+		console.error('Erreur lors de la récupération du sender_address:', error);
+		return null;
+	}
+}

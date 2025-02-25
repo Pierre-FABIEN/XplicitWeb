@@ -103,6 +103,9 @@ revoir la sécurité sur les données sur Admin
 
 Mettre l'adresse de l'entrepot en data
 mettre en prod sendcloud et stripe
+créer une BDD de prod
+créer une branch dev et faire le lien avec vercel
+changer l'adresse et mettre celle de OVH
 
 mettre dans le tuto et dans la selection custom le delais de livraisons
 Délai de fabrication :

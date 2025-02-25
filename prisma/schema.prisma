@@ -179,6 +179,13 @@ model Transaction {
   createdAt              DateTime @default(now())
   updatedAt              DateTime @default(now())
 
+  shippingOption         String
+  shippingCost           Float
+
+  sendcloudParcelId      String? 
+  trackingNumber         String? 
+  trackingUrl            String? 
+
   app_user_name          String
   app_user_email         String
   app_user_recipient     String
