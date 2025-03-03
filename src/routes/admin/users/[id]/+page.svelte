@@ -6,7 +6,10 @@
 	// Importation des composants nécessaires de Shadcn
 	import * as Form from '$shadcn/form';
 	import * as DropdownMenu from '$shadcn/dropdown-menu';
+	import * as Select from '$shadcn/select';
 	import { Input } from '$shadcn/input';
+	import { Card } from '$shadcn/card';
+	import ScrollArea from '$shadcn/scroll-area/scroll-area.svelte';
 	import { Button } from '$shadcn/button';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
@@ -57,27 +60,41 @@
 		}
 	}
 
-	function handleInput(event: Event, index: number) {
+	function selectSuggestion(suggestion: any, index: number) {
+		// Conversion en objet standard
+		const components = JSON.parse(JSON.stringify(suggestion.components));
+
+		// Mises à jour ciblant l'adresse à la position "index"
+		$form.addresses[index].street_number = components.house_number || '';
+		$form.addresses[index].street = components.road || '';
+		$form.addresses[index].city = components.city || components.town || components.village || '';
+		$form.addresses[index].county = components.county || '';
+		$form.addresses[index].state = components.state || '';
+		$form.addresses[index].state_code = components.state_code || '';
+		$form.addresses[index].zip = components.postcode || '';
+		$form.addresses[index].country = components.country || '';
+		$form.addresses[index].country_code = components.country_code || '';
+		$form.addresses[index].stateLetter = components['ISO_3166-1_alpha-2'] || '';
+		$form.addresses[index].ISO_3166_1_alpha_3 = components['ISO_3166-1_alpha-3'] || '';
+
+		// Réinitialiser les suggestions
+		addressSuggestions = [];
+	}
+
+	function handleInput(event: Event) {
 		const input = event.target as HTMLInputElement;
-		selectedAddressIndex = index;
 		clearTimeout(timeoutId);
+
 		timeoutId = setTimeout(() => {
 			fetchAddressSuggestions(input.value);
 		}, 1000);
 	}
 
-	function selectSuggestion(suggestion: any, index: any) {
-		const { house_number, road, city, town, village, state, postcode, country } =
-			suggestion.components;
-		$form.addresses[index].street = `${house_number || ''} ${road || ''}`.trim();
-		$form.addresses[index].city = city || town || village || '';
-		$form.addresses[index].state = state || '';
-		$form.addresses[index].zip = postcode || '';
-		$form.addresses[index].country = country || '';
-		addressSuggestions = [];
-	}
-
 	const roleOptions = ['ADMIN', 'CLIENT'];
+
+	$effect(() => {
+		console.log('form', $form);
+	});
 </script>
 
 <div class="min-h-screen min-w-[100vw] absolute">
@@ -115,7 +132,7 @@
 				<Form.FieldErrors />
 			</Form.Field>
 
-			<Form.Field name="passwordHash" form={updateUserAndAddresses}>
+			<Form.Field name="passwordHash" form={updateUserAndAddresses} class="w-[300px]">
 				<Form.Control>
 					<Form.Label
 						>Mot de passe:<br />
@@ -132,100 +149,137 @@
 			<div class="rts">
 				{#each $form.addresses as address, index}
 					<div class="address-form rounded border m-5 p-5 min-w-[500px]">
-						{#if addressSuggestions.length > 0 && selectedAddressIndex === index}
-							<h2>Suggestions:</h2>
-							<ul class="rounded border p-2">
-								{#each addressSuggestions as suggestion}
-									<li>
-										<button
-											type="button"
-											class="cursor-pointer"
-											onclick={() => selectSuggestion(suggestion, index)}
+						{#if addressSuggestions.length > 0}
+							<h2 class="text-xl font-semibold mb-4">Suggestions d'adresse</h2>
+							<div class="space-y-4">
+								<ScrollArea class="h-[200px]">
+									{#each addressSuggestions as suggestion}
+										<Card
+											class="border border-gray-300 shadow-md hover:shadow-lg transition-shadow p-1"
 										>
-											{suggestion.formatted}
-										</button>
-									</li>
-								{/each}
-							</ul>
+											<div class="rcb">
+												{suggestion.formatted}
+												<Button
+													class="cursor-pointer"
+													onclick={() => selectSuggestion(suggestion, index)}
+													onkeydown={(event) =>
+														event.code === 'Enter' && selectSuggestion(suggestion, index)}
+												>
+													Selectionner
+												</Button>
+											</div>
+										</Card>
+									{/each}
+								</ScrollArea>
+							</div>
 						{/if}
-
-						<h2 class="text-2xl font-bold mb-4">{address.recipient}</h2>
-
-						<Form.Field name={`addresses[${index}].recipient`} form={updateUserAndAddresses}>
+						<!-- Prénom -->
+						<Form.Field name="first_name" form={updateUserAndAddresses}>
 							<Form.Control>
-								<Form.Label>Recipient</Form.Label>
-								<Input
-									name={`addresses[${index}].recipient`}
-									type="text"
-									bind:value={address.recipient}
-								/>
+								<Form.Label>Prénom</Form.Label>
+								<Input name="first_name" type="text" bind:value={address.first_name} />
 							</Form.Control>
 							<Form.FieldErrors />
 						</Form.Field>
 
-						<Form.Field name={`addresses[${index}].street`} form={updateUserAndAddresses}>
+						<!-- Nom -->
+						<Form.Field name="last_name" form={updateUserAndAddresses}>
 							<Form.Control>
-								<Form.Label>Street</Form.Label>
+								<Form.Label>Nom</Form.Label>
+								<Input name="last_name" type="text" bind:value={address.last_name} />
+							</Form.Control>
+							<Form.FieldErrors />
+						</Form.Field>
+
+						<!-- Téléphone -->
+						<Form.Field name="phone" form={updateUserAndAddresses}>
+							<Form.Control>
+								<Form.Label>Téléphone</Form.Label>
+								<Input name="phone" type="tel" bind:value={address.phone} />
+							</Form.Control>
+							<Form.FieldErrors />
+						</Form.Field>
+
+						<!-- Entreprise -->
+						<Form.Field name="company" form={updateUserAndAddresses}>
+							<Form.Control>
+								<Form.Label>Entreprise</Form.Label>
+								<Input name="company" type="text" bind:value={address.company} />
+							</Form.Control>
+							<Form.FieldErrors />
+						</Form.Field>
+
+						<!-- Numéro de rue -->
+						<Form.Field name="street_number" form={updateUserAndAddresses}>
+							<Form.Control>
+								<Form.Label>Numéro</Form.Label>
+								<Input name="street_number" type="text" bind:value={address.street_number} />
+							</Form.Control>
+							<Form.FieldErrors />
+						</Form.Field>
+
+						<!-- Rue -->
+						<Form.Field name="street" form={updateUserAndAddresses}>
+							<Form.Control>
+								<Form.Label>Rue</Form.Label>
 								<Input
+									name="street"
 									type="text"
-									oninput={(event) => handleInput(event, index)}
+									oninput={handleInput}
 									bind:value={address.street}
 								/>
 							</Form.Control>
 							<Form.FieldErrors />
 						</Form.Field>
 
-						<Form.Field name={`addresses[${index}].city`} form={updateUserAndAddresses}>
+						<!-- Ville -->
+						<Form.Field name="city" form={updateUserAndAddresses}>
 							<Form.Control>
-								<Form.Label>City</Form.Label>
-								<Input
-									name={`addresses[${index}].city`}
-									type="text"
-									oninput={(event) => handleInput(event, index)}
-									bind:value={address.city}
-								/>
+								<Form.Label>Ville</Form.Label>
+								<Input name="city" type="text" bind:value={address.city} />
 							</Form.Control>
 							<Form.FieldErrors />
 						</Form.Field>
 
-						<Form.Field name={`addresses[${index}].state`} form={updateUserAndAddresses}>
+						<!-- Code postal -->
+						<Form.Field name="zip" form={updateUserAndAddresses}>
 							<Form.Control>
-								<Form.Label>State</Form.Label>
-								<Input
-									name={`addresses[${index}].state`}
-									type="text"
-									oninput={(event) => handleInput(event, index)}
-									bind:value={address.state}
-								/>
+								<Form.Label>Code Postal</Form.Label>
+								<Input name="zip" type="text" bind:value={address.zip} />
 							</Form.Control>
 							<Form.FieldErrors />
 						</Form.Field>
 
-						<Form.Field name={`addresses[${index}].zip`} form={updateUserAndAddresses}>
+						<!-- Pays -->
+						<Form.Field name="country" form={updateUserAndAddresses}>
 							<Form.Control>
-								<Form.Label>ZIP Code</Form.Label>
-								<Input
-									name={`addresses[${index}].zip`}
-									type="text"
-									oninput={(event) => handleInput(event, index)}
-									bind:value={address.zip}
-								/>
+								<Form.Label>Pays</Form.Label>
+								<Input name="country" type="text" bind:value={address.country} />
 							</Form.Control>
 							<Form.FieldErrors />
 						</Form.Field>
 
-						<Form.Field name={`addresses[${index}].country`} form={updateUserAndAddresses}>
+						<Form.Field name="type" form={updateUserAndAddresses}>
 							<Form.Control>
-								<Form.Label>Country</Form.Label>
-								<Input
-									name={`addresses[${index}].country`}
-									type="text"
-									oninput={(event) => handleInput(event, index)}
-									bind:value={address.country}
-								/>
+								<Form.Label>Type d'adresse</Form.Label>
+								<Select.Root bind:value={address.type} type="single">
+									<Select.Trigger class="w-full">
+										<span>{address.type || 'Sélectionner un type'}</span>
+										<!-- 👈 Affiche la valeur sélectionnée -->
+									</Select.Trigger>
+									<Select.Content>
+										<Select.Item value="SHIPPING">Livraison</Select.Item>
+										<Select.Item value="BILLING">Facturation</Select.Item>
+									</Select.Content>
+								</Select.Root>
 							</Form.Control>
 							<Form.FieldErrors />
 						</Form.Field>
+
+						<input type="hidden" name="id" bind:value={address.id} />
+						{#each Object.keys(address) as key}
+							<input type="hidden" name={key} value={address[key] ?? ''} />
+						{/each}
 
 						<input type="hidden" name={`addresses[${index}].id`} bind:value={address.id} />
 					</div>

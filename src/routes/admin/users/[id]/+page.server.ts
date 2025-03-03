@@ -9,45 +9,76 @@ import { getUserAddresses, updateAddress } from '$lib/prisma/addresses/addresses
 import { updateUserSecurity } from '$lib/prisma/user/updateUserSecurity';
 import { serializeData } from '$lib/utils/serializeData';
 
-export const load: PageServerLoad = async ({ params }) => {
+import type { PageServerLoad } from './$types';
+import { superValidate, fail } from 'sveltekit-superforms';
+import { zod } from 'sveltekit-superforms/adapters';
+
+import { updateUserAndAddressSchema } from '$lib/schema/addresses/updateUserAndAddressSchema';
+import { getUsersById, updateUserMFA, updateUserRole } from '$lib/prisma/user/user';
+import { getUserAddresses, updateAddress } from '$lib/prisma/addresses/addresses';
+import { serializeData } from '$lib/utils/serializeData';
+
+export const load: PageServerLoad = async ({ params, locals }) => {
+	// 🔒 Vérification de l'authentification
+	if (!locals.user) {
+		return fail(401, { message: 'Unauthorized' });
+	}
+
 	console.log('Loading user data for ID:', params.id);
 
+	// 📌 Récupération des informations utilisateur et adresses associées
 	const userFetched = await getUsersById(params.id);
-	const addresses = await getUserAddresses(params.id);
+	const addressesFetched = await getUserAddresses(params.id);
 
 	console.log(userFetched, 'userFetched');
-	console.log(addresses, 'addresses');
+	console.log(addressesFetched, 'addressesFetched');
 
+	// ⚠️ Vérification si l'utilisateur existe
 	if (!userFetched) {
 		console.log('User not found');
 		return fail(404, { message: 'User not found' });
 	}
 
+	// ✅ Sérialisation des données utilisateur
 	const userSelected = serializeData(userFetched);
 
+	// ✅ Préparation des données initiales pour le formulaire
 	const initialData = {
-		id: userSelected?.id || '',
-		role: userSelected?.role || 'USER',
-		isMfaEnabled: userSelected.isMfaEnabled || false,
+		id: userSelected.id,
+		role: userSelected.role || 'USER',
+		isMfaEnabled: userSelected.isMfaEnabled ?? false,
 		passwordHash: '',
-		addresses: addresses.map((address) => ({
-			id: address?.id || '',
-			recipient: address?.recipient || '',
-			street: address?.street || '',
-			city: address?.city || '',
-			state: address?.state || '',
-			zip: address?.zip || '',
-			country: address?.country || ''
+		addresses: addressesFetched.map((address) => ({
+			id: address.id,
+			first_name: address.first_name,
+			last_name: address.last_name,
+			phone: address.phone,
+			company: address.company ?? '',
+			street_number: address.street_number,
+			street: address.street,
+			city: address.city,
+			county: address.county ?? '',
+			state: address.state ?? '',
+			stateLetter: address.stateLetter,
+			state_code: address.state_code ?? '',
+			zip: address.zip,
+			country: address.country,
+			country_code: address.country_code,
+			ISO_3166_1_alpha_3: address.ISO_3166_1_alpha_3,
+			type: address.type,
+			userId: address.userId, // Ajouté pour respecter le schéma
+			createdAt: address.createdAt ?? new Date(),
+			updatedAt: address.updatedAt ?? new Date()
 		}))
 	};
 
+	// 📜 Validation des données initiales avec Superform + Zod
 	const IupdateUserAndAddressSchema = await superValidate(
 		initialData,
 		zod(updateUserAndAddressSchema)
 	);
 
 	return {
-		initialData,
 		IupdateUserAndAddressSchema,
 		userSelected
 	};
@@ -60,7 +91,6 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		console.log('Received form data:', formData);
 
-		// Extraction des données JSON
 		const jsonData = formData.get('__superform_json');
 		if (!jsonData) {
 			return fail(400, { message: 'Invalid form data' });
@@ -69,32 +99,45 @@ export const actions: Actions = {
 		let parsedData;
 		try {
 			parsedData = JSON.parse(jsonData.toString());
+			console.log('Parsed JSON Data:', parsedData);
 		} catch (error) {
 			console.error('Error parsing JSON data:', error);
 			return fail(400, { message: 'Invalid JSON data' });
 		}
 
-		// Extraction des données utilisateur
-		const userId = parsedData[1];
+		// Ajustement de l'extraction des données en fonction de la structure reçue
+		const userId = parsedData[1]; // Vérifie si c'est bien ici que se trouve l'ID utilisateur
 		const userRole = parsedData[2];
 		const isMfaEnabled = parsedData[3];
 		const passwordHash = parsedData[4] ? parsedData[4].trim() : null;
-		const addressesIndexes = parsedData[5];
 
-		// Vérifier si addressesIndexes est bien un tableau avant de faire `.map()`
+		// Correction de la récupération des adresses
+		const addressesIndexes = parsedData[5];
 		const addresses = Array.isArray(addressesIndexes)
 			? addressesIndexes.map((index: number) => ({
-					id: parsedData[index + 1], // Décalage pour récupérer l'adresse
-					recipient: parsedData[index + 2],
-					street: parsedData[index + 3],
-					city: parsedData[index + 4],
-					state: parsedData[index + 5],
-					zip: parsedData[index + 6],
-					country: parsedData[index + 7]
+					id: parsedData[index + 1],
+					first_name: parsedData[index + 2],
+					last_name: parsedData[index + 3],
+					phone: parsedData[index + 4],
+					company: parsedData[index + 5],
+					street_number: parsedData[index + 6],
+					street: parsedData[index + 7],
+					city: parsedData[index + 8],
+					county: parsedData[index + 9],
+					state: parsedData[index + 10],
+					stateLetter: parsedData[index + 11],
+					state_code: parsedData[index + 12],
+					zip: parsedData[index + 13],
+					country: parsedData[index + 14],
+					country_code: parsedData[index + 15],
+					ISO_3166_1_alpha_3: parsedData[index + 16],
+					type: parsedData[index + 17],
+					userId: userId,
+					createdAt: new Date(parsedData[index + 18][1]), // Conversion en Date
+					updatedAt: new Date(parsedData[index + 19][1])
 				}))
 			: [];
 
-		// Structuration des données finales
 		const finalData = {
 			id: userId,
 			role: userRole,
@@ -105,7 +148,7 @@ export const actions: Actions = {
 
 		console.log('Structured data:', finalData);
 
-		// Validation des données avec Zod
+		// Validation avec Zod
 		const form = await superValidate(finalData, zod(updateUserAndAddressSchema));
 		if (!form.valid) {
 			console.log('Validation errors:', form.errors);
@@ -122,29 +165,39 @@ export const actions: Actions = {
 				return fail(404, { message: 'User not found' });
 			}
 
-			// Mise à jour du rôle utilisateur
+			// 1. Mise à jour du rôle utilisateur
 			await updateUserRole(id, role);
 
-			if (passwordHash !== null) {
+			// 2. Mise à jour de la sécurité (MFA & mot de passe chiffré)
+			if (passwordHash !== null && passwordHash.trim() !== '') {
 				await updateUserSecurity(id, { isMfaEnabled, passwordHash });
+			} else {
+				// Met à jour uniquement le MFA si le password est vide ou nul
+				await updateUserMFA(id, { isMfaEnabled });
 			}
 
-			await updateUserMFA(id, {
-				isMfaEnabled: isMfaEnabled
-			});
-
-			// Mise à jour de la sécurité (MFA & mot de passe chiffré)
-
-			// Mise à jour des adresses
+			// 3. Mise à jour des adresses
 			await Promise.all(
 				addresses.map((address) =>
 					updateAddress(address.id, {
-						recipient: address.recipient,
+						userId: id,
+						first_name: address.first_name,
+						last_name: address.last_name,
+						phone: address.phone,
+						company: address.company,
+						street_number: address.street_number,
 						street: address.street,
 						city: address.city,
+						county: address.county,
 						state: address.state,
+						stateLetter: address.stateLetter,
+						state_code: address.state_code,
 						zip: address.zip,
-						country: address.country
+						country: address.country,
+						country_code: address.country_code,
+						ISO_3166_1_alpha_3: address.ISO_3166_1_alpha_3,
+						type: address.type,
+						updatedAt: new Date() // Mise à jour automatique
 					})
 				)
 			);
