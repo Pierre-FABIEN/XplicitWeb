@@ -76,18 +76,41 @@ model PasswordResetSession {
 
 // COMMERCE __________________________________________________________________________________
 
+
+
 model Address {
-  id        String  @id @default(auto()) @map("_id") @db.ObjectId
-  recipient String
-  street    String
-  city      String
-  state     String
-  zip       String
-  country   String
-  userId    String? @db.ObjectId
-  user      User?   @relation(fields: [userId], references: [id])
-  orders    Order[]
+  id            String  @id @default(auto()) @map("_id") @db.ObjectId
+  first_name    String  // Prénom du destinataire
+  last_name     String  // Nom de famille du destinataire
+  phone         String  // Numéro de téléphone
+  company       String? // Nom de l'entreprise (optionnel)
+  street_number String  // Numéro de rue
+  street        String  // Nom de la rue
+  city          String  // Ville
+  county        String  // Département
+  state         String  // Région
+  stateLetter   String  // Code ISO de la région
+  state_code    String  // Code abrégé de l'État/région
+  zip           String  // Code postal
+  country       String  // Nom du pays
+  country_code  String  // Code ISO alpha-2 du pays
+  ISO_3166_1_alpha_3 String // Code ISO alpha-3 du pays
+  
+  type          AddressType // Enum : SHIPPING ou BILLING
+  userId        String  @db.ObjectId
+  user          User    @relation(fields: [userId], references: [id])
+  orders      Order[]
+
+  createdAt     DateTime @default(now()) // Date de création
+  updatedAt     DateTime @updatedAt      // Date de mise à jour
+
   @@map("addresses")
+}
+
+// Enum pour différencier Facturation & Livraison
+enum AddressType {
+  SHIPPING
+  BILLING
 }
 
 model Order {

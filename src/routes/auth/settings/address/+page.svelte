@@ -15,22 +15,32 @@
 		id: 'deleteAddress'
 	});
 
+	console.log(data, 'data');
+
 	const {
 		form: deleteAddressData,
 		enhance: deleteAddressEnhance,
 		message: deleteAddressMessage
 	} = deleteAddress;
 
-	// Define table columns
+	// Mise à jour des colonnes pour afficher toutes les informations
 	let addressColumns = $state([
-		{ key: 'recipient', label: 'Destinataire' },
+		{ key: 'first_name', label: 'Prénom' },
+		{ key: 'last_name', label: 'Nom' },
+		{ key: 'phone', label: 'Téléphone' },
+		{ key: 'company', label: 'Entreprise' },
+		{ key: 'street_number', label: 'Numéro de rue' },
 		{ key: 'street', label: 'Rue' },
 		{ key: 'city', label: 'Ville' },
+		{ key: 'state', label: 'Région' },
 		{ key: 'zip', label: 'Code postal' },
-		{ key: 'country', label: 'Pays' }
+		{ key: 'country', label: 'Pays' },
+		{ key: 'type', label: 'Type' }, // SHIPPING ou BILLING
+		{ key: 'createdAt', label: 'Créé le' },
+		{ key: 'updatedAt', label: 'Mis à jour le' }
 	]);
 
-	// Define actions with icons
+	// Définition des actions avec icônes
 	let addressActions = $state([
 		{
 			type: 'link',
@@ -48,7 +58,7 @@
 		}
 	]);
 
-	// Show toast on form message
+	// Afficher un toast lors d'une suppression réussie
 	$effect(() => {
 		if ($deleteAddressMessage) {
 			toast($deleteAddressMessage);

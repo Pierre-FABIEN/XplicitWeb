@@ -136,7 +136,7 @@ async function handleCheckoutSession(session) {
 				});
 
 				// 🏷 **Demander l’étiquette d’expédition**
-				await requestShippingLabel(sendcloudParcel.id);
+				await requestShippingLabel(sendcloudParcel, order.shippingOption);
 			} else {
 				console.error('❌ Erreur lors de la création du colis Sendcloud.');
 			}
@@ -214,10 +214,10 @@ async function createSendcloudParcel(order) {
 	}
 }
 
-/**
- * Demande une étiquette d’expédition pour un colis existant dans Sendcloud.
- */
-async function requestShippingLabel(parcelId) {
+async function requestShippingLabel(sendcloudParcel, shippingOption) {
+	console.log(sendcloudParcel, '🚀 Colis à traiter pour l’étiquette');
+	console.log(shippingOption, '📦 Option d’expédition');
+
 	try {
 		const headers = {
 			'Content-Type': 'application/json',
@@ -228,9 +228,18 @@ async function requestShippingLabel(parcelId) {
 				).toString('base64')
 		};
 
+		// 🔍 Récupérer l'ID de la méthode d'expédition
+		const formattedShippingOption = shippingOption.split(',')[0]; // Nettoyage du nom
+		const shippingMethodId = await getShippingMethodId(formattedShippingOption);
+		if (!shippingMethodId) {
+			throw new Error(`Aucune méthode d'expédition trouvée pour ${shippingOption}`);
+		}
+		console.log("✅ ID de la méthode d'expédition:", shippingMethodId);
+
 		const payload = {
 			parcel: {
-				id: parcelId,
+				id: sendcloudParcel.id,
+				shipping_method: shippingMethodId, // 🔥 Ajout de l'ID obligatoire
 				request_label: true
 			}
 		};
@@ -281,6 +290,52 @@ async function getSenderAddress() {
 		return data.sender_addresses[0].id; // Prend le premier ID disponible
 	} catch (error) {
 		console.error('Erreur lors de la récupération du sender_address:', error);
+		return null;
+	}
+}
+
+async function getShippingMethodId(shippingMethodName) {
+	try {
+		const headers = {
+			Authorization:
+				'Basic ' +
+				Buffer.from(
+					`${process.env.SENDCLOUD_PUBLIC_KEY}:${process.env.SENDCLOUD_SECRET_KEY}`
+				).toString('base64'),
+			'Content-Type': 'application/json',
+			Accept: 'application/json'
+		};
+
+		const response = await fetch('https://panel.sendcloud.sc/api/v2/shipping_methods', {
+			method: 'GET',
+			headers
+		});
+
+		if (!response.ok) {
+			throw new Error(`Erreur Sendcloud: ${await response.text()}`);
+		}
+
+		const data = await response.json();
+		console.log(
+			'📦 Méthodes d’expédition disponibles:',
+			JSON.stringify(data.shipping_methods, null, 2)
+		);
+
+		// 🔍 Trouver la méthode qui correspond
+		const method = data.shipping_methods.find((m) =>
+			m.name.toLowerCase().includes(shippingMethodName.toLowerCase())
+		);
+
+		if (!method) {
+			throw new Error(
+				`❌ Aucune méthode d'expédition trouvée pour "${shippingMethodName}". Vérifie la liste des méthodes récupérées ci-dessus.`
+			);
+		}
+
+		console.log(`✅ Méthode trouvée : ${method.name} → ID : ${method.id}`);
+		return method.id;
+	} catch (error) {
+		console.error('Erreur lors de la récupération de shipping_method:', error);
 		return null;
 	}
 }

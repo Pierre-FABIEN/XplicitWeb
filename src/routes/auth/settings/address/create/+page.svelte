@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-
 	import { createAddressSchema } from '$lib/schema/addresses/addressSchema.js';
 
 	import * as Form from '$shadcn/form';
 	import { Button } from '$shadcn/button';
 	import { Input } from '$shadcn/input';
+	import * as Select from '$shadcn/select';
 	import { toast } from 'svelte-sonner';
 	import { Card } from '$shadcn/card';
 	import ScrollArea from '$shadcn/scroll-area/scroll-area.svelte';
@@ -35,6 +35,16 @@
 
 	$effect(() => {
 		$createAddressData.userId = data.userId;
+	});
+
+	$effect(() => {
+		console.log($createAddressData);
+	});
+
+	$effect(() => {
+		if (!$createAddressData.type || Array.isArray($createAddressData.type)) {
+			$createAddressData.type = 'SHIPPING'; // 👈 Définit une valeur par défaut correcte
+		}
 	});
 
 	let addressSuggestions = $state<string[]>([]);
@@ -71,20 +81,36 @@
 	}
 
 	function selectSuggestion(suggestion: any) {
-		const { house_number, road, city, town, village, state, postcode, country } =
-			suggestion.components;
-		$createAddressData.street = `${house_number || ''} ${road || ''}`.trim();
-		$createAddressData.city = city || town || village || '';
-		$createAddressData.state = state || '';
-		$createAddressData.zip = postcode || '';
-		$createAddressData.country = country || '';
+		console.log('Suggestion sélectionnée :', suggestion);
+
+		// Force la conversion du Proxy en objet standard
+		const components = JSON.parse(JSON.stringify(suggestion.components));
+
+		console.log('Données extraites après transformation :', components); // Vérification
+
+		// Extraction sécurisée des données avec les bons noms de clés
+		$createAddressData.street_number = components.house_number || '';
+		$createAddressData.street = components.road || '';
+		$createAddressData.city = components.city || components.town || components.village || '';
+		$createAddressData.county = components.county || '';
+		$createAddressData.state = components.state || '';
+		$createAddressData.state_code = components.state_code || '';
+		$createAddressData.zip = components.postcode || '';
+		$createAddressData.country = components.country || '';
+		$createAddressData.country_code = components.country_code || '';
+
+		// 🛠 Corrige l'accès aux clés avec des tirets !
+		$createAddressData.stateLetter = components['ISO_3166-1_alpha-2'] || '';
+		$createAddressData.ISO_3166_1_alpha_3 = components['ISO_3166-1_alpha-3'] || '';
+
+		// Réinitialisation des suggestions après la sélection
 		addressSuggestions = [];
 	}
 </script>
 
 <div class="container mx-auto p-6">
 	<div class="max-w-xl border mx-auto rounded-md p-6">
-		<h2 class="text-2xl font-semibold mb-4">Create Address</h2>
+		<h2 class="text-2xl font-semibold mb-4">Créer une adresse</h2>
 
 		{#if addressSuggestions.length > 0}
 			<h2 class="text-xl font-semibold mb-4">Suggestions d'adresse</h2>
@@ -107,95 +133,116 @@
 				</ScrollArea>
 			</div>
 		{/if}
+
 		<form method="POST" action="?/createAddress" use:createAddressEnhance class="space-y-4">
-			<div class="space-y-2">
-				<Form.Field name="recipient" form={createAddress}>
-					<Form.Control>
-						<Form.Label>Destinataire</Form.Label>
-						<Input name="recipient" type="text" bind:value={$createAddressData.recipient} />
-					</Form.Control>
-					<Form.FieldErrors />
-				</Form.Field>
-			</div>
+			<!-- Prénom -->
+			<Form.Field name="first_name" form={createAddress}>
+				<Form.Control>
+					<Form.Label>Prénom</Form.Label>
+					<Input name="first_name" type="text" bind:value={$createAddressData.first_name} />
+				</Form.Control>
+				<Form.FieldErrors />
+			</Form.Field>
 
-			<div class="space-y-2">
-				<Form.Field name="street" form={createAddress}>
-					<Form.Control>
-						<Form.Label>Rue</Form.Label>
-						<Input
-							name="street"
-							type="text"
-							oninput={handleInput}
-							bind:value={$createAddressData.street}
-						/>
-					</Form.Control>
-					<Form.FieldErrors />
-				</Form.Field>
-			</div>
+			<!-- Nom -->
+			<Form.Field name="last_name" form={createAddress}>
+				<Form.Control>
+					<Form.Label>Nom</Form.Label>
+					<Input name="last_name" type="text" bind:value={$createAddressData.last_name} />
+				</Form.Control>
+				<Form.FieldErrors />
+			</Form.Field>
 
-			<div class="space-y-2">
-				<Form.Field name="city" form={createAddress}>
-					<Form.Control>
-						<Form.Label>Ville</Form.Label>
-						<Input
-							name="city"
-							type="text"
-							oninput={handleInput}
-							bind:value={$createAddressData.city}
-						/>
-					</Form.Control>
-					<Form.FieldErrors />
-				</Form.Field>
-			</div>
+			<!-- Téléphone -->
+			<Form.Field name="phone" form={createAddress}>
+				<Form.Control>
+					<Form.Label>Téléphone</Form.Label>
+					<Input name="phone" type="tel" bind:value={$createAddressData.phone} />
+				</Form.Control>
+				<Form.FieldErrors />
+			</Form.Field>
 
-			<div class="space-y-2">
-				<Form.Field name="state" form={createAddress}>
-					<Form.Control>
-						<Form.Label>Région</Form.Label>
-						<Input
-							name="state"
-							type="text"
-							oninput={handleInput}
-							bind:value={$createAddressData.state}
-						/>
-					</Form.Control>
-					<Form.FieldErrors />
-				</Form.Field>
-			</div>
+			<!-- Entreprise -->
+			<Form.Field name="company" form={createAddress}>
+				<Form.Control>
+					<Form.Label>Entreprise</Form.Label>
+					<Input name="company" type="text" bind:value={$createAddressData.company} />
+				</Form.Control>
+				<Form.FieldErrors />
+			</Form.Field>
 
-			<div class="space-y-2">
-				<Form.Field name="zip" form={createAddress}>
-					<Form.Control>
-						<Form.Label>Code postal</Form.Label>
-						<Input
-							name="zip"
-							type="text"
-							oninput={handleInput}
-							bind:value={$createAddressData.zip}
-						/>
-					</Form.Control>
-					<Form.FieldErrors />
-				</Form.Field>
-			</div>
+			<!-- Numéro de rue -->
+			<Form.Field name="street_number" form={createAddress}>
+				<Form.Control>
+					<Form.Label>Numéro</Form.Label>
+					<Input name="street_number" type="text" bind:value={$createAddressData.street_number} />
+				</Form.Control>
+				<Form.FieldErrors />
+			</Form.Field>
 
-			<div class="space-y-2">
-				<Form.Field name="country" form={createAddress}>
-					<Form.Control>
-						<Form.Label>Pays</Form.Label>
-						<Input
-							name="country"
-							type="text"
-							oninput={handleInput}
-							bind:value={$createAddressData.country}
-						/>
-					</Form.Control>
-					<Form.FieldErrors />
-				</Form.Field>
-			</div>
+			<!-- Rue -->
+			<Form.Field name="street" form={createAddress}>
+				<Form.Control>
+					<Form.Label>Rue</Form.Label>
+					<Input
+						name="street"
+						type="text"
+						oninput={handleInput}
+						bind:value={$createAddressData.street}
+					/>
+				</Form.Control>
+				<Form.FieldErrors />
+			</Form.Field>
 
-			<input type="hidden" name="userId" bind:value={$createAddressData.userId} />
+			<!-- Ville -->
+			<Form.Field name="city" form={createAddress}>
+				<Form.Control>
+					<Form.Label>Ville</Form.Label>
+					<Input name="city" type="text" bind:value={$createAddressData.city} />
+				</Form.Control>
+				<Form.FieldErrors />
+			</Form.Field>
 
-			<Button type="submit" class="w-full">Save changes</Button>
+			<!-- Code postal -->
+			<Form.Field name="zip" form={createAddress}>
+				<Form.Control>
+					<Form.Label>Code Postal</Form.Label>
+					<Input name="zip" type="text" bind:value={$createAddressData.zip} />
+				</Form.Control>
+				<Form.FieldErrors />
+			</Form.Field>
+
+			<!-- Pays -->
+			<Form.Field name="country" form={createAddress}>
+				<Form.Control>
+					<Form.Label>Pays</Form.Label>
+					<Input name="country" type="text" bind:value={$createAddressData.country} />
+				</Form.Control>
+				<Form.FieldErrors />
+			</Form.Field>
+
+			<Form.Field name="type" form={createAddress}>
+				<Form.Control>
+					<Form.Label>Type d'adresse</Form.Label>
+					<Select.Root bind:value={$createAddressData.type} type="single">
+						<Select.Trigger class="w-full">
+							<span>{$createAddressData.type || 'Sélectionner un type'}</span>
+							<!-- 👈 Affiche la valeur sélectionnée -->
+						</Select.Trigger>
+						<Select.Content>
+							<Select.Item value="SHIPPING">Livraison</Select.Item>
+							<Select.Item value="BILLING">Facturation</Select.Item>
+						</Select.Content>
+					</Select.Root>
+				</Form.Control>
+				<Form.FieldErrors />
+			</Form.Field>
+
+			{#each Object.keys($createAddressData) as key}
+				<input type="hidden" name={key} value={$createAddressData[key] ?? ''} />
+			{/each}
+
+			<Button type="submit" class="w-full">Enregistrer</Button>
 		</form>
 	</div>
 </div>

@@ -19,7 +19,11 @@ export const load = async (event) => {
 
 	const userId = event.locals.user.id;
 
+	console.log(userId, 'userId');
+
 	const address = await getUserAddresses(userId);
+
+	console.log(address, 'address');
 
 	const IdeleteAddressSchema = await superValidate(zod(deleteAddressSchema));
 

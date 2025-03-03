@@ -5,38 +5,81 @@ import { zod } from 'sveltekit-superforms/adapters';
 import { createAddress } from '$lib/prisma/addresses/addresses';
 
 export const load: PageServerLoad = async (event) => {
-	// Initialize superform for the createAddressSchema
-	const IcreateAddressSchema = await superValidate(zod(createAddressSchema));
+	// Vérification de l'authentification
+	if (!event.locals.user) {
+		return fail(401, { message: 'Unauthorized' });
+	}
 
-	const userId = event.locals.user.id;
+	// Initialisation du formulaire Superform
+	const IcreateAddressSchema = await superValidate(zod(createAddressSchema));
 
 	return {
 		IcreateAddressSchema,
-		userId
+		userId: event.locals.user.id
 	};
 };
 
 export const actions: Actions = {
-	createAddress: async ({ request }) => {
-		const formData = await request.formData();
+	createAddress: async (event) => {
+		// Vérifier l'authentification
+		if (!event.locals.user) {
+			return fail(401, { message: 'Unauthorized' });
+		}
 
+		const formData = await event.request.formData();
+		console.log('Form Data:', formData);
+
+		// Validation avec Superform + Zod
 		const form = await superValidate(formData, zod(createAddressSchema));
+		console.log('Validated Form:', form);
 
 		if (!form.valid) {
 			return fail(400, { message: 'Validation failed', form });
 		}
 
-		const { recipient, street, city, state, zip, country, userId } = form.data;
+		const {
+			first_name,
+			last_name,
+			phone,
+			company = null,
+			street_number = null,
+			street,
+			city,
+			county = null,
+			state = null,
+			stateLetter,
+			state_code = null,
+			zip,
+			country,
+			country_code,
+			ISO_3166_1_alpha_3,
+			type
+		} = form.data;
+
+		// 🔥 **Forcer l'ajout de `userId` côté serveur**
+		const userId = event.locals.user.id;
 
 		try {
 			await createAddress({
-				recipient,
+				first_name,
+				last_name,
+				phone,
+				company,
+				street_number,
 				street,
 				city,
+				county,
 				state,
+				stateLetter,
+				state_code,
 				zip,
 				country,
-				userId
+				country_code,
+				ISO_3166_1_alpha_3,
+				type,
+				userId,
+				createdAt: new Date(),
+				updatedAt: new Date()
 			});
 
 			return message(form, 'Address created successfully');
