@@ -2,7 +2,6 @@
 
 import { error, json } from '@sveltejs/kit';
 import { z } from 'zod';
-import { VITE_SENDCLOUD_PUBLIC_KEY, VITE_SENDCLOUD_SECRET_KEY } from '$env/static/private';
 
 /**
  * We include an additional `quantity` field so that
@@ -45,7 +44,7 @@ export async function POST({ request }) {
 	const { to_country_code, to_postal_code, weight, quantity } = parseResult.data;
 
 	// 3. Construct Basic Auth
-	const authString = `${VITE_SENDCLOUD_PUBLIC_KEY}:${VITE_SENDCLOUD_SECRET_KEY}`;
+	const authString = `${process.env.SENDCLOUD_PUBLIC_KEY}:${process.env.SENDCLOUD_SECRET_KEY}`;
 	const base64Auth = Buffer.from(authString).toString('base64');
 
 	/**
@@ -98,7 +97,7 @@ export async function POST({ request }) {
 		const requestBody = {
 			// Sender (always the same)
 			from_country_code: 'FR',
-			from_postal_code: '75001',
+			from_postal_code: '31620',
 
 			// Dimensions adapted from the "quantity" logic
 			dimensions,

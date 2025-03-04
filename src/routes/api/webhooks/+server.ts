@@ -4,7 +4,6 @@ import { prisma } from '$lib/server/index';
 import dotenv from 'dotenv';
 import { getUserIdByOrderId } from '$lib/prisma/order/prendingOrder';
 import { getAllProducts } from '$lib/prisma/products/products';
-import { VITE_SENDCLOUD_PUBLIC_KEY, VITE_SENDCLOUD_SECRET_KEY } from '$env/static/private';
 
 dotenv.config();
 const sendcloudApiUrl = 'https://panel.sendcloud.sc/api/v2/parcels';
@@ -27,21 +26,24 @@ export async function POST({ request }) {
 
 	// Handle the event
 	switch (event.type) {
-		case 'checkout.session.completed':
+		case 'checkout.session.completed': {
 			const session = event.data.object;
 			console.log('✅ Checkout session completed:', session);
 			await handleCheckoutSession(session);
 			break;
+		}
 
-		case 'payment_intent.succeeded':
+		case 'payment_intent.succeeded': {
 			const paymentIntent = event.data.object;
 			console.log('✅ Payment intent succeeded:', paymentIntent);
 			break;
+		}
 
-		case 'charge.succeeded':
+		case 'charge.succeeded': {
 			const charge = event.data.object;
 			console.log('✅ Charge succeeded:', charge);
 			break;
+		}
 
 		default:
 			console.warn(`⚠️ Unhandled event type: ${event.type}`);
@@ -73,7 +75,11 @@ async function handleCheckoutSession(session) {
 			// 🔍 Récupérer la commande et ses infos
 			const order = await prisma.order.findUnique({
 				where: { id: orderId },
-				include: { user: true, address: true, items: { include: { product: true, custom: true } } }
+				include: {
+					user: true,
+					address: true,
+					items: { include: { product: true, custom: true } }
+				}
 			});
 			if (!order) throw new Error(`⚠️ Order ${orderId} not found`);
 			if (!order.address) throw new Error(`⚠️ Order ${orderId} has no associated address`);
@@ -90,16 +96,27 @@ async function handleCheckoutSession(session) {
 					status: session.payment_status,
 					orderId: orderId,
 					createdAt: new Date(session.created * 1000),
-					shippingOption: order.shippingOption,
+					shippingOption: order.shippingOption ?? '',
 					shippingCost: parseFloat(order.shippingCost?.toString() ?? '0'),
-					app_user_name: order.user.name ?? order.user.username ?? 'Unknown',
-					app_user_email: order.user.email,
-					app_user_recipient: order.address.recipient,
-					app_user_street: order.address.street,
-					app_user_city: order.address.city,
-					app_user_state: order.address.state,
-					app_user_zip: order.address.zip,
-					app_user_country: order.address.country,
+
+					// ➡️ Nouveau : récupération des données d'adresse
+					address_first_name: order.address.first_name,
+					address_last_name: order.address.last_name,
+					address_phone: order.address.phone,
+					address_company: order.address.company,
+					address_street_number: order.address.street_number,
+					address_street: order.address.street,
+					address_city: order.address.city,
+					address_county: order.address.county,
+					address_state: order.address.state,
+					address_stateLetter: order.address.stateLetter,
+					address_state_code: order.address.state_code,
+					address_zip: order.address.zip,
+					address_country: order.address.country,
+					address_country_code: order.address.country_code,
+					address_ISO_3166_1_alpha_3: order.address.ISO_3166_1_alpha_3,
+					address_type: order.address.type,
+					// Produits
 					products: order.items.map((item) => ({
 						id: item.productId,
 						name: item.product.name,
@@ -121,7 +138,8 @@ async function handleCheckoutSession(session) {
 			});
 			console.log(`✅ Transaction ${session.id} recorded successfully.`);
 
-			const sendcloudParcel = await createSendcloudParcel(order);
+			// Envoi du colis via Sendcloud
+			const sendcloudParcel = await createSendcloudParcel(transaction);
 			if (sendcloudParcel) {
 				console.log('📦 Colis créé sur Sendcloud:', sendcloudParcel);
 
@@ -146,10 +164,7 @@ async function handleCheckoutSession(session) {
 	}
 }
 
-/**
- * Crée un colis dans Sendcloud sans demander immédiatement une étiquette.
- */
-async function createSendcloudParcel(order) {
+async function createSendcloudParcel(transaction) {
 	try {
 		const headers = {
 			'Content-Type': 'application/json',
@@ -160,31 +175,41 @@ async function createSendcloudParcel(order) {
 				).toString('base64')
 		};
 
-		console.log(order, 'param order sdfgdfgssfdgf');
+		console.log(transaction, 'param transaction Sendcloud');
 
-		// Exemple d'utilisation
+		// Récupération de l'ID de l'adresse d'expédition
 		const senderAddressId = await getSenderAddress();
-		console.log("ID de l'adresse d'expédition:", senderAddressId);
+		if (!senderAddressId) {
+			throw new Error('❌ Impossible de récupérer l’adresse de l’expéditeur sur Sendcloud.');
+		}
 
+		// Calcul du poids total du colis
+		const totalWeight = transaction.products.reduce((acc, item) => acc + item.quantity * 0.125, 0);
+
+		// Construction du payload Sendcloud
 		const payload = {
 			parcel: {
-				name: order.address.recipient,
-				company_name: order.user.name ?? 'Inconnu',
-				address: order.address.street,
-				house_number: order.address.houseNumber ?? '',
-				city: order.address.city,
-				postal_code: order.address.zip,
-				country: order.address.country === 'France' ? 'FR' : order.address.country,
-				telephone: order.user.phone ?? '',
-				email: order.user.email,
-				weight: order.items.reduce((acc, item) => acc + item.quantity * 0.125, 0),
-				shipping_method_checkout_name: order.shippingOption,
-				total_order_value: order.items.reduce(
-					(sum, item) => sum + item.product.price * item.quantity,
+				name: `${transaction.address_first_name} ${transaction.address_last_name}`.trim(),
+				company_name: transaction.address_company ?? '',
+				address: transaction.address_street,
+				house_number: transaction.address_street_number ?? '',
+				city: transaction.address_city,
+				postal_code: transaction.address_zip,
+				country: transaction.address_country_code.toUpperCase(),
+				telephone: transaction.address_phone ?? '',
+				email: transaction.customer_details_email,
+
+				weight: totalWeight.toFixed(3), // Format "0.000"
+				shipping_method_checkout_name: transaction.shippingOption ?? '',
+				total_order_value: transaction.products.reduce(
+					(sum, item) => sum + item.price * item.quantity,
 					0
 				),
 				total_order_value_currency: 'EUR',
+
+				// Adresse de l'expéditeur
 				sender_address: senderAddressId,
+
 				quantity: 1,
 				is_return: false,
 				request_label: false
@@ -193,6 +218,7 @@ async function createSendcloudParcel(order) {
 
 		console.log('📦 Envoi de la demande de création de colis:', JSON.stringify(payload, null, 2));
 
+		// Requête Sendcloud
 		const response = await fetch(sendcloudApiUrl, {
 			method: 'POST',
 			headers,
@@ -264,7 +290,7 @@ async function requestShippingLabel(sendcloudParcel, shippingOption) {
 }
 
 async function getSenderAddress() {
-	const authString = `${VITE_SENDCLOUD_PUBLIC_KEY}:${VITE_SENDCLOUD_SECRET_KEY}`;
+	const authString = `${process.env.SENDCLOUD_PUBLIC_KEY}:${process.env.SENDCLOUD_SECRET_KEY}`;
 	const base64Auth = Buffer.from(authString).toString('base64');
 
 	try {

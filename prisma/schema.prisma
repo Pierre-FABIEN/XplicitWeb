@@ -209,19 +209,30 @@ model Transaction {
   trackingNumber         String? 
   trackingUrl            String? 
 
-  app_user_name          String
-  app_user_email         String
-  app_user_recipient     String
-  app_user_street        String
-  app_user_city          String
-  app_user_state         String
-  app_user_zip           String
-  app_user_country       String
+  address_first_name     String  // Prénom du destinataire
+  address_last_name      String  // Nom de famille du destinataire
+  address_phone          String  // Numéro de téléphone
+  address_company        String? // Nom de l'entreprise (optionnel)
+  address_street_number  String  // Numéro de rue
+  address_street         String  // Nom de la rue
+  address_city           String  // Ville
+  address_county         String  // Département
+  address_state          String  // Région
+  address_stateLetter    String  // Code ISO de la région
+  address_state_code     String  // Code abrégé de l'État/région
+  address_zip            String  // Code postal
+  address_country        String  // Nom du pays
+  address_country_code   String  // Code ISO alpha-2 du pays
+  address_ISO_3166_1_alpha_3 String // Code ISO alpha-3 du pays
+  address_type           AddressType // Enum : SHIPPING ou BILLING
+
   products               Json     
 
-  user                   User?    @relation(fields: [userId], references: [id]) 
+  user                   User?    @relation(fields: [userId], references: [id])
+
   @@map("transactions")
 }
+
 
 model ProductCategory {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
