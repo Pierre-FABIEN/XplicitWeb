@@ -205,6 +205,9 @@ model Transaction {
   shippingOption         String
   shippingCost           Float
 
+  shippingMethodId       Int
+  shippingMethodName     String
+
   sendcloudParcelId      String? 
   trackingNumber         String? 
   trackingUrl            String? 
