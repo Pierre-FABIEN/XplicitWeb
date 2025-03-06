@@ -205,13 +205,28 @@ model Transaction {
   shippingOption         String
   shippingCost           Float
 
+  // Informations sur le mode d'expédition
   shippingMethodId       Int
   shippingMethodName     String
 
+  // Informations supplémentaires Sendcloud
   sendcloudParcelId      String? 
   trackingNumber         String? 
   trackingUrl            String? 
 
+  // 📦 Dimensions et poids du colis selon l'API Sendcloud
+  package_length         Float    // Longueur du colis en cm
+  package_width          Float    // Largeur du colis en cm
+  package_height         Float    // Hauteur du colis en cm
+  package_dimension_unit String   // Unité des dimensions (ex: "cm")
+
+  package_weight         Float    // Poids total en kg
+  package_weight_unit    String   // Unité du poids (ex: "kg")
+
+  package_volume         Float    // Volume total en cm3
+  package_volume_unit    String   // Unité du volume (ex: "cm3")
+
+  // 📍 Adresse d'expédition
   address_first_name     String  // Prénom du destinataire
   address_last_name      String  // Nom de famille du destinataire
   address_phone          String  // Numéro de téléphone
@@ -229,7 +244,7 @@ model Transaction {
   address_ISO_3166_1_alpha_3 String // Code ISO alpha-3 du pays
   address_type           AddressType // Enum : SHIPPING ou BILLING
 
-  products               Json     
+  products               Json      // Produits commandés
 
   user                   User?    @relation(fields: [userId], references: [id])
 

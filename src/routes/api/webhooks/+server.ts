@@ -4,33 +4,125 @@ import { prisma } from '$lib/server/index';
 import dotenv from 'dotenv';
 import { getUserIdByOrderId } from '$lib/prisma/order/prendingOrder';
 import { createSendcloudOrder } from '$lib/sendcloud/order';
-import { createSendcloudParcel } from '$lib/sendcloud/parcel';
 
 dotenv.config();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-/**
- * Tableau de correspondance entre :
- *  - la clé d'expédition (ex : "colisprive:domicile/dropoff,kg,signature")
- *  - le bracket de poids (3, 6 ou 9)
- *  - l'id et le nom du service associé
- */
 const shippingMethodMap = {
 	'colisprive:domicile/dropoff,kg,signature': {
-		3: { id: 4727, name: 'Colis Privé Domicile - Signature 2-3kg' },
-		6: { id: 4730, name: 'Colis Privé Domicile - Signature 5-6kg' },
-		9: { id: 4733, name: 'Colis Privé Domicile - Signature 8-9kg' }
+		3: {
+			id: 4727,
+			name: 'Colis Privé Domicile - Signature 2-3kg',
+			length: 40,
+			width: 30,
+			height: 20,
+			unit: 'cm',
+			weight: 3,
+			weightUnit: 'kg',
+			volume: 24000,
+			volumeUnit: 'cm3'
+		},
+		6: {
+			id: 4730,
+			name: 'Colis Privé Domicile - Signature 5-6kg',
+			length: 50,
+			width: 40,
+			height: 30,
+			unit: 'cm',
+			weight: 6,
+			weightUnit: 'kg',
+			volume: 60000,
+			volumeUnit: 'cm3'
+		},
+		9: {
+			id: 4733,
+			name: 'Colis Privé Domicile - Signature 8-9kg',
+			length: 60,
+			width: 50,
+			height: 40,
+			unit: 'cm',
+			weight: 9,
+			weightUnit: 'kg',
+			volume: 120000,
+			volumeUnit: 'cm3'
+		}
 	},
 	'colisprive:service_point/dropoff': {
-		3: { id: 4751, name: 'Colis Privé Point Relais 2-3kg' },
-		6: { id: 4754, name: 'Colis Privé Point Relais 5-6kg' },
-		9: { id: 4757, name: 'Colis Privé Point Relais 8-9kg' }
+		3: {
+			id: 4751,
+			name: 'Colis Privé Point Relais 2-3kg',
+			length: 40,
+			width: 30,
+			height: 20,
+			unit: 'cm',
+			weight: 3,
+			weightUnit: 'kg',
+			volume: 24000,
+			volumeUnit: 'cm3'
+		},
+		6: {
+			id: 4754,
+			name: 'Colis Privé Point Relais 5-6kg',
+			length: 50,
+			width: 40,
+			height: 30,
+			unit: 'cm',
+			weight: 6,
+			weightUnit: 'kg',
+			volume: 60000,
+			volumeUnit: 'cm3'
+		},
+		9: {
+			id: 4757,
+			name: 'Colis Privé Point Relais 8-9kg',
+			length: 60,
+			width: 50,
+			height: 40,
+			unit: 'cm',
+			weight: 9,
+			weightUnit: 'kg',
+			volume: 120000,
+			volumeUnit: 'cm3'
+		}
 	},
 	'colissimo:home/signature,fr': {
-		3: { id: 1096, name: 'Colissimo Home Signature 2-3kg' },
-		6: { id: 1099, name: 'Colissimo Home Signature 5-6kg' },
-		9: { id: 1102, name: 'Colissimo Home Signature 8-9kg' }
+		3: {
+			id: 1096,
+			name: 'Colissimo Home Signature 2-3kg',
+			length: 40,
+			width: 30,
+			height: 20,
+			unit: 'cm',
+			weight: 3,
+			weightUnit: 'kg',
+			volume: 24000,
+			volumeUnit: 'cm3'
+		},
+		6: {
+			id: 1099,
+			name: 'Colissimo Home Signature 5-6kg',
+			length: 50,
+			width: 40,
+			height: 30,
+			unit: 'cm',
+			weight: 6,
+			weightUnit: 'kg',
+			volume: 60000,
+			volumeUnit: 'cm3'
+		},
+		9: {
+			id: 1102,
+			name: 'Colissimo Home Signature 8-9kg',
+			length: 60,
+			width: 50,
+			height: 40,
+			unit: 'cm',
+			weight: 9,
+			weightUnit: 'kg',
+			volume: 120000,
+			volumeUnit: 'cm3'
+		}
 	}
 };
 
@@ -148,7 +240,7 @@ async function handleCheckoutSession(session) {
 			const weightBracket = deduceWeightBracket(order);
 			const shippingMethodData = getShippingMethodData(order.shippingOption, weightBracket);
 
-			// ✅ Enregistrer la transaction
+			// ✅ Enregistrer la transaction avec toutes les infos d'expédition
 			const transaction = await prisma.transaction.create({
 				data: {
 					stripePaymentId: session.id,
@@ -165,11 +257,23 @@ async function handleCheckoutSession(session) {
 					shippingOption: order.shippingOption ?? '',
 					shippingCost: parseFloat(order.shippingCost?.toString() ?? '0'),
 
-					// On peut également stocker l'id et le nom du service choisi
+					// 🚀 Ajout des nouvelles infos d'expédition
 					shippingMethodId: shippingMethodData?.id ?? null,
 					shippingMethodName: shippingMethodData?.name ?? null,
 
-					// ➡️ Nouveau : récupération des données d'adresse
+					// 📦 Dimensions et poids du colis
+					package_length: shippingMethodData?.length ?? null,
+					package_width: shippingMethodData?.width ?? null,
+					package_height: shippingMethodData?.height ?? null,
+					package_dimension_unit: shippingMethodData?.unit ?? 'cm',
+
+					package_weight: shippingMethodData?.weight ?? null,
+					package_weight_unit: shippingMethodData?.weightUnit ?? 'kg',
+
+					package_volume: shippingMethodData?.volume ?? null,
+					package_volume_unit: shippingMethodData?.volumeUnit ?? 'cm3',
+
+					// 📍 Adresse d'expédition
 					address_first_name: order.address.first_name,
 					address_last_name: order.address.last_name,
 					address_phone: order.address.phone,
@@ -187,7 +291,7 @@ async function handleCheckoutSession(session) {
 					address_ISO_3166_1_alpha_3: order.address.ISO_3166_1_alpha_3,
 					address_type: order.address.type,
 
-					// Produits
+					// 🛍️ Produits
 					products: order.items.map((item) => ({
 						id: item.productId,
 						name: item.product.name,
@@ -205,31 +309,17 @@ async function handleCheckoutSession(session) {
 						}))
 					})),
 
-					// Relation utilisateur
+					// 🔗 Relation utilisateur
 					user: { connect: { id: userId } }
 				}
 			});
-			console.log(transaction, 'dixuhvxdliuhgdxliugh');
+
+			console.log(transaction, 'mjumuhmouhmoihmoih');
 
 			// Si le paiement est bien "paid", on envoie la commande vers Sendcloud
 			if (transaction.status === 'paid') {
 				await createSendcloudOrder(transaction);
 			}
-
-			// // Création du colis via Sendcloud
-			// const parcel = await createSendcloudParcel(transaction);
-			// if (parcel) {
-			// 	console.log('📦 Colis enregistré dans la base de données :', parcel.tracking_number);
-
-			// 	await prisma.transaction.update({
-			// 		where: { id: transaction.id },
-			// 		data: {
-			// 			sendcloudParcelId: String(parcel.id),
-			// 			trackingNumber: parcel.tracking_number,
-			// 			trackingUrl: parcel.tracking_url
-			// 		}
-			// 	});
-			// }
 		});
 	} catch (error) {
 		console.error(`⚠️ Failed to process order ${orderId}:`, error);

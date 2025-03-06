@@ -94,9 +94,19 @@ export async function createSendcloudOrder(transaction) {
 				is_local_pickup: false,
 				delivery_indicator: transaction.shippingMethodName,
 				measurement: {
+					dimension: {
+						length: transaction.package_length,
+						width: transaction.package_width,
+						height: transaction.package_height,
+						unit: transaction.package_dimension_unit
+					},
 					weight: {
-						value: totalWeight.toFixed(2),
-						unit: 'kg'
+						value: transaction.package_weight,
+						unit: transaction.package_weight_unit
+					},
+					volume: {
+						value: transaction.package_volume,
+						unit: transaction.package_volume_unit
 					}
 				}
 			}
