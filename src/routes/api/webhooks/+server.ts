@@ -3,7 +3,6 @@ import Stripe from 'stripe';
 import { prisma } from '$lib/server/index';
 import dotenv from 'dotenv';
 import { getUserIdByOrderId } from '$lib/prisma/order/prendingOrder';
-import { getAllProducts } from '$lib/prisma/products/products';
 import { createSendcloudOrder } from '$lib/sendcloud/order';
 import { createSendcloudParcel } from '$lib/sendcloud/parcel';
 
@@ -43,7 +42,7 @@ function deduceWeightBracket(order) {
 
 	// Calcul du poids total
 	const totalWeight = order.items.reduce((acc, item) => {
-		const productWeight = item.product?.weight ?? 0.125; // Poids par défaut si non défini
+		const productWeight = item.product?.weight ?? 0.124; // Poids par défaut si non défini
 		const customExtra = item.custom?.length > 0 ? 0.666 : 0; // Poids supplémentaire si custom
 		return acc + productWeight * item.quantity + customExtra;
 	}, 0);
@@ -217,20 +216,20 @@ async function handleCheckoutSession(session) {
 				await createSendcloudOrder(transaction);
 			}
 
-			// Création du colis via Sendcloud
-			const parcel = await createSendcloudParcel(transaction);
-			if (parcel) {
-				console.log('📦 Colis enregistré dans la base de données :', parcel.tracking_number);
+			// // Création du colis via Sendcloud
+			// const parcel = await createSendcloudParcel(transaction);
+			// if (parcel) {
+			// 	console.log('📦 Colis enregistré dans la base de données :', parcel.tracking_number);
 
-				await prisma.transaction.update({
-					where: { id: transaction.id },
-					data: {
-						sendcloudParcelId: String(parcel.id),
-						trackingNumber: parcel.tracking_number,
-						trackingUrl: parcel.tracking_url
-					}
-				});
-			}
+			// 	await prisma.transaction.update({
+			// 		where: { id: transaction.id },
+			// 		data: {
+			// 			sendcloudParcelId: String(parcel.id),
+			// 			trackingNumber: parcel.tracking_number,
+			// 			trackingUrl: parcel.tracking_url
+			// 		}
+			// 	});
+			// }
 		});
 	} catch (error) {
 		console.error(`⚠️ Failed to process order ${orderId}:`, error);

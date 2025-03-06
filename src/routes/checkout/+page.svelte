@@ -27,6 +27,7 @@
 	let shippingOptions = $state<any[]>([]);
 	let selectedShippingOption = $state<string | null>(null);
 	let shippingCost = $state<number>(0);
+	let servicePoints = $state<any[]>([]);
 
 	let { data } = $props();
 
@@ -68,6 +69,7 @@
 	function computeTotalQuantity() {
 		return $cartStore.items.reduce((acc, item) => acc + item.quantity, 0);
 	}
+
 	async function fetchSendcloudShippingOptions() {
 		if (!selectedAddressObj) {
 			toast.error('Veuillez sélectionner une adresse.');
@@ -84,7 +86,7 @@
 			const totalWeight = computeTotalWeight(); // Fonction locale qui calcule le poids total du panier
 			const totalQuantity = computeTotalQuantity(); // Fonction locale qui calcule le nombre d'articles total
 
-			const res = await fetch('/api/shipping/sendcloud', {
+			const res = await fetch('/api/sendcloud/shipping-options', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -116,14 +118,60 @@
 		}
 	}
 
-	function chooseShippingOption(optionCode: string) {
-		selectedShippingOption = optionCode;
-		const chosen = shippingOptions.find((opt) => opt.code === optionCode);
+	function chooseShippingOption(chosenOption: any) {
+		// On n’a plus un simple code, mais l’objet complet
+		console.log('Option choisie:', chosenOption);
 
-		if (chosen?.quotes?.[0]?.price?.total?.value) {
-			shippingCost = parseFloat(chosen.quotes[0].price.total.value);
+		selectedShippingOption = chosenOption.code;
+
+		if (chosenOption?.quotes?.[0]?.price?.total?.value) {
+			shippingCost = parseFloat(chosenOption.quotes[0].price.total.value);
 		} else {
 			shippingCost = 0;
+		}
+
+		const carrierCode = chosenOption?.carrier?.code; // ou chosenOption?.carrier_code ?
+
+		// Vérifier si c’est un point relais
+		const isServicePoint = chosenOption?.functionalities?.last_mile === 'service_point';
+		if (isServicePoint && carrierCode) {
+			fetchServicePoints(carrierCode);
+		}
+	}
+
+	async function fetchServicePoints(carrierCode: string) {
+		if (!selectedAddressObj) {
+			toast.error('Veuillez sélectionner une adresse.');
+			return;
+		}
+
+		try {
+			const res = await fetch('/api/sendcloud/service-points', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					to_country_code: selectedAddressObj.stateLetter, // ex: "FR"
+					to_postal_code: selectedAddressObj.zip, // Code postal
+					radius: 20000, // 20 km en mètres
+					carriers: carrierCode // ex: "colisprive"
+				})
+			});
+
+			if (!res.ok) {
+				throw new Error('Erreur de récupération des points relais');
+			}
+			const data = await res.json();
+
+			// Stocker les points relais reçus
+			servicePoints = data;
+			console.log('✅ Points relais reçus:', servicePoints);
+
+			if (!servicePoints.length) {
+				toast.error('Aucun point relais trouvé pour ce transporteur.');
+			}
+		} catch (err) {
+			console.error('❌ Erreur fetchServicePoints :', err);
+			toast.error('Impossible de récupérer les points relais.');
 		}
 	}
 
@@ -309,7 +357,7 @@
 									name="shippingOption"
 									value={option.code}
 									checked={selectedShippingOption === option.code}
-									onchange={() => chooseShippingOption(option.code)}
+									onchange={() => chooseShippingOption(option)}
 								/>
 								<label for={option.code} class="ml-2">
 									<strong>{option.carrier.name}</strong> – {option.product.name}

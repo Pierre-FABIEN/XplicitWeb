@@ -29,7 +29,7 @@ export async function createSendcloudOrder(transaction) {
 
 	// ⚖️ Calcul du poids total du colis en kg
 	const totalWeight = transaction.products.reduce((acc, product) => {
-		const baseWeight = product.quantity * 0.125; // Poids de base
+		const baseWeight = product.quantity * 0.124; // Poids de base
 		const customExtra = product.customizations?.length > 0 ? 0.666 : 0; // Poids supplémentaire si customisation
 		const productWeight = baseWeight + customExtra;
 
@@ -61,6 +61,12 @@ export async function createSendcloudOrder(transaction) {
 					total_price: {
 						value: product.price * product.quantity,
 						currency: 'EUR'
+					},
+					measurement: {
+						weight: {
+							value: 0.124,
+							unit: 'kg'
+						}
 					}
 				}))
 			},
