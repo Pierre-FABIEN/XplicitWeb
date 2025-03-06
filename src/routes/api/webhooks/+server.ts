@@ -4,6 +4,7 @@ import { prisma } from '$lib/server/index';
 import dotenv from 'dotenv';
 import { getUserIdByOrderId } from '$lib/prisma/order/prendingOrder';
 import { createSendcloudOrder } from '$lib/sendcloud/order';
+import { createSendcloudLabel } from '$lib/sendcloud/label';
 
 dotenv.config();
 
@@ -203,16 +204,19 @@ export async function POST({ request }) {
 	return json({ received: true }, { status: 200 });
 }
 
-async function handleCheckoutSession(session) {
+/**
+ * Gère la fin d'une session de paiement
+ * 1) On enregistre la transaction en base (dans une transaction courte)
+ * 2) On appelle Sendcloud hors transaction
+ */
+async function handleCheckoutSession(session: Stripe.Checkout.Session) {
 	const orderId = session.metadata.order_id;
-	console.log('ℹ️ Session metadata:', session.metadata);
-
 	if (!orderId) {
 		console.error('⚠️ Order ID is missing in the session metadata');
 		return;
 	}
 
-	// 🔍 Récupérer l'utilisateur lié à la commande
+	// Récupération de l’utilisateur lié à la commande
 	const user = await getUserIdByOrderId(orderId);
 	if (!user || !user.userId) {
 		console.error('⚠️ User ID is missing for the provided order ID');
@@ -221,10 +225,13 @@ async function handleCheckoutSession(session) {
 
 	const userId = user.userId;
 
+	let createdTransaction;
+
 	try {
-		await prisma.$transaction(async (prisma) => {
-			// 🔍 Récupérer la commande et ses infos
-			const order = await prisma.order.findUnique({
+		// (1) ENREGISTREMENT EN DB via une transaction Prisma courte
+		createdTransaction = await prisma.$transaction(async (prismaTx) => {
+			// Récupère la commande
+			const order = await prismaTx.order.findUnique({
 				where: { id: orderId },
 				include: {
 					user: true,
@@ -232,48 +239,46 @@ async function handleCheckoutSession(session) {
 					items: { include: { product: true, custom: true } }
 				}
 			});
-
 			if (!order) throw new Error(`⚠️ Order ${orderId} not found`);
 			if (!order.address) throw new Error(`⚠️ Order ${orderId} has no associated address`);
 
-			// Déduction du bracket de poids et des infos d’expédition
+			// Calcul du bracket de poids
 			const weightBracket = deduceWeightBracket(order);
 			const shippingMethodData = getShippingMethodData(order.shippingOption, weightBracket);
 
-			// ✅ Enregistrer la transaction avec toutes les infos d'expédition
-			const transaction = await prisma.transaction.create({
+			// Crée la transaction dans la BDD
+			const newTx = await prismaTx.transaction.create({
 				data: {
+					// Liens Stripe
 					stripePaymentId: session.id,
-					amount: session.amount_total / 100,
-					currency: session.currency,
+					amount: (session.amount_total ?? 0) / 100,
+					currency: session.currency ?? 'eur',
 					customer_details_email: session.customer_details?.email || '',
 					customer_details_name: session.customer_details?.name || '',
 					customer_details_phone: session.customer_details?.phone || '',
-					status: session.payment_status,
+					status: session.payment_status || 'unknown',
 					orderId: orderId,
-					createdAt: new Date(session.created * 1000),
+					createdAt: session.created ? new Date(session.created * 1000) : new Date(),
 
 					// Infos transport
 					shippingOption: order.shippingOption ?? '',
 					shippingCost: parseFloat(order.shippingCost?.toString() ?? '0'),
 
-					// 🚀 Ajout des nouvelles infos d'expédition
+					// Méthode d'expédition
 					shippingMethodId: shippingMethodData?.id ?? null,
 					shippingMethodName: shippingMethodData?.name ?? null,
 
-					// 📦 Dimensions et poids du colis
+					// Dimensions + Poids
 					package_length: shippingMethodData?.length ?? null,
 					package_width: shippingMethodData?.width ?? null,
 					package_height: shippingMethodData?.height ?? null,
 					package_dimension_unit: shippingMethodData?.unit ?? 'cm',
-
 					package_weight: shippingMethodData?.weight ?? null,
 					package_weight_unit: shippingMethodData?.weightUnit ?? 'kg',
-
 					package_volume: shippingMethodData?.volume ?? null,
 					package_volume_unit: shippingMethodData?.volumeUnit ?? 'cm3',
 
-					// 📍 Adresse d'expédition
+					// Adresse
 					address_first_name: order.address.first_name,
 					address_last_name: order.address.last_name,
 					address_phone: order.address.phone,
@@ -291,7 +296,7 @@ async function handleCheckoutSession(session) {
 					address_ISO_3166_1_alpha_3: order.address.ISO_3166_1_alpha_3,
 					address_type: order.address.type,
 
-					// 🛍️ Produits
+					// Produits (JSON)
 					products: order.items.map((item) => ({
 						id: item.productId,
 						name: item.product.name,
@@ -300,28 +305,41 @@ async function handleCheckoutSession(session) {
 						description: item.product.description,
 						stock: item.product.stock,
 						images: item.product.images,
-						customizations: item.custom.map((custom) => ({
-							id: custom.id,
-							image: custom.image,
-							userMessage: custom.userMessage,
-							createdAt: custom.createdAt,
-							updatedAt: custom.updatedAt
+						customizations: item.custom.map((c) => ({
+							id: c.id,
+							image: c.image,
+							userMessage: c.userMessage,
+							createdAt: c.createdAt,
+							updatedAt: c.updatedAt
 						}))
 					})),
 
-					// 🔗 Relation utilisateur
+					// Relation utilisateur
 					user: { connect: { id: userId } }
 				}
 			});
 
-			console.log(transaction, 'mjumuhmouhmoihmoih');
-
-			// Si le paiement est bien "paid", on envoie la commande vers Sendcloud
-			if (transaction.status === 'paid') {
-				await createSendcloudOrder(transaction);
-			}
+			return newTx;
 		});
 	} catch (error) {
-		console.error(`⚠️ Failed to process order ${orderId}:`, error);
+		console.error(`⚠️ Failed to create transaction for order ${orderId}:`, error);
+		return; // on arrête ici si l’enregistrement DB a échoué
+	}
+
+	console.log('Nouvelle transaction créée =>', createdTransaction?.id);
+
+	// (2) APPEL A SENDCLOUD en dehors de la transaction
+	try {
+		if (createdTransaction.status === 'paid') {
+			await createSendcloudOrder(createdTransaction);
+			await createSendcloudLabel(createdTransaction);
+		}
+	} catch (error) {
+		console.error(
+			`⚠️ Erreur lors de la création du label / order Sendcloud pour la transaction ${createdTransaction.id} :`,
+			error
+		);
+		// Pas de rollback, car la transaction est déjà commise en DB
+		// => éventuellement, on peut mettre à jour le statut si on veut
 	}
 }

@@ -210,7 +210,7 @@ model Transaction {
   shippingMethodName     String
 
   // Informations supplémentaires Sendcloud
-  sendcloudParcelId      String? 
+  sendcloudParcelId      Int?
   trackingNumber         String? 
   trackingUrl            String? 
 

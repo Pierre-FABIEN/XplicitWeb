@@ -1,4 +1,6 @@
 <script lang="ts">
+	import maplibregl from 'maplibre-gl';
+	import { MapLibre, Marker, Popup } from 'svelte-maplibre-gl';
 	import { loadStripe } from '@stripe/stripe-js';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
@@ -18,6 +20,8 @@
 		updateCartItemQuantity
 	} from '$lib/store/Data/cartStore';
 
+	let { data } = $props();
+
 	// Runes Svelte 5
 	let stripe = $state(null);
 	let selectedAddressId = $state<string | undefined>(undefined);
@@ -27,9 +31,26 @@
 	let shippingOptions = $state<any[]>([]);
 	let selectedShippingOption = $state<string | null>(null);
 	let shippingCost = $state<number>(0);
+
 	let servicePoints = $state<any[]>([]);
 
-	let { data } = $props();
+	let zoom = $state(12);
+	let centerCoordinates = $state<[number, number]>([2.3522, 48.8566]);
+	let selectedPoint = $state<any>(null);
+
+	// Offset pour la popup (optionnel, reprenant l’exemple maplibre)
+	let offset = $state(24);
+	let offsets: maplibregl.Offset = $derived({
+		top: [0, offset],
+		bottom: [0, -offset],
+		left: [offset + 12, 0],
+		right: [-offset - 12, 0],
+		center: [0, 0],
+		'top-left': [offset, offset],
+		'top-right': [-offset, offset],
+		'bottom-left': [offset, -offset],
+		'bottom-right': [-offset, -offset]
+	});
 
 	// superForm
 	let createPayment = superForm(data.IOrderSchema, {
@@ -39,6 +60,25 @@
 	});
 
 	const { form: createPaymentData, enhance: createPaymentEnhance } = createPayment;
+
+	/**
+	 * Effect: whenever we "read" servicePoints, if it's non-empty,
+	 * we recenter the map on the first point. This replaces onMount usage.
+	 */
+	$effect(() => {
+		if (servicePoints.length > 0) {
+			centerCoordinates = [servicePoints[0].longitude, servicePoints[0].latitude];
+		}
+	});
+
+	/**
+	 * Called when the user clicks a marker. We set our local selectedPoint,
+	 * then call onSelect(point). This is a callback-prop approach
+	 * instead of an event dispatcher.
+	 */
+	function handleMarkerClick(point: any) {
+		selectedPoint = point;
+	}
 
 	$effect(() => {
 		(async () => {
@@ -152,7 +192,7 @@
 				body: JSON.stringify({
 					to_country_code: selectedAddressObj.stateLetter, // ex: "FR"
 					to_postal_code: selectedAddressObj.zip, // Code postal
-					radius: 20000, // 20 km en mètres
+					radius: 5000, // 20 km en mètres
 					carriers: carrierCode // ex: "colisprive"
 				})
 			});
@@ -371,6 +411,52 @@
 						</div>
 					{/each}
 
+					<MapLibre
+						class="w-full h-[500px]"
+						style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+						{zoom}
+						center={centerCoordinates}
+					>
+						{#each servicePoints as point}
+							<Marker lnglat={[point.longitude, point.latitude]}>
+								{#snippet content()}
+									<!-- Visuel du marker -->
+									<div class="bg-blue-600 text-white p-2 rounded cursor-pointer">
+										{point.name}
+									</div>
+								{/snippet}
+								<!-- Popup à l’intérieur du Marker -->
+								<Popup
+									class="text-black"
+									offset={offsets}
+									open={selectedPoint?.id === point.id}
+									on:close={() => (selectedPoint = null)}
+								>
+									<div class="p-2">
+										<h3 class="font-bold mb-1">{point.name}</h3>
+										<p>ID : {point.id}</p>
+										<p>Adresse : {point.address}</p>
+										<p>{point.postal_code} {point.city}</p>
+										<button onclick={() => handleMarkerClick(point)}>Valider</button>
+									</div>
+								</Popup>
+							</Marker>
+						{/each}
+					</MapLibre>
+
+					<!-- 
+  If a marker is selected, we display some info about it.
+  This is purely optional / for demo. 
+-->
+					{#if selectedPoint}
+						<div class="border p-2 mt-3">
+							<h3 class="font-bold">Selected Point:</h3>
+							<p>ID: {selectedPoint.id}</p>
+							<p>Name: {selectedPoint.name}</p>
+							<!-- You can display more fields like address, postal code, city, etc. -->
+						</div>
+					{/if}
+
 					<!-- Récapitulatif et paiement -->
 					<div class="mt-4 p-4 border-t rounded-none">
 						<div class="flex justify-between">
@@ -381,7 +467,7 @@
 							<span class="text-lg">Livraison :</span>
 							<span class="text-lg">
 								{shippingCost > 0
-									? `${shippingCost.toFixed(2)}€`
+									? shippingCost.toFixed(2) + '€'
 									: selectedShippingOption
 										? 'En cours...'
 										: 'Non sélectionné'}
