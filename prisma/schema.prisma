@@ -114,26 +114,36 @@ enum AddressType {
 }
 
 model Order {
-  id            String            @id @default(auto()) @map("_id") @db.ObjectId
-  userId        String            @db.ObjectId
-  addressId     String?           @db.ObjectId  
-  subtotal      Float             @default(0)
-  tax           Float             @default(0)
-  total         Float             @default(0)
-  status        OrderStatus       @default(PENDING)
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @default(now())
-  items         OrderItem[]       
+  id                      String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId                  String  @db.ObjectId
+  addressId               String? @db.ObjectId  
+  subtotal                Float   @default(0)
+  tax                     Float   @default(0)
+  total                   Float   @default(0)
+  status                  OrderStatus @default(PENDING)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @default(now())
+  items                   OrderItem[]
 
-  shippingOption String?
-  shippingCost    Float?
+  shippingOption          String?
+  shippingCost            Float?
 
-  user          User              @relation(fields: [userId], references: [id])
-  address       Address?          @relation(fields: [addressId], references: [id])
-  statusHistory OrderStatusHistory[]
+  // Champs plats pour les informations du point relais
+  servicePointId          String?
+  servicePointPostNumber  String?
+  servicePointLatitude    String?
+  servicePointLongitude   String?
+  servicePointType        String?
+  servicePointExtraRefCab String?
+  servicePointExtraShopRef String?
+
+  user                    User @relation(fields: [userId], references: [id])
+  address                 Address? @relation(fields: [addressId], references: [id])
+  statusHistory           OrderStatusHistory[]
 
   @@map("orders")
 }
+
 
 
 model OrderItem {
@@ -243,6 +253,15 @@ model Transaction {
   address_country_code   String  // Code ISO alpha-2 du pays
   address_ISO_3166_1_alpha_3 String // Code ISO alpha-3 du pays
   address_type           AddressType // Enum : SHIPPING ou BILLING
+
+    // 📍 Point Relais
+  servicePointId         String?  
+  servicePointPostNumber String?  
+  servicePointLatitude   String?  
+  servicePointLongitude  String?  
+  servicePointType       String?  
+  servicePointExtraRefCab String?  
+  servicePointExtraShopRef String?  
 
   products               Json      // Produits commandés
 

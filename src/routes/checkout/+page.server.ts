@@ -34,7 +34,20 @@ export const actions: Actions = {
 		console.log(form, '🔍 Validation des données');
 
 		// Récupération des champs validés
-		const { orderId, addressId, shippingOption, shippingCost } = form.data;
+		// Récupération des champs validés
+		const {
+			orderId,
+			addressId,
+			shippingOption,
+			shippingCost,
+			servicePointId,
+			servicePointPostNumber,
+			servicePointLatitude,
+			servicePointLongitude,
+			servicePointType,
+			servicePointExtraRefCab,
+			servicePointExtraShopRef
+		} = form.data;
 
 		if (!orderId || !addressId || !shippingOption || !shippingCost) {
 			return json(
@@ -51,7 +64,19 @@ export const actions: Actions = {
 		const userId = order.userId;
 
 		// ✅ Mise à jour de la commande avec l'option de livraison choisie
-		await updateOrder(orderId, addressId, shippingOption, shippingCost);
+		await updateOrder(
+			orderId,
+			addressId,
+			shippingOption,
+			shippingCost,
+			servicePointId,
+			servicePointPostNumber,
+			servicePointLatitude,
+			servicePointLongitude,
+			servicePointType,
+			servicePointExtraRefCab,
+			servicePointExtraShopRef
+		);
 
 		// Création des éléments Stripe
 		const lineItems = order.items.map((item) => ({

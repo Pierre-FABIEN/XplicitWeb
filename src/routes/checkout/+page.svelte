@@ -37,6 +37,7 @@
 	let zoom = $state(12);
 	let centerCoordinates = $state<[number, number]>([2.3522, 48.8566]);
 	let selectedPoint = $state<any>(null);
+	let showMap = $state(false);
 
 	// Offset pour la popup (optionnel, reprenant l’exemple maplibre)
 	let offset = $state(24);
@@ -68,6 +69,31 @@
 	$effect(() => {
 		if (servicePoints.length > 0) {
 			centerCoordinates = [servicePoints[0].longitude, servicePoints[0].latitude];
+		}
+	});
+
+	$effect(() => {
+		console.log($createPaymentData, 'khsblsihjbsliub');
+	});
+
+	$effect(() => {
+		if (selectedPoint) {
+			$createPaymentData.servicePointId = selectedPoint.id.toString();
+			$createPaymentData.servicePointPostNumber = selectedPoint.extra_data?.shop_ref || '';
+			$createPaymentData.servicePointLatitude = selectedPoint.latitude;
+			$createPaymentData.servicePointLongitude = selectedPoint.longitude;
+			$createPaymentData.servicePointType = selectedPoint.shop_type || null;
+			$createPaymentData.servicePointExtraRefCab = selectedPoint.extra_data?.ref_cab || '';
+			$createPaymentData.servicePointExtraShopRef = selectedPoint.extra_data?.shop_ref || '';
+		} else {
+			// Réinitialisation si aucun point sélectionné
+			$createPaymentData.servicePointId = '';
+			$createPaymentData.servicePointPostNumber = '';
+			$createPaymentData.servicePointLatitude = '';
+			$createPaymentData.servicePointLongitude = '';
+			$createPaymentData.servicePointType = null;
+			$createPaymentData.servicePointExtraRefCab = '';
+			$createPaymentData.servicePointExtraShopRef = '';
 		}
 	});
 
@@ -175,7 +201,10 @@
 		// Vérifier si c’est un point relais
 		const isServicePoint = chosenOption?.functionalities?.last_mile === 'service_point';
 		if (isServicePoint && carrierCode) {
+			showMap = true;
 			fetchServicePoints(carrierCode);
+		} else {
+			showMap = false;
 		}
 	}
 
@@ -261,6 +290,12 @@
 			return;
 		}
 
+		// Vérification si un point relais est requis
+		if (showMap && !selectedPoint) {
+			toast.error('Veuillez sélectionner un point relais.');
+			return;
+		}
+
 		// Mise à jour des données du superform
 		$createPaymentData.shippingCost = shippingCost.toString();
 		$createPaymentData.shippingOption = selectedShippingOption;
@@ -281,9 +316,6 @@
 	});
 </script>
 
-<!-- =========================================== -->
-<!-- TEMPLATE / UI -->
-<!-- =========================================== -->
 <div class="ccc w-screen h-screen">
 	<SmoothScrollBar>
 		<div class="ctc w-[100vw] mb-[200px]">
@@ -411,43 +443,33 @@
 						</div>
 					{/each}
 
-					<MapLibre
-						class="w-full h-[500px]"
-						style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-						{zoom}
-						center={centerCoordinates}
-					>
-						{#each servicePoints as point}
-							<Marker lnglat={[point.longitude, point.latitude]}>
-								{#snippet content()}
-									<!-- Visuel du marker -->
-									<div class="bg-blue-600 text-white p-2 rounded cursor-pointer">
-										{point.name}
-									</div>
-								{/snippet}
-								<!-- Popup à l’intérieur du Marker -->
-								<Popup
-									class="text-black"
-									offset={offsets}
-									open={selectedPoint?.id === point.id}
-									on:close={() => (selectedPoint = null)}
-								>
-									<div class="p-2">
-										<h3 class="font-bold mb-1">{point.name}</h3>
-										<p>ID : {point.id}</p>
-										<p>Adresse : {point.address}</p>
-										<p>{point.postal_code} {point.city}</p>
-										<button onclick={() => handleMarkerClick(point)}>Valider</button>
-									</div>
-								</Popup>
-							</Marker>
-						{/each}
-					</MapLibre>
+					{#if showMap}
+						<MapLibre
+							class="w-full h-[500px]"
+							style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+							{zoom}
+							center={centerCoordinates}
+						>
+							{#each servicePoints as point}
+								<Marker lnglat={[point.longitude, point.latitude]}>
+									{#snippet content()}
+										<!-- Visuel du marker -->
+										<div class="bg-blue-600 text-white p-2 rounded cursor-pointer"></div>
+									{/snippet}
+									<!-- Popup à l’intérieur du Marker -->
+									<Popup class="text-black" offset={offsets} open={selectedPoint?.id === point.id}>
+										<div class="p-2">
+											<h3 class="font-bold mb-1">{point.name}</h3>
+											<p>Adresse : {point.street}</p>
+											<p>{point.postal_code} {point.city}</p>
+											<button onclick={() => handleMarkerClick(point)}>Valider</button>
+										</div>
+									</Popup>
+								</Marker>
+							{/each}
+						</MapLibre>
+					{/if}
 
-					<!-- 
-  If a marker is selected, we display some info about it.
-  This is purely optional / for demo. 
--->
 					{#if selectedPoint}
 						<div class="border p-2 mt-3">
 							<h3 class="font-bold">Selected Point:</h3>
@@ -504,6 +526,42 @@
 							bind:value={$createPaymentData.shippingOption}
 						/>
 						<input type="hidden" name="shippingCost" bind:value={$createPaymentData.shippingCost} />
+
+						<input
+							type="hidden"
+							name="servicePointId"
+							bind:value={$createPaymentData.servicePointId}
+						/>
+						<input
+							type="hidden"
+							name="servicePointPostNumber"
+							bind:value={$createPaymentData.servicePointPostNumber}
+						/>
+						<input
+							type="hidden"
+							name="servicePointLatitude"
+							bind:value={$createPaymentData.servicePointLatitude}
+						/>
+						<input
+							type="hidden"
+							name="servicePointLongitude"
+							bind:value={$createPaymentData.servicePointLongitude}
+						/>
+						<input
+							type="hidden"
+							name="servicePointType"
+							bind:value={$createPaymentData.servicePointType}
+						/>
+						<input
+							type="hidden"
+							name="servicePointExtraRefCab"
+							bind:value={$createPaymentData.servicePointExtraRefCab}
+						/>
+						<input
+							type="hidden"
+							name="servicePointExtraShopRef"
+							bind:value={$createPaymentData.servicePointExtraShopRef}
+						/>
 
 						<Button type="submit">Payer</Button>
 					</form>

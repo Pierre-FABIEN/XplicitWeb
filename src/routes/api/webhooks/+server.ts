@@ -296,6 +296,15 @@ async function handleCheckoutSession(session: Stripe.Checkout.Session) {
 					address_ISO_3166_1_alpha_3: order.address.ISO_3166_1_alpha_3,
 					address_type: order.address.type,
 
+					// 📍 Point Relais
+					servicePointId: order.servicePointId ?? null,
+					servicePointPostNumber: order.servicePointPostNumber ?? null,
+					servicePointLatitude: order.servicePointLatitude ?? null,
+					servicePointLongitude: order.servicePointLongitude ?? null,
+					servicePointType: order.servicePointType ?? null,
+					servicePointExtraRefCab: order.servicePointExtraRefCab ?? null,
+					servicePointExtraShopRef: order.servicePointExtraShopRef ?? null,
+
 					// Produits (JSON)
 					products: order.items.map((item) => ({
 						id: item.productId,

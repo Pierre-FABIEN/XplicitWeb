@@ -220,7 +220,14 @@ export async function updateOrder(
 	orderId: string,
 	addressId: string,
 	shippingOption: string,
-	shippingCost: string
+	shippingCost: string,
+	servicePointId?: string,
+	servicePointPostNumber?: string,
+	servicePointLatitude?: string,
+	servicePointLongitude?: string,
+	servicePointType?: string | null,
+	servicePointExtraRefCab?: string,
+	servicePointExtraShopRef?: string
 ) {
 	return await prisma.order.update({
 		where: { id: orderId },
@@ -228,7 +235,15 @@ export async function updateOrder(
 			addressId,
 			shippingOption,
 			shippingCost: parseFloat(shippingCost), // Convertir en Float
-			updatedAt: new Date()
+			updatedAt: new Date(),
+			// Champs du point relais
+			servicePointId,
+			servicePointPostNumber,
+			servicePointLatitude,
+			servicePointLongitude,
+			servicePointType,
+			servicePointExtraRefCab,
+			servicePointExtraShopRef
 		}
 	});
 }
