@@ -1,54 +1,62 @@
-// syncCart.ts
 import { cart } from './cartStore';
 import { get } from 'svelte/store';
 
 let lastSynced = 0;
-let isSyncing = false;
+let isSyncing = false; // Verrou pour empêcher des appels multiples
 
 const syncCart = async () => {
 	const currentCart = get(cart);
 
+	// console.log('lastModified:', currentCart.lastModified);
+	// console.log('lastSynced:', lastSynced);
+
 	if (isSyncing) {
-		// A sync is already in progress
+		// console.log('Sync already in progress. Skipping this call.');
 		return;
 	}
 
-	// If it's the first time, initialize the "lastSynced"
 	if (lastSynced === 0) {
+		// Initialisation du verrou au premier appel
 		lastSynced = currentCart.lastModified;
+		// console.log('Initialized lastSynced to', lastSynced);
 		return;
 	}
 
-	// Check if there's anything new to sync
 	if (currentCart.lastModified > lastSynced) {
-		isSyncing = true;
-
-		console.log('iluhliguligig', currentCart);
-
+		isSyncing = true; // Active le verrou
+		//console.log('Synchronizing cart...');
 		try {
 			const response = await fetch('/api/save-cart', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: {
+					'Content-Type': 'application/json'
+				},
 				body: JSON.stringify(currentCart)
 			});
+
 			if (!response.ok) {
 				throw new Error('Failed to save cart');
 			}
 
-			// Update lastSynced only if successful
+			// Met à jour `lastSynced` uniquement après une synchronisation réussie
 			lastSynced = currentCart.lastModified;
+
+			//console.log(response, 'iiiiiiiiiiiiiiiiii');
 		} catch (error) {
-			console.error('Failed to sync cart:', error);
+			//console.error('Failed to sync cart:', error);
 		} finally {
-			isSyncing = false;
+			isSyncing = false; // Libère le verrou
 		}
+	} else {
+		//console.log('No sync needed. Cart is already up-to-date.');
 	}
 };
 
-export const startSync = () => {
-	// Subscribe to the cart store changes
+const startSync = () => {
 	cart.subscribe(() => {
-		// Immediately call syncCart after each change
-		syncCart();
+		// Appeler syncCart chaque fois que le store change
+		setTimeout(syncCart, 50);
 	});
 };
+
+export { startSync };
