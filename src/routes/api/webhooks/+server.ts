@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { getUserIdByOrderId } from '$lib/prisma/order/prendingOrder';
 import { createSendcloudOrder } from '$lib/sendcloud/order';
 import { createSendcloudLabel } from '$lib/sendcloud/label';
+import { resetCart } from '$lib/store/Data/cartStore';
 
 dotenv.config();
 
@@ -342,6 +343,7 @@ async function handleCheckoutSession(session: Stripe.Checkout.Session) {
 		if (createdTransaction.status === 'paid') {
 			await createSendcloudOrder(createdTransaction);
 			await createSendcloudLabel(createdTransaction);
+			resetCart();
 		}
 	} catch (error) {
 		console.error(

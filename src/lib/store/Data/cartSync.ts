@@ -1,62 +1,54 @@
+// syncCart.ts
 import { cart } from './cartStore';
 import { get } from 'svelte/store';
 
 let lastSynced = 0;
-let isSyncing = false; // Verrou pour empêcher des appels multiples
+let isSyncing = false;
 
 const syncCart = async () => {
 	const currentCart = get(cart);
 
-	// console.log('lastModified:', currentCart.lastModified);
-	// console.log('lastSynced:', lastSynced);
-
 	if (isSyncing) {
-		// console.log('Sync already in progress. Skipping this call.');
+		// A sync is already in progress
 		return;
 	}
 
+	// If it's the first time, initialize the "lastSynced"
 	if (lastSynced === 0) {
-		// Initialisation du verrou au premier appel
 		lastSynced = currentCart.lastModified;
-		// console.log('Initialized lastSynced to', lastSynced);
 		return;
 	}
 
+	// Check if there's anything new to sync
 	if (currentCart.lastModified > lastSynced) {
-		isSyncing = true; // Active le verrou
-		//console.log('Synchronizing cart...');
+		isSyncing = true;
+
+		console.log('iluhliguligig', currentCart);
+
 		try {
 			const response = await fetch('/api/save-cart', {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(currentCart)
 			});
-
 			if (!response.ok) {
 				throw new Error('Failed to save cart');
 			}
 
-			// Met à jour `lastSynced` uniquement après une synchronisation réussie
+			// Update lastSynced only if successful
 			lastSynced = currentCart.lastModified;
-
-			//console.log(response, 'iiiiiiiiiiiiiiiiii');
 		} catch (error) {
-			//console.error('Failed to sync cart:', error);
+			console.error('Failed to sync cart:', error);
 		} finally {
-			isSyncing = false; // Libère le verrou
+			isSyncing = false;
 		}
-	} else {
-		//console.log('No sync needed. Cart is already up-to-date.');
 	}
 };
 
-const startSync = () => {
+export const startSync = () => {
+	// Subscribe to the cart store changes
 	cart.subscribe(() => {
-		// Appeler syncCart chaque fois que le store change
-		setTimeout(syncCart, 500);
+		// Immediately call syncCart after each change
+		syncCart();
 	});
 };
-
-export { startSync };

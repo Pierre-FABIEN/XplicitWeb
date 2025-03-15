@@ -1,11 +1,7 @@
 // src/lib/store/Data/cartStore.ts
-
 import { toast } from 'svelte-sonner';
 import { writable } from 'svelte/store';
 
-/**
- * Type definition for an OrderItem.
- */
 export type OrderItem = {
 	id: string;
 	product: {
@@ -24,41 +20,42 @@ export type OrderItem = {
 	};
 };
 
-/**
- * Type definition for the CartState.
- */
 type CartState = {
 	id: string;
 	userId: string;
 	items: OrderItem[];
-	subtotal: number; // Sum of all items before tax
-	tax: number; // VAT amount
-	total: number; // Total amount including tax
+	subtotal: number; // HT (products only)
+	tax: number; // VAT (products only)
+	shippingCost: number; // shipping HT
+	shippingTax: number; // shipping VAT
+	total: number; // final total (TTC) = (subtotal + tax + shippingCost + shippingTax)
 	lastModified: number;
 };
 
-/**
- * Initialize the cart store with default values.
- */
+// Initialize the store with default values
 export const cart = writable<CartState>({
 	id: '',
 	userId: '',
 	items: [],
 	subtotal: 0,
 	tax: 0,
+	shippingCost: 0, // default 0
+	shippingTax: 0, // default 0
 	total: 0,
 	lastModified: Date.now()
 });
 
 /**
- * Function to set the entire cart state.
- *
- * @param id - Cart ID
- * @param userId - User ID
- * @param items - Array of OrderItems
- * @param subtotal - Subtotal before tax
- * @param tax - VAT amount
- * @param total - Total amount including tax
+ * Helper function to recalc the final total
+ * total = products subtotal + product tax + shipping cost + shipping tax
+ */
+function recalcFinalTotal(c: CartState) {
+	c.total = parseFloat((c.subtotal + c.tax + c.shippingCost + c.shippingTax).toFixed(2));
+	c.lastModified = Date.now();
+}
+
+/**
+ * Sets the entire cart, if you want to load it from the DB or an external source
  */
 export const setCart = (
 	id: string,
@@ -66,7 +63,8 @@ export const setCart = (
 	items: OrderItem[],
 	subtotal: number,
 	tax: number,
-	total: number
+	shippingCost: number,
+	shippingTax: number
 ) => {
 	cart.set({
 		id,
@@ -74,217 +72,220 @@ export const setCart = (
 		items,
 		subtotal,
 		tax,
-		total,
+		shippingCost,
+		shippingTax,
+		total: parseFloat((subtotal + tax + shippingCost + shippingTax).toFixed(2)),
 		lastModified: Date.now()
 	});
 };
+
+/**
+ * Updates only the shipping cost (HT). We recalc shippingTax if needed.
+ */
+export function setShippingCostHT(newShippingCost: number) {
+	cart.update((c) => {
+		c.shippingCost = newShippingCost;
+		c.shippingTax = parseFloat((newShippingCost * 0.055).toFixed(2)); // 5.5% vat
+		recalcFinalTotal(c);
+		return c;
+	});
+}
+
+/**
+ * Example function to remove or add shipping tax with a custom rate
+ */
+export function setShippingTaxRate(rate: number) {
+	cart.update((c) => {
+		c.shippingTax = parseFloat((c.shippingCost * rate).toFixed(2));
+		recalcFinalTotal(c);
+		return c;
+	});
+}
+
+/**
+ * Adds a product to the cart, respecting stock, 72-limit, etc.
+ */
 export const addToCart = (product: OrderItem) => {
 	cart.update((currentCart) => {
 		if (!Array.isArray(currentCart.items)) {
 			currentCart.items = [];
 		}
 
-		// 🔍 Vérifie si le produit ajouté est customisé ou natif
 		const isProductCustom = Array.isArray(product.custom) && product.custom.length > 0;
 
-		// 🔥 Vérification : Est-ce que le panier contient déjà un produit de type opposé ?
 		const existingTypeConflict = currentCart.items.some((item) => {
 			const isItemCustom = Array.isArray(item.custom) && item.custom.length > 0;
 			return isItemCustom !== isProductCustom;
 		});
 
 		if (existingTypeConflict) {
-			console.error(
-				'Cannot add product: custom and non-custom items cannot coexist in the same order.'
-			);
-			toast.error(
-				'Les articles personnalisés et non-personnalisés ne peuvent pas être mélangés dans une même commande.'
-			);
+			console.error('Cannot mix custom and non-custom items in the same order');
+			toast.error('Impossible de mélanger produits custom et non-custom dans cette commande.');
 			return currentCart;
 		}
 
-		// 📌 Vérification de la limite pour les commandes natives (max 72 unités)
+		// 72-limit check
 		if (!isProductCustom) {
 			const totalNativeQuantity = currentCart.items
-				.filter((item) => !Array.isArray(item.custom) || item.custom.length === 0) // 🟢 Filtre les commandes natives
+				.filter((item) => !Array.isArray(item.custom) || item.custom.length === 0)
 				.reduce((sum, item) => sum + item.quantity, 0);
 
 			if (totalNativeQuantity + product.quantity > 72) {
-				console.error('Cannot add product: native orders are limited to 72 units.');
-				toast.error('Les commandes non personnalisées sont limitées à 72 unités.');
+				console.error('Cannot add product: limit is 72 units for native orders.');
+				toast.error('Limite de 72 unités pour les commandes non personnalisées.');
 				return currentCart;
 			}
 		}
 
-		// 🟢 Calcul du stock disponible
 		const totalQuantityForProduct = currentCart.items
 			.filter((item) => item.product.id === product.product.id)
 			.reduce((sum, item) => sum + item.quantity, 0);
 
 		const availableStock = product.product.stock - totalQuantityForProduct;
 		if (availableStock <= 0) {
-			console.error('Cannot add product, stock exceeded.');
-			toast.error('Stock insuffisant pour ajouter ce produit.');
+			console.error('Stock exceeded');
+			toast.error('Stock insuffisant.');
 			return currentCart;
 		}
 
-		// 🔥 Détermine la quantité à ajouter (sans dépasser le stock)
 		const quantityToAdd = Math.min(product.quantity, availableStock);
 
-		// 📌 Recherche si une version **identique** (même produit + même customisation) existe déjà
 		const itemIndex = currentCart.items.findIndex(
 			(item) =>
 				item.product.id === product.product.id &&
-				JSON.stringify(item.custom) === JSON.stringify(product.custom) // Compare les objets custom
+				JSON.stringify(item.custom) === JSON.stringify(product.custom)
 		);
 
 		if (itemIndex !== -1) {
-			// 🔄 Met à jour la quantité
 			currentCart.items[itemIndex].quantity += quantityToAdd;
 		} else {
-			// ➕ Ajoute un nouvel item
 			currentCart.items.push({
 				...product,
-				quantity: quantityToAdd // Quantité ajustée
+				quantity: quantityToAdd
 			});
 		}
 
-		// 📊 Recalcul des prix
+		// Recalc product subtotal
 		const newSubtotal = currentCart.items.reduce(
 			(sum, item) => sum + item.product.price * item.quantity,
 			0
 		);
 		const newTax = parseFloat((newSubtotal * 0.055).toFixed(2));
-		const newTotal = parseFloat((newSubtotal + newTax).toFixed(2));
 
-		// ✅ Mise à jour du panier
 		currentCart.subtotal = newSubtotal;
 		currentCart.tax = newTax;
-		currentCart.total = newTotal;
-		currentCart.lastModified = Date.now();
+
+		// Recalc final total (including shipping cost/tax)
+		recalcFinalTotal(currentCart);
 
 		return currentCart;
 	});
 };
 
 /**
- * Function to remove a product from the cart by product ID and optional custom ID.
- *
- * @param productId - The ID of the product to remove
- * @param customId - Optional custom ID to remove a specific custom item
+ * Removes a product from the cart
  */
 export const removeFromCart = (productId: string, customId?: string) => {
 	cart.update((currentCart) => {
-		// Vérifiez si des produits correspondent avant de modifier le panier
 		const itemToRemoveExists = currentCart.items.some(
 			(item) => item.product.id === productId && (!customId || item.custom?.id === customId)
 		);
 
 		if (!itemToRemoveExists) {
-			// Produit introuvable dans le panier
-			toast.error('Produit non trouvé dans le panier.');
+			toast.error('Produit introuvable dans le panier.');
 			return currentCart;
 		}
 
-		// Filtre les articles en excluant celui à supprimer
 		currentCart.items = currentCart.items.filter((item) => {
-			// Supprime les articles correspondant à productId et customId (si fourni)
 			if (customId) {
 				return !(item.product.id === productId && item.custom?.id === customId);
 			}
-			// Supprime les articles non-custom correspondant à productId
 			return item.product.id !== productId;
 		});
 
-		// Recalculer le sous-total
 		const newSubtotal = currentCart.items.reduce(
 			(sum, item) => sum + item.product.price * item.quantity,
 			0
 		);
-
-		// Recalculer la TVA (5,5%)
 		const newTax = parseFloat((newSubtotal * 0.055).toFixed(2));
 
-		// Recalculer le total
-		const newTotal = parseFloat((newSubtotal + newTax).toFixed(2));
-
-		// Mettre à jour le panier avec les nouvelles valeurs
 		currentCart.subtotal = newSubtotal;
 		currentCart.tax = newTax;
-		currentCart.total = newTotal;
-		currentCart.lastModified = Date.now();
 
-		// Notification de réussite
+		recalcFinalTotal(currentCart);
+
 		toast.success('Produit supprimé du panier.');
-
 		return currentCart;
 	});
 };
 
+/**
+ * Updates the quantity of a product in the cart
+ */
 export const updateCartItemQuantity = (productId: string, quantity: number, customId?: string) => {
 	cart.update((currentCart) => {
 		const itemIndex = currentCart.items.findIndex(
 			(item) =>
-				item.product.id === productId &&
-				(!customId || item.custom?.some((custom) => custom.id === customId))
+				item.product.id === productId && (!customId || item.custom?.some((c) => c.id === customId))
 		);
 
 		if (itemIndex === -1) {
-			console.warn('Item not found in cart for Product ID:', productId, 'and Custom ID:', customId);
+			console.warn('Item not found in cart for Product ID:', productId);
 			return currentCart;
 		}
 
-		console.log('Item found at index:', itemIndex);
 		const currentItem = currentCart.items[itemIndex];
 
-		// Vérifier le stock disponible uniquement pour ce produit
-		// (La quantité des autres items identiques)
 		const otherItemsQuantity = currentCart.items
 			.filter((_, idx) => idx !== itemIndex && _.product.id === productId)
 			.reduce((sum, i) => sum + i.quantity, 0);
-		const maxAvailable = currentItem.product.stock - otherItemsQuantity;
 
-		// 1. Clamper la quantité au stock
+		const maxAvailable = currentItem.product.stock - otherItemsQuantity;
 		let newQuantity = Math.min(quantity, maxAvailable);
 
-		// 2. Si c'est un produit "natif" (pas de .custom),
-		//    imposer une limite globale de 72
+		// 72-limit logic if not custom
 		if (!currentItem.custom) {
-			// Calculer la quantité de tous les autres produits "natifs"
 			const nativeItemsTotal = currentCart.items
 				.filter((i, idx) => !i.custom && idx !== itemIndex)
 				.reduce((sum, i) => sum + i.quantity, 0);
 
-			// Vérifier la somme globale
 			const maxNativeAllowed = 72;
 			const allowedForThisItem = maxNativeAllowed - nativeItemsTotal;
 
 			newQuantity = Math.min(newQuantity, allowedForThisItem);
-
-			// (Optionnel) S'assurer que la quantité soit multiple de 24
-			// newQuantity = Math.floor(newQuantity / 24) * 24;
-			// si tu veux forcer un step de 24
 		}
 
-		console.log('Final newQuantity after constraints:', newQuantity);
 		currentItem.quantity = newQuantity;
 
-		// Recalculer les totaux
 		const newSubtotal = currentCart.items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
 		const newTax = parseFloat((newSubtotal * 0.055).toFixed(2));
-		const newTotal = parseFloat((newSubtotal + newTax).toFixed(2));
 
 		currentCart.subtotal = newSubtotal;
 		currentCart.tax = newTax;
-		currentCart.total = newTotal;
-		currentCart.lastModified = Date.now();
 
-		console.log('Updated cart state:', JSON.stringify(currentCart, null, 2));
+		recalcFinalTotal(currentCart);
 		return currentCart;
 	});
 };
 
-// Subscribe to cart changes (for debugging or UI updates)
+export function resetCart() {
+	cart.update((c) => {
+		c.id = '';
+		c.userId = '';
+		c.items = [];
+		c.subtotal = 0;
+		c.tax = 0;
+		c.shippingCost = 0;
+		c.shippingTax = 0;
+		c.total = 0;
+		c.lastModified = Date.now();
+		return c;
+	});
+
+	toast.success('Commande validée, panier vidé.');
+}
+
+// Debug
 cart.subscribe((currentCart) => {
-	console.log('Cart updated:', JSON.stringify(currentCart, null, 2));
+	console.log('Cart updated =>', JSON.stringify(currentCart, null, 2));
 });

@@ -32,7 +32,7 @@
 <!-- UI Table -->
 <div class="ccc w-xl m-5">
 	<Table
-		name="Ventes"
+		name="Factures"
 		columns={userColumns}
 		data={data.transactions ?? []}
 		actions={transactionActions}

@@ -10,7 +10,6 @@ import { updateUserSecurity } from '$lib/prisma/user/updateUserSecurity';
 import { serializeData } from '$lib/utils/serializeData';
 
 import type { PageServerLoad } from './$types';
-import { superValidate, fail } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 
 import { updateUserAndAddressSchema } from '$lib/schema/addresses/updateUserAndAddressSchema';

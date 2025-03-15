@@ -209,12 +209,6 @@ async function maybeDeleteImageOnCloudinary(imageUrl: string) {
 /**
  * Extrait le public_id d'une URL Cloudinary.
  */
-function extractPublicId(imageUrl: string): string {
-	if (!imageUrl) return '';
-	const parts = imageUrl.split('/');
-	const fileNameWithExtension = parts[parts.length - 1];
-	return fileNameWithExtension.split('.')[0];
-}
 
 export async function updateOrder(
 	orderId: string,
@@ -229,14 +223,35 @@ export async function updateOrder(
 	servicePointExtraRefCab?: string,
 	servicePointExtraShopRef?: string
 ) {
+	// 1. Convert shippingCost to float
+	const shippingCostFloat = parseFloat(shippingCost);
+
+	// 2. Récupère l'ordre existant
+	const existingOrder = await prisma.order.findUnique({
+		where: { id: orderId }
+	});
+	if (!existingOrder) {
+		throw new Error(`Order ${orderId} does not exist`);
+	}
+
+	// 3. Calcule le total final (HT + port HT + TVA si besoin)
+	// existingOrder.total = prix des articles + leur TVA
+	// shippingCostFloat = frais de port (HT)
+	const orderTotalHTWithoutShipping = existingOrder.total; // par hypothèse
+	// OU (existingOrder.subtotal + existingOrder.tax) – dépend de votre base
+
+	// total final
+	const finalTotal = orderTotalHTWithoutShipping + shippingCostFloat;
+
+	// 4. Met à jour la commande
 	return await prisma.order.update({
 		where: { id: orderId },
 		data: {
 			addressId,
 			shippingOption,
-			shippingCost: parseFloat(shippingCost), // Convertir en Float
+			shippingCost: shippingCostFloat,
+			total: parseFloat(finalTotal.toFixed(2)), // on arrondit
 			updatedAt: new Date(),
-			// Champs du point relais
 			servicePointId,
 			servicePointPostNumber,
 			servicePointLatitude,

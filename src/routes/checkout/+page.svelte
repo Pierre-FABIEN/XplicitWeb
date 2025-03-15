@@ -17,6 +17,7 @@
 	import {
 		cart as cartStore,
 		removeFromCart,
+		setShippingCostHT,
 		updateCartItemQuantity
 	} from '$lib/store/Data/cartStore';
 
@@ -38,6 +39,9 @@
 	let centerCoordinates = $state<[number, number]>([2.3522, 48.8566]);
 	let selectedPoint = $state<any>(null);
 	let showMap = $state(false);
+
+	let shippingTax = $derived(shippingCost * 0.055);
+	let totalTTC = $derived($cartStore.subtotal + $cartStore.tax + shippingCost + shippingTax);
 
 	// Offset pour la popup (optionnel, reprenant l’exemple maplibre)
 	let offset = $state(24);
@@ -185,10 +189,12 @@
 	}
 
 	function chooseShippingOption(chosenOption: any) {
-		// On n’a plus un simple code, mais l’objet complet
 		console.log('Option choisie:', chosenOption);
 
 		selectedShippingOption = chosenOption.code;
+
+		const costHT = parseFloat(chosenOption.quotes?.[0]?.price?.total?.value || 0);
+		setShippingCostHT(costHT);
 
 		if (chosenOption?.quotes?.[0]?.price?.total?.value) {
 			shippingCost = parseFloat(chosenOption.quotes[0].price.total.value);
@@ -196,15 +202,18 @@
 			shippingCost = 0;
 		}
 
-		const carrierCode = chosenOption?.carrier?.code; // ou chosenOption?.carrier_code ?
-
+		const carrierCode = chosenOption?.carrier?.code;
 		// Vérifier si c’est un point relais
 		const isServicePoint = chosenOption?.functionalities?.last_mile === 'service_point';
+
 		if (isServicePoint && carrierCode) {
+			// On affiche la carte et on récupère les points relais
 			showMap = true;
 			fetchServicePoints(carrierCode);
 		} else {
+			// Si ce n’est pas un point relais, on masque la carte et on reset les données du point
 			showMap = false;
+			selectedPoint = null;
 		}
 	}
 
@@ -495,15 +504,14 @@
 										: 'Non sélectionné'}
 							</span>
 						</div>
-						<div class="flex justify-between mt-2">
-							<span class="text-xl font-semibold">Total TTC :</span>
-							<span class="text-xl font-semibold">
-								{($cartStore.total + shippingCost).toFixed(2)}€
-							</span>
-						</div>
+
 						<div class="flex justify-between mt-2">
 							<span class="text-lg">TVA (5,5%) :</span>
 							<span class="text-lg">{$cartStore.tax.toFixed(2)}€</span>
+						</div>
+						<div class="flex justify-between mt-2">
+							<span class="text-xl font-semibold">Total TTC :</span>
+							<span class="text-xl font-semibold">{totalTTC.toFixed(2)}€</span>
 						</div>
 					</div>
 				{:else}
