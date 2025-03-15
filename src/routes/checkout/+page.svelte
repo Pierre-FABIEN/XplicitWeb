@@ -40,8 +40,7 @@
 	let selectedPoint = $state<any>(null);
 	let showMap = $state(false);
 
-	let shippingTax = $derived(shippingCost * 0.055);
-	let totalTTC = $derived($cartStore.subtotal + $cartStore.tax + shippingCost + shippingTax);
+	let totalTTC = $derived($cartStore.subtotal + $cartStore.tax + shippingCost);
 
 	// Offset pour la popup (optionnel, reprenant l’exemple maplibre)
 	let offset = $state(24);

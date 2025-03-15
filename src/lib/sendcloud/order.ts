@@ -51,89 +51,88 @@ export async function createSendcloudOrder(transaction) {
 
 	const requestBody = [
 		{
-		  order_id: transaction.id.toString(),
-		  order_number: `ORDER-${transaction.id}`,
-		  order_details: {
-			integration: {
-			  id: parseInt(process.env.SENDCLOUD_INTEGRATION_ID, 10)
+			order_id: transaction.id.toString(),
+			order_number: `ORDER-${transaction.id}`,
+			order_details: {
+				integration: {
+					id: parseInt(process.env.SENDCLOUD_INTEGRATION_ID, 10)
+				},
+				status: { code: 'fulfilled', message: 'Paid in full' },
+				order_created_at: new Date().toISOString(),
+				order_updated_at: new Date().toISOString(),
+				order_items: transaction.products.map((product) => ({
+					name: product.name,
+					quantity: product.quantity,
+					total_price: {
+						value: product.price * product.quantity,
+						currency: 'EUR'
+					},
+					measurement: {
+						weight: {
+							value: 0.124, // poids unitaire par produit
+							unit: 'kg'
+						}
+					}
+				}))
 			},
-			status: { code: 'fulfilled', message: 'Paid in full' },
-			order_created_at: new Date().toISOString(),
-			order_updated_at: new Date().toISOString(),
-			order_items: transaction.products.map((product) => ({
-			  name: product.name,
-			  quantity: product.quantity,
-			  total_price: {
-				value: product.price * product.quantity,
-				currency: 'EUR'
-			  },
-			  measurement: {
-				weight: {
-				  value: 0.124, // poids unitaire par produit
-				  unit: 'kg'
-				}
-			  }
-			}))
-		  },
-		  payment_details: {
-			total_price: {
-			  value:
-				parseFloat(transaction.shippingCost?.toString() ?? '0') +
-				transaction.products.reduce((acc, itm) => acc + itm.price * itm.quantity, 0),
-			  currency: 'EUR'
+			payment_details: {
+				total_price: {
+					value:
+						parseFloat(transaction.shippingCost?.toString() ?? '0') +
+						transaction.products.reduce((acc, itm) => acc + itm.price * itm.quantity, 0),
+					currency: 'EUR'
+				},
+				status: { code: 'paid', message: 'Paid' }
 			},
-			status: { code: 'paid', message: 'Paid' }
-		  },
-		  shipping_address: {
-			name: `${transaction.address_first_name} ${transaction.address_last_name}`,
-			address_line_1: transaction.address_street,
-			house_number: transaction.address_street_number?.toString() ?? '',
-			postal_code: transaction.address_zip,
-			city: transaction.address_city,
-			country_code: transaction.address_country_code,
-			phone_number: transaction.address_phone ?? '',
-			email: transaction.customer_details_email,
-			company_name: transaction.address_company
-		  },
-		  shipping_details: {
-			is_local_pickup: false,
-			delivery_indicator: transaction.shippingMethodName,
-			measurement: {
-			  dimension: {
-				length: transaction.package_length,
-				width: transaction.package_width,
-				height: transaction.package_height,
-				unit: transaction.package_dimension_unit
-			  },
-			  weight: {
-				value: transaction.package_weight,
-				unit: transaction.package_weight_unit
-			  },
-			  volume: {
-				value: transaction.package_volume,
-				unit: transaction.package_volume_unit
-			  }
-			}
-		  },
-		  // ✅ Déplacement de service_point_details au bon endroit
-		  ...(transaction.servicePointId
-			? {
-				service_point_details: {
-				  id: transaction.servicePointId.toString(),
-				  post_number: transaction.servicePointPostNumber || '',
-				  latitude: transaction.servicePointLatitude || '',
-				  longitude: transaction.servicePointLongitude || '',
-				  type: transaction.servicePointType || '',
-				  extra_data: {
-					ref_cab: transaction.servicePointExtraRefCab || '',
-					shop_ref: transaction.servicePointExtraShopRef || ''
-				  }
+			shipping_address: {
+				name: `${transaction.address_first_name} ${transaction.address_last_name}`,
+				address_line_1: transaction.address_street,
+				house_number: transaction.address_street_number?.toString() ?? '',
+				postal_code: transaction.address_zip,
+				city: transaction.address_city,
+				country_code: transaction.address_country_code,
+				phone_number: transaction.address_phone ?? '',
+				email: transaction.customer_details_email,
+				company_name: transaction.address_company
+			},
+			shipping_details: {
+				is_local_pickup: false,
+				delivery_indicator: transaction.shippingMethodName,
+				measurement: {
+					dimension: {
+						length: transaction.package_length,
+						width: transaction.package_width,
+						height: transaction.package_height,
+						unit: transaction.package_dimension_unit
+					},
+					weight: {
+						value: transaction.package_weight,
+						unit: transaction.package_weight_unit
+					},
+					volume: {
+						value: transaction.package_volume,
+						unit: transaction.package_volume_unit
+					}
 				}
-			  }
-			: {})
+			},
+			// ✅ Déplacement de service_point_details au bon endroit
+			...(transaction.servicePointId
+				? {
+						service_point_details: {
+							id: transaction.servicePointId.toString(),
+							post_number: transaction.servicePointPostNumber || '',
+							latitude: transaction.servicePointLatitude || '',
+							longitude: transaction.servicePointLongitude || '',
+							type: transaction.servicePointType || '',
+							extra_data: {
+								ref_cab: transaction.servicePointExtraRefCab || '',
+								shop_ref: transaction.servicePointExtraShopRef || ''
+							}
+						}
+					}
+				: {})
 		}
-	  ];
-	  
+	];
 
 	console.log('📤 Payload envoyé à Sendcloud:', JSON.stringify(requestBody, null, 2));
 

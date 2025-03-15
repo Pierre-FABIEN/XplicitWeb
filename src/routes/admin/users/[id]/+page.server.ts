@@ -2,20 +2,11 @@ import type { PageServerLoad } from './$types';
 import { type Actions } from '@sveltejs/kit';
 import { superValidate, fail, message } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
-
 import { updateUserAndAddressSchema } from '$lib/schema/addresses/updateUserAndAddressSchema';
 import { getUsersById, updateUserMFA, updateUserRole } from '$lib/prisma/user/user';
 import { getUserAddresses, updateAddress } from '$lib/prisma/addresses/addresses';
+import { serializeData } from '$lib/utils/serializeData';
 import { updateUserSecurity } from '$lib/prisma/user/updateUserSecurity';
-import { serializeData } from '$lib/utils/serializeData';
-
-import type { PageServerLoad } from './$types';
-import { zod } from 'sveltekit-superforms/adapters';
-
-import { updateUserAndAddressSchema } from '$lib/schema/addresses/updateUserAndAddressSchema';
-import { getUsersById, updateUserMFA, updateUserRole } from '$lib/prisma/user/user';
-import { getUserAddresses, updateAddress } from '$lib/prisma/addresses/addresses';
-import { serializeData } from '$lib/utils/serializeData';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	// 🔒 Vérification de l'authentification
