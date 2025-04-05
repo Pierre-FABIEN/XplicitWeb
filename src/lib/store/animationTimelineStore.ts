@@ -68,8 +68,8 @@ export function updateCameraPosition(pathname: string) {
 			});
 			break;
 		case '/catalogue':
-			[x, y, z] = [0.8, 0.3, 1.6];
-			[tx, ty, tz] = [-0.7, 0.5, 0];
+			[x, y, z] = [1, 1, 1];
+			[tx, ty, tz] = [0, 0.6, 0];
 			mode.subscribe((currentMode) => {
 				if (currentMode === 'dark') {
 					LightColorStore.set('#000000');
