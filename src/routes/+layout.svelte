@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Navigation from './../lib/components/Navigation.svelte';
 	import '@fontsource-variable/open-sans';
 	import '@fontsource-variable/raleway';
 	import '../app.css';
@@ -14,14 +15,12 @@
 		setFirstOpen,
 		setRessourceToValide
 	} from '$lib/store/initialLoaderStore';
-	import Loader from '$lib/components/loader/Loader.svelte';
 	import { page } from '$app/stores';
-	import Cart from '$lib/components/cart/Cart.svelte';
+
 	import { setCart } from '$lib/store/Data/cartStore';
 	import { startSync } from '$lib/store/Data/cartSync';
 	import Threltre from '$lib/components/threlte/Threltre.svelte';
 	import BackgroundCanvas from '$lib/components/BackgroundCanvas.svelte';
-	import Options from '$lib/components/navigation/Options.svelte';
 	import SmoothScrollBarStore from '$lib/store/SmoothScrollBarStore';
 
 	let { children, data } = $props();
@@ -59,8 +58,10 @@
 		if (!contentRef) return;
 
 		const observer = new ResizeObserver(() => {
-			if (contentRef) {contentHeight = contentRef.clientHeight;}
-			
+			if (contentRef) {
+				contentHeight = contentRef.clientHeight;
+			}
+
 			updateSmoothScroll();
 		});
 		observer.observe(contentRef);
@@ -97,34 +98,8 @@
 		<ModeWatcher />
 
 		<div class="container ccc">
-			<div class="iconeNav ccc">
-				<nav
-					class="backdrop-blur-3xl shadow-xl border border-[#ffffff88] rounded-[16px] flex justify-end items-center p-2 space-x-4"
-				>
-					<ul class="rcs">
-						<li class="ccc">
-							<a href="/"> Accueil </a>
-						</li>
-						<li class="ccc">
-							<a href="/atelier"> L'atelier </a>
-						</li>
-						<li class="ccc">
-							<a href="/catalogue"> catalogue </a>
-						</li>
-						<li class="ccc">
-							<a href="/blog"> Blog </a>
-						</li>
-						<li class="ccc">
-							<a href="/contact"> Contact </a>
-						</li>
-					</ul>
-					<Options />
-					<Cart {data} />
-					<!-- <Breadcrumb />
-					<NavigationMenu /> -->
-				</nav>
-			</div>
 			<div class="wrapperScroll">
+				<Navigation {data} />
 				<SmoothScrollBar>
 					<main class="mainLayout">
 						<!-- Threltre avec texture dynamique -->
@@ -168,47 +143,6 @@
 		z-index: 1;
 	}
 
-	.iconeNav {
-		position: absolute;
-		z-index: 10;
-		bottom: 10px;
-		width: 100%;
-		max-width: 80vw;
-
-		nav {
-			transition: all 0.3s ease;
-
-			ul {
-				li {
-					a {
-						display: flex;
-						align-items: center;
-						justify-content: center;
-						border-radius: 16px;
-						height: 40px;
-						padding: 0px 20px;
-						font-family: 'Raleway Variable', sans-serif;
-
-						margin: 0px 5px;
-
-						transition: all 0.3s ease;
-						font-weight: 500;
-						//color: white;
-
-						&:hover {
-							transform: translateY(-1px);
-							background: rgba(255, 255, 255, 0.1);
-						}
-					}
-				}
-			}
-			&:hover {
-				transform: translateY(-5px);
-				box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.3);
-				background: rgba(255, 255, 255, 0.05);
-			}
-		}
-	}
 	.canva {
 		position: absolute;
 		width: 100vw;

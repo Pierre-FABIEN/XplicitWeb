@@ -86,7 +86,7 @@
 	}
 </script>
 
-<div class="cartButton relative w-70 h-70 mx-7 ccc">
+<div class="cartButton relative h-70 ccc">
 	<div class="absolute z-50 ccc">
 		<Sheet.Root bind:open={sidebarOpen}>
 			<Sheet.Trigger>
