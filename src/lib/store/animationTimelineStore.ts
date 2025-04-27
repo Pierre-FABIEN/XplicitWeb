@@ -4,6 +4,7 @@ import { derived, get } from 'svelte/store';
 import { BackgroundColorStore, LightColorStore } from './BackgroundColorStore';
 import { color1Tweened, color2Tweened } from './lightColorStore';
 import { mode } from 'mode-watcher';
+import { isSmall } from './mediaStore';
 
 // Stores pour la position de la caméra
 export const cameraX = tweened(0, { duration: 500, easing: cubicOut });
@@ -29,11 +30,17 @@ export function updateCameraPosition(pathname: string) {
 	let tx = 0,
 		ty = 0.5,
 		tz = 0;
+	const mobile = get(isSmall);
 
 	switch (pathname) {
 		case '/':
-			[x, y, z] = [0.8, 0.3, 1.6];
-			[tx, ty, tz] = [-0.7, 0.5, 0];
+			if (mobile) {
+				[x, y, z] = [1, 1, 1];
+				[tx, ty, tz] = [0, 0.7, 0];
+			} else {
+				[x, y, z] = [0.8, 0.3, 1.6];
+				[tx, ty, tz] = [-0.7, 0.5, 0];
+			}
 			mode.subscribe((currentMode) => {
 				if (currentMode === 'dark') {
 					LightColorStore.set('#000000');

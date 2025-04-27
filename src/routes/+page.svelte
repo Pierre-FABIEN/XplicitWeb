@@ -5,6 +5,9 @@
 	import { goto } from '$app/navigation';
 	import { mode } from 'mode-watcher';
 	import { Power, Store } from 'lucide-svelte';
+	import { updateCameraPosition } from '$lib/store/animationTimelineStore';
+	import { isSmall } from '$lib/store/mediaStore';
+	import { page } from '$app/stores';
 
 	let animateLines = $state(false); // Contrôle de l'animation des lignes
 
@@ -21,10 +24,19 @@
 	const onHoverButton = () => {
 		animateLines = !animateLines;
 	};
+
+	$effect(() => {
+		// Les deux lectures ci-dessous sont les dépendances ;
+		// le $effect se relancera si l’une change.
+		const path = $page.url.pathname;
+		const small = $isSmall;
+
+		updateCameraPosition(path);
+	});
 </script>
 
-<div class="ccc absolute z-30 top-[25vh] left-[10vw]">
-	<h1 class="titleHome" style={`-webkit-text-stroke: 2px ${strokeColor};`}>
+<div class="containerHome ccc absolute z-30 top-[25vh] left-[10vw]">
+	<h1 class="titleHome" style={`-webkit-text-stroke-color: ${strokeColor};`}>
 		<span
 			class="firstline {animateLines ? 'hovered' : ''}"
 			transition:fly={{ x: -88, duration: 100 }}
@@ -70,13 +82,70 @@
 </div>
 
 <style lang="scss">
+	@media screen and (max-width: 1000px) {
+		.containerHome {
+			top: 5vh;
+			left: 50vw;
+			transform: translate(-50%, 0%);
+			width: 500px;
+		}
+	}
+
+	@media screen and (max-width: 600px) {
+		.containerHome {
+			width: 400px !important;
+		}
+		.titleHome {
+			width: 400px !important;
+		}
+		.firstline {
+			font-size: 40px !important;
+			width: 400px !important;
+		}
+		.secondline {
+			font-size: 50px !important;
+			width: 400px !important;
+		}
+		.thirdline {
+			font-size: 40px !important;
+			width: 400px !important;
+		}
+	}
+
+	@media screen and (max-width: 425px) {
+		.containerHome {
+			width: 300px !important;
+		}
+		.titleHome {
+			width: 300px !important;
+			-webkit-text-stroke-width: 1px !important;
+			height: 100px !important;
+		}
+		.firstline {
+			font-size: 30px !important;
+			width: 300px !important;
+		}
+		.secondline {
+			font-size: 40px !important;
+			width: 300px !important;
+			top: 25px !important;
+			left: 50px !important;
+		}
+		.thirdline {
+			font-size: 30px !important;
+			width: 300px !important;
+			top: 65px !important;
+		}
+	}
+
 	.titleHome {
 		text-align: center;
 		font-family: 'Open Sans Variable', sans-serif;
 		font-style: italic;
 		text-align: left;
 		font-size: 57px;
-		-webkit-text-stroke: 2px black;
+		-webkit-text-stroke-color: black;
+		-webkit-text-stroke-width: 2px;
 		color: transparent;
 		text-transform: uppercase;
 		font-weight: 900;
