@@ -2,16 +2,23 @@
 	// ──────────────────────────────────────────────────────────── Deps
 	import Cart from '$lib/components/cart/Cart.svelte';
 	import Options from '$lib/components/navigation/Options.svelte';
-
+	import { mode } from 'mode-watcher';
 	// shadcn-ui
 	import * as Drawer from '$shadcn/drawer';
 	import { Button, buttonVariants } from '$shadcn/button';
 
 	// Icons
 	import { Menu } from 'lucide-svelte';
+	import { goto } from '$app/navigation';
 
 	// ──────────────────────────────────────────────────────────── Data
-	export let data;
+	let { data } = $props();
+
+	let strokeColor = $state('black');
+
+	$effect(() => {
+		strokeColor = $mode === 'light' ? '#00021a' : '#00c2ff';
+	});
 
 	const links = [
 		{ href: '/', label: 'Accueil' },
@@ -20,6 +27,15 @@
 		{ href: '/blog', label: 'Blog' },
 		{ href: '/contact', label: 'Contact' }
 	];
+
+	/* ── State ────────────────────────────────────────────────────────────── */
+	let drawerOpen = $state(false); // bound to Drawer.Root
+
+	/* ── Helpers ──────────────────────────────────────────────────────────── */
+	function navigateAndClose(href: string) {
+		drawerOpen = false; // 1) ferme le sheet
+		goto(href); // 2) navigation kit
+	}
 </script>
 
 <!-- Desktop bar + Mobile drawer trigger ---------------------------------- -->
@@ -28,7 +44,7 @@
 		class="backdrop-blur-3xl shadow-xl border border-white/50 rounded-2xl flex items-center p-2 space-x-4"
 	>
 		<!-- ───────── Mobile Drawer (burger + sheet) -->
-		<Drawer.Root>
+		<Drawer.Root bind:open={drawerOpen}>
 			<Drawer.Trigger
 				aria-label="Open navigation"
 				class={buttonVariants({ variant: 'ghost', size: 'icon' })}
@@ -36,20 +52,24 @@
 				<Menu size="24" />
 			</Drawer.Trigger>
 
-			<Drawer.Content side="bottom" class="pb-8 pt-6">
-				<Drawer.Header class="text-center">
-					<Drawer.Title>Menu</Drawer.Title>
-				</Drawer.Header>
-
-				<ul class="my-6 flex flex-col items-center gap-4 text-lg font-medium">
+			<Drawer.Content class="pb-8 pt-6">
+				<ul class="my-6 flex flex-col gap-4 text-lg font-medium">
 					{#each links as { href, label }}
-						<Drawer.Close>
-							<a {href} class="block uppercase tracking-wide">{label}</a>
-						</Drawer.Close>
+						<a
+							{href}
+							onclick={(e) => {
+								e.preventDefault();
+								navigateAndClose(href);
+							}}
+							style={`-webkit-text-stroke-color:${strokeColor};`}
+							class="fontstyle block uppercase tracking-wide w-full px-4 py-2"
+						>
+							{label}
+						</a>
 					{/each}
 				</ul>
 
-				<div class="mt-4 flex items-center justify-center gap-6">
+				<div class="mt-4 flex rcs gap-6">
 					<Options />
 					<Cart {data} />
 				</div>
@@ -94,5 +114,17 @@
 
 	.options {
 		margin-left: 0px !important;
+	}
+
+	.fontstyle {
+		font-family: 'Open Sans Variable', sans-serif;
+		font-style: italic;
+		text-align: left;
+		font-size: 40px;
+		-webkit-text-stroke-color: black;
+		-webkit-text-stroke-width: 2px;
+		color: transparent;
+		text-transform: uppercase;
+		font-weight: 900;
 	}
 </style>

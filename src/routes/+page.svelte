@@ -4,7 +4,7 @@
 	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { mode } from 'mode-watcher';
-	import { Power, Store } from 'lucide-svelte';
+	import { Power } from 'lucide-svelte';
 	import { updateCameraPosition } from '$lib/store/animationTimelineStore';
 	import { isSmall } from '$lib/store/mediaStore';
 	import { page } from '$app/stores';

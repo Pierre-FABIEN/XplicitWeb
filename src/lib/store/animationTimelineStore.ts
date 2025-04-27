@@ -75,8 +75,14 @@ export function updateCameraPosition(pathname: string) {
 			});
 			break;
 		case '/catalogue':
-			[x, y, z] = [1, 1, 1];
-			[tx, ty, tz] = [0, 0.6, 0];
+			if (mobile) {
+				[x, y, z] = [1, 1, 1];
+				[tx, ty, tz] = [0, 0.7, 0];
+			} else {
+				[x, y, z] = [1, 1, 1];
+				[tx, ty, tz] = [0, 0.6, 0];
+			}
+
 			mode.subscribe((currentMode) => {
 				if (currentMode === 'dark') {
 					LightColorStore.set('#000000');
