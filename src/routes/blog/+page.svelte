@@ -151,17 +151,6 @@
 						{@html article.content}
 					</p>
 
-					<div class="mt-4 flex items-center space-x-3">
-						<div>
-							<p class="text-sm font-medium text-gray-900">
-								{article.author?.name || 'Unknown Author'}
-							</p>
-							<p class="text-sm text-gray-500">
-								{new Date(article.createdAt).toLocaleDateString()}
-							</p>
-						</div>
-					</div>
-
 					<Button class="mt-4">
 						<a href={`/blog/${article.slug}`}>Lire la suite</a>
 					</Button>

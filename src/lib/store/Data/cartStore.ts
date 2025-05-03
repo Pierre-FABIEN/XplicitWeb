@@ -50,7 +50,12 @@ export const cart = writable<CartState>({
  * total = products subtotal + product tax + shipping cost + shipping tax
  */
 function recalcFinalTotal(c: CartState) {
-	c.total = parseFloat((c.subtotal + c.tax + c.shippingCost + c.shippingTax).toFixed(2));
+	const shippingCost = Number.isFinite(c.shippingCost) ? c.shippingCost : 0;
+	const shippingTax = Number.isFinite(c.shippingTax) ? c.shippingTax : 0;
+	const subtotal = Number.isFinite(c.subtotal) ? c.subtotal : 0;
+	const tax = Number.isFinite(c.tax) ? c.tax : 0;
+
+	c.total = parseFloat((subtotal + tax + shippingCost + shippingTax).toFixed(2));
 	c.lastModified = Date.now();
 }
 
