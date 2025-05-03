@@ -1,24 +1,16 @@
 <script lang="ts">
-	// ──────────────────────────────────────────────────────────── Deps
+	/* ── Deps ─────────────────────────────────────────────────────────────── */
 	import Cart from '$lib/components/cart/Cart.svelte';
 	import Options from '$lib/components/navigation/Options.svelte';
+	import { goto } from '$app/navigation';
 	import { mode } from 'mode-watcher';
-	// shadcn-ui
+
 	import * as Drawer from '$shadcn/drawer';
 	import { Button, buttonVariants } from '$shadcn/button';
-
-	// Icons
 	import { Menu } from 'lucide-svelte';
-	import { goto } from '$app/navigation';
 
-	// ──────────────────────────────────────────────────────────── Data
+	/* ── Data  ────────────────────────────────────────────────────────────── */
 	let { data } = $props();
-
-	let strokeColor = $state('black');
-
-	$effect(() => {
-		strokeColor = $mode === 'light' ? '#00021a' : '#00c2ff';
-	});
 
 	const links = [
 		{ href: '/', label: 'Accueil' },
@@ -30,65 +22,78 @@
 
 	/* ── State ────────────────────────────────────────────────────────────── */
 	let drawerOpen = $state(false); // bound to Drawer.Root
+	let strokeColor = $derived($mode === 'light' ? '#00021a' : '#00c2ff');
 
 	/* ── Helpers ──────────────────────────────────────────────────────────── */
 	function navigateAndClose(href: string) {
-		drawerOpen = false; // 1) ferme le sheet
 		goto(href); // 2) navigation kit
+		drawerOpen = false; // 1) ferme le sheet
 	}
 </script>
 
-<!-- Desktop bar + Mobile drawer trigger ---------------------------------- -->
+<!-- Barre desktop + burger mobile --------------------------------------- -->
 <div class="iconeNav ccc">
 	<nav
-		class="backdrop-blur-3xl shadow-xl border border-white/50 rounded-2xl flex items-center p-2 space-x-4"
+		class="backdrop-blur-3xl shadow-xl border border-white/50 rounded-2xl
+			   flex items-center p-2 space-x-4"
 	>
-		<!-- ───────── Mobile Drawer (burger + sheet) -->
+		<!-- ─── Drawer mobile -->
 		<Drawer.Root bind:open={drawerOpen}>
+			<!-- Trigger (burger) -->
 			<Drawer.Trigger
 				aria-label="Open navigation"
-				class={buttonVariants({ variant: 'ghost', size: 'icon' })}
+				class={buttonVariants({ variant: 'ghost', size: 'icon' }) + ' md:hidden'}
 			>
 				<Menu size="24" />
 			</Drawer.Trigger>
 
-			<Drawer.Content class="pb-8 pt-6">
+			<!-- Content (bottom-sheet) -->
+			<Drawer.Content class="pb-8 pt-6 md:hidden">
 				<ul class="my-6 flex flex-col gap-4 text-lg font-medium">
 					{#each links as { href, label }}
 						<a
 							{href}
-							onclick={(e) => {
-								e.preventDefault();
-								navigateAndClose(href);
-							}}
+							onclick={() => navigateAndClose(href)}
 							style={`-webkit-text-stroke-color:${strokeColor};`}
-							class="fontstyle block uppercase tracking-wide w-full px-4 py-2"
+							class="fontStyle block uppercase tracking-wide w-full px-4 py-2"
 						>
 							{label}
 						</a>
 					{/each}
 				</ul>
 
-				<div class="mt-4 flex rcs gap-6">
-					<Options />
-					<Cart {data} />
-				</div>
-
 				<Drawer.Footer class="mt-6 flex justify-center gap-4">
-					<Button size="sm">Se connecter</Button>
-					<Drawer.Close class={buttonVariants({ variant: 'outline', size: 'sm' })}>
-						Fermer
-					</Drawer.Close>
+					<Button size="sm" href="/auth/login" onclick={() => (drawerOpen = false)}
+						>Se connecter</Button
+					>
+					<Button size="sm" variant="outline" onclick={() => (drawerOpen = false)}>Fermer</Button>
 				</Drawer.Footer>
 			</Drawer.Content>
 		</Drawer.Root>
 
-		<!-- Desktop-only utilities -->
-		<div class="hidden md:block options">
-			<Options />
-		</div>
-		<div class="hidden md:block">
-			<Cart {data} />
+		<!-- ─── Links desktop -->
+		<ul class="hidden md:flex">
+			{#each links as { href, label }}
+				<li>
+					<a
+						{href}
+						class="fontStyle flex items-center justify-center rounded-xl h-10 px-5 font-medium
+					   transition hover:-translate-y-[1px] hover:bg-white/10"
+					>
+						{label}
+					</a>
+				</li>
+			{/each}
+		</ul>
+
+		<!-- Utilitaires desktop -->
+		<div class="navContainer rcb w-[260px] hidden">
+			<div>
+				<Options />
+			</div>
+			<div>
+				<Cart {data} />
+			</div>
 		</div>
 	</nav>
 </div>
@@ -101,6 +106,10 @@
 		transform: translate(-50%, 0);
 		z-index: 10;
 
+		.navContainer {
+			margin-left: 0 !important;
+		}
+
 		nav {
 			transition: all 0.3s ease;
 
@@ -110,21 +119,12 @@
 				background: rgba(255, 255, 255, 0.05);
 			}
 		}
-	}
 
-	.options {
-		margin-left: 0px !important;
-	}
-
-	.fontstyle {
-		font-family: 'Open Sans Variable', sans-serif;
-		font-style: italic;
-		text-align: left;
-		font-size: 40px;
-		-webkit-text-stroke-color: black;
-		-webkit-text-stroke-width: 2px;
-		color: transparent;
-		text-transform: uppercase;
-		font-weight: 900;
+		.fontStyle {
+			font-family:
+				Raleway Variable,
+				sans-serif;
+			font-weight: normal;
+		}
 	}
 </style>

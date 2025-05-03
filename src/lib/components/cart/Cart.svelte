@@ -9,6 +9,7 @@
 	import { ShoppingCart } from 'lucide-svelte';
 	import Input from '../shadcn/ui/input/input.svelte';
 	import { goto, invalidateAll } from '$app/navigation';
+	import { mode } from 'mode-watcher';
 
 	let { data } = $props();
 
@@ -19,7 +20,7 @@
 	});
 
 	let sidebarOpen: boolean = $state(false);
-
+	let currentMode = $derived($mode);
 	let isNativeOrder: boolean = $state(false);
 
 	$effect(() => {
@@ -90,11 +91,13 @@
 	<div class="absolute z-50 ccc">
 		<Sheet.Root bind:open={sidebarOpen}>
 			<Sheet.Trigger>
-				<button class="m-5 ccc">
-					<ShoppingCart class="w-8 h-8 z-0 absolute right-0 top-0 stroke-white" />
-					<Badge
-						class="bulletCart font-bold absolute z-10 left-0 bottom-0 bg-white/90 border-slate-400 "
-					>
+				<button
+					class="m-5 ccc"
+					class:text-black={currentMode === 'light'}
+					class:text-white={currentMode === 'dark'}
+				>
+					<ShoppingCart class="w-8 h-8 absolute right-0 top-0 stroke-current transition-colors" />
+					<Badge class="bulletCart font-bold absolute z-10 left-0 bottom-0 color-black">
 						{#if $cart && $cart.items}
 							{$cart.items.length > 0 ? $cart.items.length : '0'}
 						{:else}
@@ -105,7 +108,7 @@
 			</Sheet.Trigger>
 
 			<Sheet.Content class="p-4 max-w-md w-full">
-				<h2 class="text-2xl font-bold mb-4">Your Cart</h2>
+				<h2 class="text-2xl font-bold mb-4">Votre panier</h2>
 
 				{#if isNativeOrder}
 					<p class="mb-4">
@@ -210,7 +213,7 @@
 						<a href="/checkout">Checkout</a>
 					</Button>
 				{:else}
-					<p>Your cart is empty.</p>
+					<p>Votre panier est vide.</p>
 				{/if}
 
 				{#if user}

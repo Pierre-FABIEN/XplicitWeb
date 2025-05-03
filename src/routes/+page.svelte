@@ -127,7 +127,7 @@
 		}
 		.secondline {
 			font-size: 40px !important;
-			width: 300px !important;
+			width: 250px !important;
 			top: 25px !important;
 			left: 50px !important;
 		}
@@ -203,7 +203,6 @@
 			color: black;
 			text-transform: uppercase;
 			font-size: 22px;
-			padding: 6px 40px;
 
 			span {
 				transform: translateY(35px);

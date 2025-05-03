@@ -24,8 +24,8 @@
 	});
 </script>
 
-<div class="min-w-screen min-h-screen flex justify-center items-center">
-	<div class="w-[400px] mx-auto mt-12 max-w-lg p-6 border shadow-lg rounded-lg">
+<div class="w-screen h-screen ccc">
+	<div class="loginContainer w-[300px] mx-auto p-6 border shadow-lg rounded-lg backdrop-blur-3xl">
 		<h1 class="text-2xl font-semibold mb-6 text-center">Connexion</h1>
 
 		<form method="POST" action="?/login" use:loginEnhance class="space-y-6">
