@@ -68,7 +68,6 @@
 
 		// Apply a GSAP "from" animation with stagger
 		gsap.from(cards, {
-			opacity: 0,
 			y: -30,
 			duration: 0.25,
 			stagger: 0.15,
@@ -108,9 +107,9 @@
 									{product.name}
 								</h3>
 
-								<p class="text-sm text-left">
+								<!-- <p class="text-sm text-left">
 									{product.description}
-								</p>
+								</p> -->
 
 								<div class="rcb w-[100%]">
 									<p class="text-lg font-medium text-indigo-600">

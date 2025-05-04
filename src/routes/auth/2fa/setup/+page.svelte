@@ -25,45 +25,47 @@
 	});
 </script>
 
-<div class="mx-auto mt-8 max-w-lg">
-	<h1 class="text-2xl font-semibold mb-4">Configurer l'authentification à deux facteurs</h1>
+<div class="w-screen h-screen ccc">
+	<div class="w-[300px] mx-auto p-6 border shadow-lg rounded-lg backdrop-blur-3xl">
+		<h1 class="text-2xl font-semibold mb-4">Configurer l'authentification à deux facteurs</h1>
 
-	<div class="flex flex-col items-center">
-		<!-- QR Code -->
-		<div class="w-64 h-64 mb-4">
-			{@html data.qrcode}
-		</div>
-
-		<!-- Formulaire TOTP -->
-		<form
-			method="POST"
-			use:formEnhance
-			action="?/setuptotp"
-			class="space-y-4 w-full max-w-sm mx-auto"
-		>
-			<input type="hidden" name="encodedTOTPKey" value={data.encodedTOTPKey} required />
-
-			<!-- Champ de code TOTP -->
-			<Form.Field name="code" form={twoFactorForm}>
-				<Form.Control>
-					<Form.Label>Code de vérification</Form.Label>
-					<Input
-						id="form-totp-code"
-						name="code"
-						type="text"
-						placeholder="Entrez le code"
-						bind:value={$twoFactorData.code}
-						required
-						class="mt-1 block w-full"
-					/>
-				</Form.Control>
-				<Form.FieldErrors />
-			</Form.Field>
-
-			<!-- Bouton de soumission -->
-			<div class="mt-6">
-				<Button type="submit" class="w-full" variant="outline">Valider</Button>
+		<div class="flex flex-col items-center">
+			<!-- QR Code -->
+			<div class="w-64 h-64 mb-4">
+				{@html data.qrcode}
 			</div>
-		</form>
+
+			<!-- Formulaire TOTP -->
+			<form
+				method="POST"
+				use:formEnhance
+				action="?/setuptotp"
+				class="space-y-4 w-full max-w-sm mx-auto"
+			>
+				<input type="hidden" name="encodedTOTPKey" value={data.encodedTOTPKey} required />
+
+				<!-- Champ de code TOTP -->
+				<Form.Field name="code" form={twoFactorForm}>
+					<Form.Control>
+						<Form.Label>Code de vérification</Form.Label>
+						<Input
+							id="form-totp-code"
+							name="code"
+							type="text"
+							placeholder="Entrez le code"
+							bind:value={$twoFactorData.code}
+							required
+							class="mt-1 block w-full"
+						/>
+					</Form.Control>
+					<Form.FieldErrors />
+				</Form.Field>
+
+				<!-- Bouton de soumission -->
+				<div class="mt-6">
+					<Button type="submit" class="w-full" variant="outline">Valider</Button>
+				</div>
+			</form>
+		</div>
 	</div>
 </div>

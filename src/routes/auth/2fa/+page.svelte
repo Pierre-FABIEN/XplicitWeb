@@ -26,36 +26,39 @@
 	});
 </script>
 
-<div class="mx-auto mt-12 max-w-lg p-6 border shadow-lg rounded-lg">
-	<h1 class="text-2xl font-semibold mb-6 text-center">Two-factor Authentication</h1>
-	<p class="text-center mb-4 text-gray-600">Enter the code from your authenticator app.</p>
+<div class="w-screen h-screen ccc">
+	<div class="w-[300px] mx-auto p-6 border shadow-lg rounded-lg backdrop-blur-3xl">
+		<h1 class="text-2xl font-semibold mb-6 text-center">Two-factor Authentication</h1>
+		<p class="text-center mb-4 text-gray-600">Enter the code from your authenticator app.</p>
 
-	<!-- Formulaire TOTP -->
-	<form method="POST" action="?/totp" use:totpEnhance class="space-y-6">
-		<div>
-			<Form.Field name="code" form={totpForm}>
-				<Form.Control>
-					<Form.Label>Authentication Code</Form.Label>
-					<Input
-						type="text"
-						name="code"
-						bind:value={$totpData.code}
-						placeholder="Enter your code"
-						autocomplete="one-time-code"
-						required
-					/>
-				</Form.Control>
-				<Form.FieldErrors />
-			</Form.Field>
+		<!-- Formulaire TOTP -->
+		<form method="POST" action="?/totp" use:totpEnhance class="space-y-6">
+			<div>
+				<Form.Field name="code" form={totpForm}>
+					<Form.Control>
+						<Form.Label>Authentication Code</Form.Label>
+						<Input
+							type="text"
+							name="code"
+							bind:value={$totpData.code}
+							placeholder="Enter your code"
+							autocomplete="one-time-code"
+							required
+						/>
+					</Form.Control>
+					<Form.FieldErrors />
+				</Form.Field>
+			</div>
+
+			<div class="mt-6">
+				<Button type="submit" class="w-full">Verify</Button>
+			</div>
+		</form>
+
+		<!-- Lien pour utiliser le code de récupération -->
+		<div class="mt-4 text-center">
+			<a href="/auth/2fa/reset" class="text-orange-700 hover:underline">Use recovery code instead</a
+			>
 		</div>
-
-		<div class="mt-6">
-			<Button type="submit" class="w-full">Verify</Button>
-		</div>
-	</form>
-
-	<!-- Lien pour utiliser le code de récupération -->
-	<div class="mt-4 text-center">
-		<a href="/auth/2fa/reset" class="text-orange-700 hover:underline">Use recovery code instead</a>
 	</div>
 </div>

@@ -29,7 +29,6 @@
 		isNativeOrder = $cart.items.every(
 			(item) => !Array.isArray(item.custom) || item.custom.length === 0
 		);
-		console.log('Cart data in Cart.svelte:', $cart);
 	});
 
 	/**
@@ -109,153 +108,168 @@
 				</button>
 			</Sheet.Trigger>
 
-			<Sheet.Content class="p-4 max-w-md w-full">
+			<Sheet.Content class="p-4 pr-10 min-w-fit">
 				<SmoothScrollBar>
-					<h2 class="text-2xl font-bold mb-4">Votre panier</h2>
+					<div class="p-10">
+						<h2 class="text-2xl font-bold mb-4">Votre panier</h2>
 
-					{#if isNativeOrder}
-						<p class="mb-4">
-							Pour les commandes non-custom, les quantités sont fixées à 3 packs de 24 maximum.
-						</p>
-					{/if}
+						{#if isNativeOrder}
+							<p class="mb-4">
+								Pour les commandes non-custom, les quantités sont fixées à 3 packs de 24 maximum.
+							</p>
+						{/if}
 
-					{#if $cart && $cart.items && $cart.items.length > 0}
-						<div class="max-h-[500px] overflow-y-auto">
-							{#each $cart.items as item (item.id)}
-								<div class="p-4 border rounded-lg shadow-sm flex justify-between items-center mb-2">
-									<img
-										src={(item.custom?.length > 0 && item.custom[0].image) ||
-											(Array.isArray(item.product.images)
-												? item.product.images[0]
-												: item.product.images) ||
-											''}
-										alt={item.product.name}
-										class="w-20 h-20 object-cover mr-5"
-									/>
+						{#if $cart && $cart.items && $cart.items.length > 0}
+							<div class="max-h-[500px] overflow-y-auto">
+								{#each $cart.items as item (item.id)}
+									<div
+										class="p-4 border rounded-lg shadow-sm flex justify-between items-center mb-2"
+									>
+										<img
+											src={(item.custom?.length > 0 && item.custom[0].image) ||
+												(Array.isArray(item.product.images)
+													? item.product.images[0]
+													: item.product.images) ||
+												''}
+											alt={item.product.name}
+											class="w-20 h-20 object-cover mr-5"
+										/>
 
-									<div class="flex-1 mx-4">
-										<h3 class="text-lg font-semibold">
-											{item.product.name}
+										<div class="flex-1 mx-4">
+											<h3 class="text-lg font-semibold">
+												{item.product.name}
+												{#if item.custom && item.custom.length > 0}
+													<span class="text-sm font-normal text-gray-500">Custom</span>
+												{/if}
+											</h3>
+											<p class="text-gray-600">${item.product.price.toFixed(2)}€</p>
+
 											{#if item.custom && item.custom.length > 0}
-												<span class="text-sm font-normal text-gray-500">Custom</span>
+												<!-- Custom items: Use predefined quantity options -->
+												<select
+													class="border rounded px-3 py-2 w-full"
+													onchange={(e) =>
+														changeQuantity(
+															item.product.id,
+															parseInt(e.target.value),
+															item.custom?.[0]?.id
+														)}
+												>
+													<option value="" disabled selected>Select a quantity option...</option>
+													{#each quantityOptions as option}
+														<option value={option.value} selected={item.quantity === option.value}>
+															{option.label}
+														</option>
+													{/each}
+												</select>
+											{:else}
+												<Input
+													type="number"
+													class="border p-2 rounded w-[60px]"
+													value={item.quantity}
+													oninput={(e) =>
+														changeQuantity(
+															item.product.id,
+															parseInt(e.target.value),
+															item.custom?.id
+														)}
+													min="24"
+													max="72"
+													step="24"
+												/>
 											{/if}
-										</h3>
-										<p class="text-gray-600">${item.product.price.toFixed(2)}€</p>
-
-										{#if item.custom && item.custom.length > 0}
-											<!-- Custom items: Use predefined quantity options -->
-											<select
-												class="border rounded px-3 py-2 w-full"
-												onchange={(e) =>
-													changeQuantity(
-														item.product.id,
-														parseInt(e.target.value),
-														item.custom?.[0]?.id
-													)}
+										</div>
+										<div class="flex flex-col items-end">
+											<p class="text-lg font-semibold">
+												{(item.price * item.quantity).toFixed(2)}€
+											</p>
+											<button
+												onclick={() => handleRemoveFromCart(item.product.id, item.custom?.id)}
+												class="text-red-600 hover:text-red-800"
 											>
-												<option value="" disabled selected>Select a quantity option...</option>
-												{#each quantityOptions as option}
-													<option value={option.value} selected={item.quantity === option.value}>
-														{option.label}
-													</option>
-												{/each}
-											</select>
-										{:else}
-											<Input
-												type="number"
-												class="border p-2 rounded w-[60px]"
-												value={item.quantity}
-												oninput={(e) =>
-													changeQuantity(
-														item.product.id,
-														parseInt(e.target.value),
-														item.custom?.id
-													)}
-												min="24"
-												max="72"
-												step="24"
-											/>
-										{/if}
+												<Trash />
+											</button>
+										</div>
 									</div>
-									<div class="flex flex-col items-end">
-										<p class="text-lg font-semibold">
-											{(item.price * item.quantity).toFixed(2)}€
-										</p>
-										<button
-											onclick={() => handleRemoveFromCart(item.product.id, item.custom?.id)}
-											class="text-red-600 hover:text-red-800"
-										>
-											<Trash />
-										</button>
-									</div>
-								</div>
-							{/each}
-						</div>
-						<div class="mt-4 border-t pt-4">
+								{/each}
+							</div>
 							<div class="mt-4 border-t pt-4">
-								<!-- Subtotal -->
-								<div class="flex justify-between">
-									<span class="text-lg">Subtotal:</span>
-									<span class="text-lg">
-										${$cart.subtotal?.toFixed(2) || '0.00'}€
-									</span>
-								</div>
-								<!-- Tax (TVA) -->
-								<div class="flex justify-between mt-2">
-									<span class="text-lg">TVA (5,5%):</span>
-									<span class="text-lg">
-										${$cart.tax?.toFixed(2) || '0.00'}€
-									</span>
-								</div>
-								<!-- Total -->
-								<div class="flex justify-between mt-2">
-									<span class="text-xl font-semibold">Total:</span>
-									<span class="text-xl font-semibold">
-										${$cart.total?.toFixed(2) || '0.00'}€
-									</span>
+								<div class="mt-4 border-t pt-4">
+									<!-- Subtotal -->
+									<div class="flex justify-between">
+										<span class="text-lg">Subtotal:</span>
+										<span class="text-lg">
+											${$cart.subtotal?.toFixed(2) || '0.00'}€
+										</span>
+									</div>
+									<!-- Tax (TVA) -->
+									<div class="flex justify-between mt-2">
+										<span class="text-lg">TVA (5,5%):</span>
+										<span class="text-lg">
+											${$cart.tax?.toFixed(2) || '0.00'}€
+										</span>
+									</div>
+									<!-- Total -->
+									<div class="flex justify-between mt-2">
+										<span class="text-xl font-semibold">Total:</span>
+										<span class="text-xl font-semibold">
+											{isFinite($cart.total) ? $cart.total.toFixed(2) : '0.00'} €
+										</span>
+									</div>
 								</div>
 							</div>
-						</div>
-						<Button href="/checkout" onclick={() => (sidebarOpen = false)}>Checkout</Button>
-					{:else}
-						<p>Votre panier est vide.</p>
-					{/if}
+						{:else}
+							<p>Votre panier est vide.</p>
+						{/if}
 
-					{#if user}
-						<!-- If the user is logged in -->
-						<div class="ccc">
-							<Button href="/auth/settings" onclick={() => (sidebarOpen = false)}>
-								Mes paramètres
-							</Button>
-
-							{#if data.user.role === 'ADMIN'}
-								<Button class="m-5" href="/admin" onclick={() => (sidebarOpen = false)}
-									>Dashboard</Button
+						{#if user}
+							<!-- If the user is logged in -->
+							<div class="ccc">
+								<Button class="w-full m-2" href="/checkout" onclick={() => (sidebarOpen = false)}
+									>Checkout</Button
 								>
-							{/if}
-
-							<Button type="button" variant="destructive" class="m-5" onclick={handleSignOut}>
-								Se déconnecter
-							</Button>
-						</div>
-					{:else}
-						<!-- If the user is not logged in -->
-						<div class="text-center mt-4">
-							<p class=" mb-2">
-								Veuillez vous <a
-									href="/auth/login"
+								<Button
+									class="w-full m-2"
+									href="/auth/settings"
 									onclick={() => (sidebarOpen = false)}
-									class="text-blue-500 underline">connecter</a
 								>
-								ou
-								<a
-									href="/auth/signup"
-									onclick={() => (sidebarOpen = false)}
-									class="text-blue-500 underline">vous inscrire</a
-								> pour finaliser votre commande.
-							</p>
-						</div>
-					{/if}
+									Mes paramètres
+								</Button>
+
+								{#if data.user.role === 'ADMIN'}
+									<Button class="w-full m-2" href="/admin" onclick={() => (sidebarOpen = false)}
+										>Dashboard</Button
+									>
+								{/if}
+
+								<Button
+									class="w-full m-2"
+									type="button"
+									variant="destructive"
+									onclick={handleSignOut}
+								>
+									Se déconnecter
+								</Button>
+							</div>
+						{:else}
+							<!-- If the user is not logged in -->
+							<div class="text-center mt-4">
+								<p class=" mb-2">
+									Veuillez vous <a
+										href="/auth/login"
+										onclick={() => (sidebarOpen = false)}
+										class="text-blue-500 underline">connecter</a
+									>
+									ou
+									<a
+										href="/auth/signup"
+										onclick={() => (sidebarOpen = false)}
+										class="text-blue-500 underline">vous inscrire</a
+									> pour finaliser votre commande.
+								</p>
+							</div>
+						{/if}
+					</div>
 				</SmoothScrollBar>
 			</Sheet.Content>
 		</Sheet.Root>

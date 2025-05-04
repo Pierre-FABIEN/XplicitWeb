@@ -29,30 +29,32 @@
 	});
 </script>
 
-<div class="mx-auto mt-12 max-w-lg p-6 border shadow-lg rounded-lg">
-	<h1 class="text-2xl font-semibold mb-4 text-center">Réinitialiser votre mot de passe</h1>
+<div class="w-screen h-screen ccc">
+	<div class="w-[300px] mx-auto p-6 border shadow-lg rounded-lg backdrop-blur-3xl">
+		<h1 class="text-2xl font-semibold mb-4 text-center">Réinitialiser votre mot de passe</h1>
 
-	<p class="text-center text-gray-600 mb-6">Entrez votre nouveau mot de passe ci-dessous.</p>
+		<p class="text-center text-gray-600 mb-6">Entrez votre nouveau mot de passe ci-dessous.</p>
 
-	<!-- Formulaire de réinitialisation du mot de passe -->
-	<form method="POST" action="?/resetPassword" use:resetPasswordEnhance class="space-y-6">
-		<Form.Field name="password" form={resetPasswordForm}>
-			<Form.Control>
-				<Form.Label>Nouveau mot de passe</Form.Label>
-				<Input
-					type="password"
-					name="password"
-					bind:value={$resetPasswordData.password}
-					placeholder="Entrez votre nouveau mot de passe"
-					autocomplete="new-password"
-					required
-				/>
-			</Form.Control>
-			<Form.FieldErrors />
-		</Form.Field>
+		<!-- Formulaire de réinitialisation du mot de passe -->
+		<form method="POST" action="?/resetPassword" use:resetPasswordEnhance class="space-y-6">
+			<Form.Field name="password" form={resetPasswordForm}>
+				<Form.Control>
+					<Form.Label>Nouveau mot de passe</Form.Label>
+					<Input
+						type="password"
+						name="password"
+						bind:value={$resetPasswordData.password}
+						placeholder="Entrez votre nouveau mot de passe"
+						autocomplete="new-password"
+						required
+					/>
+				</Form.Control>
+				<Form.FieldErrors />
+			</Form.Field>
 
-		<div class="mt-6">
-			<Button type="submit" class="w-full">Réinitialiser le mot de passe</Button>
-		</div>
-	</form>
+			<div class="mt-6">
+				<Button type="submit" class="w-full">Réinitialiser le mot de passe</Button>
+			</div>
+		</form>
+	</div>
 </div>

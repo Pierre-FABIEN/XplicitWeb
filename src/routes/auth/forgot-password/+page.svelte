@@ -25,8 +25,8 @@
 	});
 </script>
 
-<div class="min-w-screen min-h-screen flex justify-center items-center">
-	<div class="w-[400px] mx-auto mt-12 max-w-lg p-6 border shadow-lg rounded-lg">
+<div class="w-screen h-screen ccc">
+	<div class="w-[300px] mx-auto p-6 border shadow-lg rounded-lg backdrop-blur-3xl">
 		<h1 class="text-2xl font-semibold mb-6 text-center">Mot de passe oublié</h1>
 
 		<form method="POST" action="?/forgotPassword" use:forgotEnhance class="space-y-6">

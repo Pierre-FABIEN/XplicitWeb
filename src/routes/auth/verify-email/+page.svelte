@@ -17,34 +17,36 @@
 	const { form: verifyData, enhance: verifyEnhance, message: verifyMessage } = verifyCodeForm;
 </script>
 
-<div class="mx-auto mt-8 max-w-lg">
-	<h1 class="text-2xl font-semibold mb-4">Vérifiez votre adresse email</h1>
-	<p class="mb-4 text-gray-700">Nous avons envoyé un code de 8 chiffres à {data.email}.</p>
+<div class="w-screen h-screen ccc">
+	<div class="w-[300px] mx-auto p-6 border shadow-lg rounded-lg backdrop-blur-3xl">
+		<h1 class="text-2xl font-semibold mb-4">Vérifiez votre adresse email</h1>
+		<p class="mb-4 text-gray-700">Nous avons envoyé un code de 8 chiffres à {data.email}.</p>
 
-	<form method="post" use:verifyEnhance action="?/verifyCode" class="space-y-4">
-		<div>
-			<Form.Field name="code" form={verifyCodeForm}>
-				<Form.Control>
-					<Form.Label>Code de vérification</Form.Label>
-					<Input
-						id="form-verify-code"
-						name="code"
-						type="text"
-						placeholder="Entrez le code"
-						bind:value={$verifyData.code}
-						required
-					/>
-				</Form.Control>
-				<Form.FieldErrors />
-			</Form.Field>
-		</div>
+		<form method="post" use:verifyEnhance action="?/verifyCode" class="space-y-4">
+			<div>
+				<Form.Field name="code" form={verifyCodeForm}>
+					<Form.Control>
+						<Form.Label>Code de vérification</Form.Label>
+						<Input
+							id="form-verify-code"
+							name="code"
+							type="text"
+							placeholder="Entrez le code"
+							bind:value={$verifyData.code}
+							required
+						/>
+					</Form.Control>
+					<Form.FieldErrors />
+				</Form.Field>
+			</div>
 
-		<div class="mt-6">
-			<Button type="submit" class="w-full">Vérifier</Button>
-		</div>
-	</form>
+			<div class="mt-6">
+				<Button type="submit" class="w-full">Vérifier</Button>
+			</div>
+		</form>
 
-	<form method="post" use:enhance action="?/resendCode" class="mt-4">
-		<Button type="submit" class="w-full" variant="ghost">Renvoyer le code</Button>
-	</form>
+		<form method="post" use:enhance action="?/resendCode" class="mt-4">
+			<Button type="submit" class="w-full" variant="ghost">Renvoyer le code</Button>
+		</form>
+	</div>
 </div>

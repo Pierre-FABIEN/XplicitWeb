@@ -50,12 +50,7 @@ export const cart = writable<CartState>({
  * total = products subtotal + product tax + shipping cost + shipping tax
  */
 function recalcFinalTotal(c: CartState) {
-	const shippingCost = Number.isFinite(c.shippingCost) ? c.shippingCost : 0;
-	const shippingTax = Number.isFinite(c.shippingTax) ? c.shippingTax : 0;
-	const subtotal = Number.isFinite(c.subtotal) ? c.subtotal : 0;
-	const tax = Number.isFinite(c.tax) ? c.tax : 0;
-
-	c.total = parseFloat((subtotal + tax + shippingCost + shippingTax).toFixed(2));
+	c.total = calcTotal(c.subtotal, c.tax, c.shippingCost, c.shippingTax);
 	c.lastModified = Date.now();
 }
 
@@ -79,10 +74,25 @@ export const setCart = (
 		tax,
 		shippingCost,
 		shippingTax,
-		total: parseFloat((subtotal + tax + shippingCost + shippingTax).toFixed(2)),
+		total: calcTotal(subtotal, tax, shippingCost, shippingTax),
 		lastModified: Date.now()
 	});
 };
+
+function calcTotal(subtotal = 0, tax = 0, shippingCost = 0, shippingTax = 0) {
+	console.log(
+		'subtotal:',
+		subtotal,
+		'tax:',
+		tax,
+		'shippingCost:',
+		shippingCost,
+		'shippingTax:',
+		shippingTax
+	);
+
+	return parseFloat((subtotal + tax + shippingCost + shippingTax).toFixed(2));
+}
 
 /**
  * Updates only the shipping cost (HT). We recalc shippingTax if needed.
@@ -230,8 +240,7 @@ export const removeFromCart = (productId: string, customId?: string) => {
 export const updateCartItemQuantity = (productId: string, quantity: number, customId?: string) => {
 	cart.update((currentCart) => {
 		const itemIndex = currentCart.items.findIndex(
-			(item) =>
-				item.product.id === productId && (!customId || item.custom?.some((c) => c.id === customId))
+			(item) => item.product.id === productId && (!customId || item.custom?.id === customId)
 		);
 
 		if (itemIndex === -1) {
