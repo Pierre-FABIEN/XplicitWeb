@@ -1,6 +1,8 @@
 <script lang="ts">
 	import maplibregl from 'maplibre-gl';
 	import { MapLibre, Marker, Popup } from 'svelte-maplibre-gl';
+	import * as Popover from '$shadcn/popover/index.js';
+	import * as Command from '$shadcn/command/index.js';
 	import { loadStripe } from '@stripe/stripe-js';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
@@ -20,6 +22,9 @@
 		setShippingCostHT,
 		updateCartItemQuantity
 	} from '$lib/store/Data/cartStore';
+	import { tick } from 'svelte';
+	import { Check, ChevronsUpDown } from 'lucide-svelte';
+	import { cn } from 'tailwind-variants';
 
 	let { data } = $props();
 
@@ -41,6 +46,21 @@
 	let showMap = $state(false);
 
 	let totalTTC = $derived($cartStore.subtotal + $cartStore.tax + shippingCost);
+	let addressOpen = $state(false);
+	let addressTriggerRef = $state<HTMLButtonElement>(null!);
+
+	/* Selected address prettified for the trigger button */
+	const addressLabel = $derived(
+		selectedAddressObj
+			? `${selectedAddressObj.first_name} ${selectedAddressObj.last_name} — ${selectedAddressObj.street}, ${selectedAddressObj.city}`
+			: 'Sélectionnez une adresse…'
+	);
+
+	/** Closes the popover and restores focus (a11y) */
+	function closeAddressPopover() {
+		addressOpen = false;
+		tick().then(() => addressTriggerRef?.focus());
+	}
 
 	// Offset pour la popup (optionnel, reprenant l’exemple maplibre)
 	let offset = $state(24);
@@ -332,27 +352,66 @@
 				<h2 class="text-2xl font-bold mb-4 mt-5">Vos adresses</h2>
 				<div class="clc">
 					{#if data?.addresses?.length > 0}
-						{#each data.addresses as address}
-							<button
-								class="border rounded p-2 m-2 min-w-[400px]
-								{selectedAddressId === address.id ? 'border-green-400' : ''}"
-								onclick={() => selectAddress(address.id)}
-							>
-								<p class="text-sm text-muted-foreground">
-									Destinataire: {address.first_name}
-									{address.last_name}
-								</p>
-								<p class="text-sm text-muted-foreground">Rue: {address.street}</p>
-								<p class="text-sm text-muted-foreground">Ville: {address.city}</p>
-								<p class="text-sm text-muted-foreground">Code postal: {address.zip}</p>
-								<p class="text-sm text-muted-foreground">Pays: {address.country}</p>
-							</button>
-						{/each}
+						<Popover.Root bind:open={addressOpen}>
+							<!-- Trigger ------------------------------------------------- -->
+							<Popover.Trigger bind:ref={addressTriggerRef}>
+								{#snippet child({ props })}
+									<Button
+										variant="outline"
+										class="w-[100%] justify-between"
+										{...props}
+										role="combobox"
+										aria-expanded={addressOpen}
+										aria-controls="address-combobox"
+									>
+										{addressLabel}
+										<ChevronsUpDown class="opacity-50" />
+									</Button>
+								{/snippet}
+							</Popover.Trigger>
+
+							<!-- Content ------------------------------------------------- -->
+							<Popover.Content class="w-[340px] p-0" id="address-combobox">
+								<Command.Root>
+									<Command.Input placeholder="Rechercher…" />
+
+									<Command.List>
+										<Command.Empty>Aucun résultat.</Command.Empty>
+
+										<Command.Group value="addresses">
+											{#each data.addresses as address (address.id)}
+												<Command.Item
+													value={`${address.first_name} ${address.last_name} ${address.street} ${address.city} ${address.country}`}
+													onSelect={() => {
+														selectAddress(address.id);
+														closeAddressPopover();
+													}}
+													class="flex flex-col items-start px-2 py-1.5 gap-0.5"
+												>
+													<Check
+														class={`address-${selectedAddressId === address.id ? 'selected' : 'unselected'} ${true ? 'shrink-0' : ''}`}
+													/>
+
+													<span class="text-sm">
+														{address.first_name}
+														{address.last_name}
+													</span>
+													<span class="text-xs text-muted-foreground">
+														{address.street}, {address.city}
+														{address.zip}, {address.country}
+													</span>
+												</Command.Item>
+											{/each}
+										</Command.Group>
+									</Command.List>
+								</Command.Root>
+							</Popover.Content>
+						</Popover.Root>
 					{:else}
 						<p class="text-gray-600">Aucune adresse renseignée.</p>
 					{/if}
 
-					<Button class="mt-4">
+					<Button class="mt-4 w-[100%]">
 						<a data-sveltekit-preload-data href="/auth/settings/address">Créer une adresse</a>
 					</Button>
 				</div>
@@ -570,7 +629,7 @@
 							bind:value={$createPaymentData.servicePointExtraShopRef}
 						/>
 
-						<Button type="submit">Payer</Button>
+						<Button type="submit" class="w-full">Payer</Button>
 					</form>
 				</div>
 			</div>

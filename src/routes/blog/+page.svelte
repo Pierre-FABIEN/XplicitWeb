@@ -123,10 +123,10 @@
 <!-- =============================
 ✅ TEMPLATE
 ============================= -->
-<main bind:this={containerRef} class="container mx-auto px-4 py-6">
+<main bind:this={containerRef} class="w-full h-full mx-auto px-4 py-6">
 	<h1 class="title text-4xl font-bold mb-8">Liste des Articles</h1>
 
-	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 		{#each posts as article}
 			<div
 				class="article-card group relative bg-white border border-gray-200
@@ -142,7 +142,7 @@
 						class="mt-2 text-lg font-semibold text-gray-900
 						       group-hover:text-indigo-800 transition-colors duration-300"
 					>
-						<a href={`/articles/${article.slug}`}>
+						<a href={`/blog/${article.slug}`}>
 							{article.title}
 						</a>
 					</h3>
