@@ -108,29 +108,27 @@
 	}
 </script>
 
-<div class="container mx-auto p-6">
+<div class="w-[100vw] h-[100%] mx-auto px-4 py-6 space-y-6 ccc my-10">
 	<div class="max-w-xl border mx-auto rounded-md p-6">
 		<h2 class="text-2xl font-semibold mb-4">Créer une adresse</h2>
 
 		{#if addressSuggestions.length > 0}
 			<h2 class="text-xl font-semibold mb-4">Suggestions d'adresse</h2>
 			<div class="space-y-4">
-				<ScrollArea class="h-[200px]">
-					{#each addressSuggestions as suggestion}
-						<Card class="border border-gray-300 shadow-md hover:shadow-lg transition-shadow p-1">
-							<div class="rcb">
-								{suggestion.formatted}
-								<Button
-									class="cursor-pointer"
-									onclick={() => selectSuggestion(suggestion)}
-									onkeydown={(event) => event.code === 'Enter' && selectSuggestion(suggestion)}
-								>
-									Selectionner
-								</Button>
-							</div>
-						</Card>
-					{/each}
-				</ScrollArea>
+				{#each addressSuggestions as suggestion}
+					<Card class="border border-gray-300 shadow-md hover:shadow-lg transition-shadow p-1">
+						<div class="rcb">
+							{suggestion.formatted}
+							<Button
+								class="cursor-pointer"
+								onclick={() => selectSuggestion(suggestion)}
+								onkeydown={(event) => event.code === 'Enter' && selectSuggestion(suggestion)}
+							>
+								Selectionner
+							</Button>
+						</div>
+					</Card>
+				{/each}
 			</div>
 		{/if}
 
