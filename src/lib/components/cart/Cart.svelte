@@ -10,7 +10,7 @@
 	import { ShoppingCart } from 'lucide-svelte';
 	import Input from '../shadcn/ui/input/input.svelte';
 	import { goto, invalidateAll } from '$app/navigation';
-	import { mode } from 'mode-watcher';
+	import { colorMode } from '$lib/store/colorMode';
 
 	let { data } = $props();
 
@@ -21,7 +21,7 @@
 	});
 
 	let sidebarOpen: boolean = $state(false);
-	let currentMode = $derived($mode);
+	let currentMode = $derived($colorMode);
 	let isNativeOrder: boolean = $state(false);
 
 	$effect(() => {
@@ -283,9 +283,5 @@
 		border: 1px solid white;
 		background-color: rgba(255, 255, 255, 0.2);
 		border-radius: 10px;
-	}
-
-	.bulletCart {
-		font-family: 'Raleway Variable', sans-serif;
 	}
 </style>

@@ -78,6 +78,7 @@ function setSceneColors(page: string, currentMode: 'light' | 'dark') {
 export function updateCameraPosition(pathname: string): void {
 	const currentMode: 'light' | 'dark' = browser ? get(colorMode) : 'light';
 	const mobile = get(isSmall);
+	console.log(currentMode, 'currentMode');
 
 	let x = 0,
 		y = 0.3,

@@ -1,10 +1,11 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-
+import tailwindcss from '@tailwindcss/vite';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('vite').UserConfig} */
 const config = {
 	plugins: [
+		tailwindcss(),
 		sveltekit(),
 	],
 

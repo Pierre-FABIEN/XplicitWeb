@@ -3,7 +3,7 @@
 	import '@fontsource-variable/raleway';
 	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
-	import { mode } from 'mode-watcher';
+	import { colorMode } from '$lib/store/colorMode';
 	import { Power } from 'lucide-svelte';
 	import { updateCameraPosition } from '$lib/store/animationTimelineStore';
 	import { isSmall } from '$lib/store/mediaStore';
@@ -18,7 +18,7 @@
 	let strokeColor = $state('black');
 
 	$effect(() => {
-		strokeColor = $mode === 'light' ? '#00021a' : '#00c2ff';
+		strokeColor = $colorMode === 'light' ? '#00021a' : '#00c2ff';
 	});
 
 	const onHoverButton = () => {

@@ -3,8 +3,7 @@
 	import Cart from '$lib/components/cart/Cart.svelte';
 	import Options from '$lib/components/navigation/Options.svelte';
 	import { goto } from '$app/navigation';
-	import { mode } from 'mode-watcher';
-
+	import { colorMode } from '$lib/store/colorMode';
 	import * as Drawer from '$shadcn/drawer';
 	import { Button, buttonVariants } from '$shadcn/button';
 	import { Menu } from 'lucide-svelte';
@@ -22,7 +21,7 @@
 
 	/* ── State ────────────────────────────────────────────────────────────── */
 	let drawerOpen = $state(false); // bound to Drawer.Root
-	let strokeColor = $derived($mode === 'light' ? '#00021a' : '#00c2ff');
+	let strokeColor = $derived($colorMode === 'light' ? '#00021a' : '#00c2ff');
 
 	/* ── Helpers ──────────────────────────────────────────────────────────── */
 	function navigateAndClose(href: string) {

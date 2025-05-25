@@ -1,7 +1,6 @@
 <script lang="ts">
-	import type { WithElementRef } from 'bits-ui';
-	import type { HTMLAttributes } from 'svelte/elements';
-	import { cn } from '$components/shadcn/utils.js';
+	import { cn, type WithElementRef } from "$lib/components/shadcn/utils.js";
+	import type { HTMLAttributes } from "svelte/elements";
 
 	let {
 		ref = $bindable(null),
@@ -13,7 +12,8 @@
 
 <span
 	bind:this={ref}
-	class={cn('ml-auto text-xs tracking-widest text-muted-foreground', className)}
+	data-slot="command-shortcut"
+	class={cn("text-muted-foreground ml-auto text-xs tracking-widest", className)}
 	{...restProps}
 >
 	{@render children?.()}
