@@ -1,29 +1,50 @@
-import lucia from 'lucia-auth';
-import { prisma } from '$lib/server';
-import { sveltekit } from 'lucia/middleware';
-import { PrismaAdapter } from '@lucia-auth/adapter-prisma';
+// -----------------------------------------------------------------------------
+// src/lib/server/lucia.ts  – Initialisation Lucia v3 + Prisma adapter
+// -----------------------------------------------------------------------------
 
-export const auth = lucia({
-	adapter: PrismaAdapter(prisma),
-	env: import.meta.env.DEV ? 'DEV' : 'PROD',
-	middleware: sveltekit(),
-	providers: {
-		google: {
-			clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-			clientSecret: import.meta.env.VITE_GOOGLE_CLIENT_SECRET,
-			redirectUri: import.meta.env.VITE_GOOGLE_REDIRECT_URI,
-			scope: ['profile', 'email']
+import { Lucia } from 'lucia';
+import { PrismaAdapter } from '@lucia-auth/adapter-prisma';
+import { prisma } from '$lib/server';
+import { dev } from '$app/environment';
+
+/* Le PrismaAdapter attend les *modèles* Prisma à utiliser */
+const adapter = new PrismaAdapter(prisma.session, prisma.user);
+
+export const auth = new Lucia(adapter, {
+	env: dev ? 'DEV' : 'PROD',
+
+	/* Cookies de session “rolling” */
+	sessionCookie: {
+		attributes: {
+			secure: !dev,
+			httpOnly: true,
+			sameSite: 'lax',
+			path: '/'
 		}
 	},
-	transformDatabaseUser: (userData) => {
-		return {
-			userId: userData.id,
-			email: userData.email,
-			username: userData.username,
-			googleId: userData.googleId,
-			emailVerified: userData.emailVerified
+
+	/* Mapping → données sérialisées côté client */
+	getUserAttributes: (dbUser) => ({
+		userId: dbUser.id,
+		email: dbUser.email,
+		username: dbUser.username,
+		role: dbUser.role,
+		isMfaEnabled: dbUser.isMfaEnabled
+	})
+});
+
+/* ---------------------- Déclarations globales Lucia ------------------------ */
+declare module 'lucia' {
+	interface Register {
+		Lucia: typeof auth;
+		DatabaseUserAttributes: {
+			id: number;
+			email: string;
+			username: string;
+			role: string;
+			isMfaEnabled: boolean;
 		};
 	}
-});
+}
 
 export type Auth = typeof auth;

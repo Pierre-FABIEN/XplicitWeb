@@ -1,68 +1,80 @@
-import { RefillingTokenBucket } from '$lib/lucia/rate-limit';
-import {
-	validateSessionToken,
-	setSessionTokenCookie,
-	deleteSessionTokenCookie
-} from '$lib/lucia/session';
-import { sequence } from '@sveltejs/kit/hooks';
+// -----------------------------------------------------------------------------
+// hooks.server.ts — Rate-limit + Auth + “pending order” + DevTools guard
+// -----------------------------------------------------------------------------
+
 import type { Handle } from '@sveltejs/kit';
+import { sequence } from '@sveltejs/kit/hooks';
+
+import { RefillingTokenBucket } from '$lib/lucia/rate-limit';
+import { auth } from '$lib/lucia';
 import { createPendingOrder, findPendingOrder } from '$lib/prisma/order/prendingOrder';
 
-// Rate limiting setup
+/* -------- Guard pour les requêtes DevTools Chrome -------- */
+const devtoolsGuard: Handle = async ({ event, resolve }) => {
+	if (event.url.pathname.startsWith('/.well-known/appspecific/')) {
+		return new Response(null, { status: 204 });
+	}
+	return resolve(event);
+};
+
+/* -------- Rate-limit -------- */
 const bucket = new RefillingTokenBucket<string>(100, 1);
-
-const rateLimitHandle: Handle = async ({ event, resolve }) => {
-	const clientIP = event.request.headers.get('X-Forwarded-For') ?? '';
-	if (!bucket.consume(clientIP, 1)) {
+function clientIP(event: Parameters<Handle>[0]['event']): string {
+	const xff = event.request.headers.get('x-forwarded-for');
+	if (xff) return xff.split(',')[0]!.trim();
+	try {
+		return event.getClientAddress();
+	} catch {
+		return '127.0.0.1';
+	}
+}
+const rateLimit: Handle = async ({ event, resolve }) => {
+	if (!bucket.consume(clientIP(event), 1))
 		return new Response('Too many requests', { status: 429 });
-	}
 	return resolve(event);
 };
 
-// Authentication and pending order setup
+/* -------- Cookie guard -------- */
+const cookieGuard: Handle = async ({ event, resolve }) => {
+	if (/[^\u0020-\u007E]/.test(event.request.headers.get('cookie') ?? ''))
+		return new Response('Bad Cookie', { status: 400 });
+	return resolve(event);
+};
+
+/* -------- Auth (Lucia v3) -------- */
 const authHandle: Handle = async ({ event, resolve }) => {
-	const token = event.cookies.get('session') ?? null;
+	const sid = event.cookies.get(auth.sessionCookieName);
+	let session: import('lucia').Session | null = null;
+	let user: import('lucia').User | null = null;
 
-	// Initialisation des locaux
-	event.locals.session = null;
-	event.locals.user = null;
-	event.locals.role = null;
-	event.locals.pendingOrder = null;
+	if (sid) {
+		const res = await auth.validateSession(sid);
+		session = res.session;
+		user = res.user;
 
-	if (!token) {
-		// Pas de token, utilisateur non connecté
-		return resolve(event);
-	}
-
-	const { session, user } = await validateSessionToken(token);
-
-	if (session) {
-		// Prolonge la durée de vie du cookie
-		setSessionTokenCookie(event, token, session.expiresAt);
-
-		// Mettre à jour les informations locales
-		event.locals.session = session;
-		event.locals.user = user;
-		event.locals.role = user.role;
-		event.locals.isMfaEnabled = user.isMfaEnabled;
-
-		// Récupérer ou créer la commande en attente
-		let pendingOrder = await findPendingOrder(user.id);
-
-		//console.log(pendingOrder, 'pendingOrderffffffffffff');
-
-		if (!pendingOrder) {
-			pendingOrder = await createPendingOrder(user.id);
+		if (session && session.fresh) {
+			const c = auth.createSessionCookie(session.id);
+			event.cookies.set(c.name, c.value, { path: '.', ...c.attributes });
 		}
-
-		event.locals.pendingOrder = pendingOrder;
-	} else {
-		// Token invalide ou expiré
-		deleteSessionTokenCookie(event);
+		if (!session) {
+			const blank = auth.createBlankSessionCookie();
+			event.cookies.set(blank.name, blank.value, { path: '.', ...blank.attributes });
+		}
 	}
+
+	event.locals = {
+		...event.locals,
+		session,
+		user,
+		role: user?.role ?? null,
+		isMfaEnabled: user?.isMfaEnabled ?? false,
+		pendingOrder: user
+			? ((await findPendingOrder(user.id)) ?? (await createPendingOrder(user.id)))
+			: null
+	};
 
 	return resolve(event);
 };
 
-// Combined handle
-export const handle = sequence(rateLimitHandle, authHandle);
+/* -------- Chaîne finale -------- */
+export const handle: Handle = sequence(devtoolsGuard, cookieGuard, rateLimit, authHandle);
