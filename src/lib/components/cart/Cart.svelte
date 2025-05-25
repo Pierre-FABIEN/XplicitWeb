@@ -108,9 +108,9 @@
 				</button>
 			</Sheet.Trigger>
 
-			<Sheet.Content class="p-4 pr-10 min-w-fit">
+			<Sheet.Content class="p-0 min-w-fit">
 				<SmoothScrollBar>
-					<div class="p-10">
+					<div class="p-4">
 						<h2 class="text-2xl font-bold mb-4">Votre panier</h2>
 
 						{#if isNativeOrder}

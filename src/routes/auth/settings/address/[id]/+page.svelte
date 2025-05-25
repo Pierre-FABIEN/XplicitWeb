@@ -102,7 +102,7 @@
 	}
 </script>
 
-<div class="mx-auto mt-8 max-w-lg">
+<div class="w-[100vw] h-[100%] mx-auto px-4 py-6 space-y-6 ccc my-10">
 	<h1 class="text-4xl font-s text-[#fe3d00]">Update the address</h1>
 
 	{#if addressSuggestions.length > 0}
