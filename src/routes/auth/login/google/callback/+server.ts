@@ -1,12 +1,12 @@
 import { google } from '$lib/lucia/oauth';
 import { ObjectParser } from '@pilcrowjs/object-parser';
 import { getUserFromGoogleId, getUserFromEmail } from '$lib/lucia/user';
-import { createSession, generateSessionToken, setSessionTokenCookie } from '$lib/lucia/session';
 import { decodeIdToken } from 'arctic';
+import { auth } from '$lib/lucia';
+import { createUserWithGoogleOAuth } from '$lib/prisma/user/user';
 
 import type { RequestEvent } from './$types';
 import type { OAuth2Tokens } from 'arctic';
-import { createUserWithGoogleOAuth } from '$lib/prisma/user/user';
 
 export async function GET(event: RequestEvent): Promise<Response> {
 	const storedState = event.cookies.get('google_oauth_state') ?? null;
@@ -33,31 +33,24 @@ export async function GET(event: RequestEvent): Promise<Response> {
 	const picture = claimsParser.getString('picture');
 	const email = claimsParser.getString('email');
 
-	// Vérifier si l'utilisateur existe déjà par Google ID
 	let user = await getUserFromGoogleId(googleId);
 	if (!user) {
-		// Vérifier si l'utilisateur existe déjà par email
 		user = await getUserFromEmail(email);
 
 		if (!user) {
-			// Créer un nouvel utilisateur OAuth
 			console.log(googleId, email, name, picture, "Création d'un nouvel utilisateur OAuth");
-
 			user = await createUserWithGoogleOAuth(googleId, email, name, picture);
 		}
 	}
 
-	// Créer une session pour l'utilisateur
-	const sessionToken = generateSessionToken();
-	const session = await createSession(
-		sessionToken,
-		user.id,
-		{ twoFactorVerified: false },
-		'google'
-	);
-	setSessionTokenCookie(event, sessionToken, session.expiresAt);
+	// ✅ Lucia: créer session + cookie standard
+	const session = await auth.createSession(user.id, { twoFactorVerified: false });
+	const sessionCookie = auth.createSessionCookie(session.id);
+	event.cookies.set(sessionCookie.name, sessionCookie.value, {
+		path: '/',
+		...sessionCookie.attributes
+	});
 
-	// Rediriger vers la page d'accueil
 	return new Response(null, {
 		status: 302,
 		headers: {

@@ -30,7 +30,7 @@ model User {
   emailVerified             Boolean                    @default(false)
   isMfaEnabled              Boolean                    @default(false)
   totpKey                   Bytes?
-  googleId                  String?                    
+  googleId                  String?                    @unique
   name                      String?
   picture                   String?
   role                      Role                       @default(CLIENT)
