@@ -30,7 +30,7 @@ model User {
   emailVerified             Boolean                    @default(false)
   isMfaEnabled              Boolean                    @default(false)
   totpKey                   Bytes?
-  googleId                  String?                    @unique
+  googleId                  String?                    
   name                      String?
   picture                   String?
   role                      Role                       @default(CLIENT)
@@ -44,12 +44,18 @@ model User {
 }
 
 model Session {
-  id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  user              User     @relation(fields: [userId], references: [id])
-  userId            String   @db.ObjectId
+  /// ID écrit par Lucia (nanoid) → plus de contrainte ObjectId
+  id                String   @id @map("_id")
+
+  /// relation vers l’utilisateur
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+
   expiresAt         DateTime
   twoFactorVerified Boolean  @default(false)
   oauthProvider     String?
+
+  @@index([userId])
 }
 
 model EmailVerificationRequest {

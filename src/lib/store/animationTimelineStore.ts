@@ -5,12 +5,10 @@ import { browser } from '$app/environment';
 
 import { BackgroundColorStore, LightColorStore } from './BackgroundColorStore';
 import { color1Tweened, color2Tweened } from './lightColorStore';
-import { colorMode } from '$lib/store/colorMode';
+import { mode } from 'mode-watcher';
 import { isSmall } from './mediaStore';
 
-/* -------------------------------------------------------------------------- */
-/*    1.  Stores tweenés (position/cible caméra)                              */
-/* -------------------------------------------------------------------------- */
+/* ---------- 1. Stores tweenés (position & cible) ------------------------ */
 const opts = { duration: 500, easing: cubicOut };
 
 export const cameraX = tweened(0, opts);
@@ -21,7 +19,6 @@ export const targetX = tweened(0, opts);
 export const targetY = tweened(0.5, opts);
 export const targetZ = tweened(0, opts);
 
-/** Tableaux directement utilisables dans la scène */
 export const cameraPosition = derived(
 	[cameraX, cameraY, cameraZ],
 	([$x, $y, $z]) => [$x, $y, $z] as const
@@ -31,16 +28,10 @@ export const cameraTarget = derived(
 	([$x, $y, $z]) => [$x, $y, $z] as const
 );
 
-/* -------------------------------------------------------------------------- */
-/*    2.  Mise à jour couleurs (light/dark)                                   */
-/* -------------------------------------------------------------------------- */
-function setSceneColors(page: string, currentMode: 'light' | 'dark') {
-	type Hex = `#${string}`;
-
-	const palettes: Record<
-		string,
-		{ dark: { light: Hex; bg: Hex }; light: { light: Hex; bg: Hex } }
-	> = {
+/* ---------- 2. Palettes light/dark ------------------------------------- */
+type Hex = `#${string}`;
+const palettes: Record<string, { dark: { light: Hex; bg: Hex }; light: { light: Hex; bg: Hex } }> =
+	{
 		'/': {
 			dark: { light: '#000000', bg: '#00021a' },
 			light: { light: '#75deff', bg: '#00c2ff' }
@@ -63,6 +54,7 @@ function setSceneColors(page: string, currentMode: 'light' | 'dark') {
 		}
 	};
 
+function setSceneColors(page: string, currentMode: 'light' | 'dark') {
 	const p = palettes[page] ?? palettes['/'];
 	const { light, bg } = p[currentMode];
 
@@ -72,13 +64,10 @@ function setSceneColors(page: string, currentMode: 'light' | 'dark') {
 	color2Tweened.set(bg);
 }
 
-/* -------------------------------------------------------------------------- */
-/*    3.  Fonction publique                                                   */
-/* -------------------------------------------------------------------------- */
+/* ---------- 3. API publique -------------------------------------------- */
 export function updateCameraPosition(pathname: string): void {
-	const currentMode: 'light' | 'dark' = browser ? get(colorMode) : 'light';
+	const currentMode: 'light' | 'dark' = browser ? (mode.current ?? 'light') : 'light';
 	const mobile = get(isSmall);
-	console.log(currentMode, 'currentMode');
 
 	let x = 0,
 		y = 0.3,
@@ -88,42 +77,35 @@ export function updateCameraPosition(pathname: string): void {
 		tz = 0;
 
 	switch (pathname) {
-		case '/': {
+		case '/':
 			if (mobile) ([x, y, z] = [1, 1, 1]), ([tx, ty, tz] = [0, 0.7, 0]);
 			else ([x, y, z] = [0.8, 0.3, 1.6]), ([tx, ty, tz] = [-0.7, 0.5, 0]);
 			break;
-		}
-		case '/atelier': {
+		case '/atelier':
 			[x, y, z] = [1, 1, 1];
 			[tx, ty, tz] = [0, 0.5, 0];
 			break;
-		}
-		case '/catalogue': {
+		case '/catalogue':
 			if (mobile) ([x, y, z] = [1, 1, 1]), ([tx, ty, tz] = [0, 0.7, 0]);
 			else ([x, y, z] = [1, 1, 1]), ([tx, ty, tz] = [0, 0.6, 0]);
 			break;
-		}
-		case '/blog': {
+		case '/blog':
 			[x, y, z] = [0.8, 0.5, 0.8];
 			[tx, ty, tz] = [-0.8, 0.5, 0];
 			break;
-		}
-		case '/contact': {
+		case '/contact':
 			[x, y, z] = [0.5, 2, 0.5];
 			[tx, ty, tz] = [0.5, 1, 0];
 			break;
-		}
-		// default : valeurs déjà initialisées
 	}
 
-	/* 1️⃣  met à jour la palette en fonction du mode (light/dark) */
+	/* Palette couleurs selon le thème */
 	setSceneColors(pathname, currentMode);
 
-	/* 2️⃣  met à jour les tweened */
+	/* Mise à jour des tweened */
 	cameraX.set(x);
 	cameraY.set(y);
 	cameraZ.set(z);
-
 	targetX.set(tx);
 	targetY.set(ty);
 	targetZ.set(tz);

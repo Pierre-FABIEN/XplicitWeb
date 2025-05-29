@@ -1,5 +1,4 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { deleteSessionTokenCookie, invalidateSession } from '$lib/lucia/session';
 
 import type { Actions, PageServerLoadEvent, RequestEvent } from './$types';
 

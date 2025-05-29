@@ -9,6 +9,8 @@
 
 	let { data } = $props();
 
+	console.log(data);
+
 	// Initialiser le formulaire Superform avec Zod
 	const loginForm = superForm(data?.loginForm ?? {}, {
 		validators: zodClient(loginSchema),

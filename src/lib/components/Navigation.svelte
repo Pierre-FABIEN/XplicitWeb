@@ -3,10 +3,10 @@
 	import Cart from '$lib/components/cart/Cart.svelte';
 	import Options from '$lib/components/navigation/Options.svelte';
 	import { goto } from '$app/navigation';
-	import { colorMode } from '$lib/store/colorMode';
 	import * as Drawer from '$shadcn/drawer';
 	import { Button, buttonVariants } from '$shadcn/button';
 	import { Menu } from 'lucide-svelte';
+	import { mode } from 'mode-watcher';
 
 	/* ── Data  ────────────────────────────────────────────────────────────── */
 	let { data } = $props();
@@ -21,7 +21,7 @@
 
 	/* ── State ────────────────────────────────────────────────────────────── */
 	let drawerOpen = $state(false); // bound to Drawer.Root
-	let strokeColor = $derived($colorMode === 'light' ? '#00021a' : '#00c2ff');
+	let strokeColor = $derived($mode === 'light' ? '#00021a' : '#00c2ff');
 
 	/* ── Helpers ──────────────────────────────────────────────────────────── */
 	function navigateAndClose(href: string) {

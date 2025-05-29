@@ -115,7 +115,7 @@
 						</Tooltip.Root>
 					</Tooltip.Provider>
 				</Sheet.Trigger>
-				<Sheet.Content side="left">
+				<Sheet.Content side="left" class="ccs w-[80%] pt-10">
 					<form
 						method="POST"
 						enctype="multipart/form-data"

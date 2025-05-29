@@ -1,101 +1,121 @@
-import { fail, redirect } from '@sveltejs/kit';
+// -----------------------------------------------------------------------------
+// src/routes/auth/signup/+page.server.ts
+// -----------------------------------------------------------------------------
+
+import { redirect, fail } from '@sveltejs/kit';
+import { superValidate } from 'sveltekit-superforms';
+import { zod } from 'sveltekit-superforms/adapters';
+
+import { signupSchema } from '$lib/schema/auth/signupSchema';
+
 import { checkEmailAvailability } from '$lib/prisma/email/email';
 import { createUser } from '$lib/lucia/user';
-import { RefillingTokenBucket } from '$lib/lucia/rate-limit';
-import { createSession, generateSessionToken, setSessionTokenCookie } from '$lib/lucia/session';
+
 import {
 	createEmailVerificationRequest,
 	sendVerificationEmail,
 	setEmailVerificationRequestCookie
 } from '$lib/lucia/email-verification';
 
-import type { SessionFlags } from '$lib/lucia/session';
-import type { Actions, PageServerLoadEvent, RequestEvent } from './$types';
-import { superValidate } from 'sveltekit-superforms';
-import { signupSchema } from '$lib/schema/auth/signupSchema';
-import { zod } from 'sveltekit-superforms/adapters';
+import { RefillingTokenBucket } from '$lib/lucia/rate-limit';
+import { auth } from '$lib/lucia'; // ⬅️  on récupère l’instance Lucia
 
-const ipBucket = new RefillingTokenBucket<string>(3, 10);
+import type { PageServerLoad, Actions } from './$types';
 
-export const load = async (event: PageServerLoadEvent) => {
-	if (event.locals.session !== null && event.locals.user !== null) {
-		if (!event.locals.user.emailVerified) {
-			return redirect(302, '/auth/verify-email');
-		}
-		if (!event.locals.user.googleId) {
-			if (!event.locals.user.registered2FA) {
-						if (event.locals.user.isMfaEnabled) {
-		return redirect(302, '/auth/2fa/setup');
-	}
-			}
-			if (!event.locals.session.twoFactorVerified) {
-				if (event.locals.user.isMfaEnabled) {
-					return redirect(302, '/auth/2fa');
-				}
-			}
+/* -------------------------------------------------------------------------- */
+/*  Helpers                                                                   */
+/* -------------------------------------------------------------------------- */
+
+const ipBucket = new RefillingTokenBucket<string>(3, 10); // 3 req / 10 s
+
+function log(...args: unknown[]) {
+	console.log('[signup]', ...args);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  PAGE LOAD                                                                 */
+/* -------------------------------------------------------------------------- */
+
+export const load: PageServerLoad = async (event) => {
+	log('load() start', {
+		isAuthenticated: !!event.locals.user,
+		user: event.locals.user?.id
+	});
+
+	/* Redirections rapides si déjà connecté -------------------------------- */
+	if (event.locals.session && event.locals.user) {
+		const u = event.locals.user;
+
+		if (!u.emailVerified) return redirect(302, '/auth/verify-email');
+		if (!u.googleId && u.isMfaEnabled) {
+			if (!u.registered2FA) return redirect(302, '/auth/2fa/setup');
+			if (!event.locals.session.twoFactorVerified) return redirect(302, '/auth/2fa');
 		}
 		return redirect(302, '/auth/');
 	}
 
+	/* Formulaire vierge ----------------------------------------------------- */
 	const form = await superValidate(zod(signupSchema));
-
+	log('load() done → empty form');
 	return { form };
 };
 
+/* -------------------------------------------------------------------------- */
+/*  ACTIONS                                                                   */
+/* -------------------------------------------------------------------------- */
+
 export const actions: Actions = {
-	signup: async (event: RequestEvent) => {
-		const clientIP = event.request.headers.get('X-Forwarded-For');
+	signup: async (event) => {
+		log('POST /signup hit');
 
-		// Vérifier le rate limit
-		if (clientIP !== null && !ipBucket.check(clientIP, 1)) {
-			return fail(429, {
-				message: 'Too many requests'
-			});
-		}
+		/* ---------- 1. Rate-limit pré-check -------------------------------- */
+		const ip = event.request.headers.get('x-forwarded-for') ?? 'localhost';
+		if (!ipBucket.check(ip, 1)) return fail(429, { message: 'Too many requests' });
 
-		// Valider le formulaire avec Superform et Zod
+		/* ---------- 2. Validation Zod + Superforms ------------------------- */
 		const form = await superValidate(event, zod(signupSchema));
+		log('Form received', form.data);
 
-		// Si la validation échoue, retourner les erreurs
-		if (!form.valid) {
-			return fail(400, { form });
-		}
+		if (!form.valid) return fail(400, { form });
 
-		// Vérifier si l'email est déjà utilisé
-		const emailAvailable = await checkEmailAvailability(form.data.email);
-		if (!emailAvailable) {
+		/* ---------- 3. Email déjà utilisé ? -------------------------------- */
+		if (!(await checkEmailAvailability(form.data.email))) {
 			form.errors.email = ['Cet email est déjà utilisé.'];
 			return fail(400, { form });
 		}
 
-		// Consommer le token du rate limit
-		if (clientIP !== null && !ipBucket.consume(clientIP, 1)) {
-			return fail(429, {
-				message: 'Too many requests'
-			});
-		}
+		/* Consommation réelle du token RL */
+		if (!ipBucket.consume(ip, 1)) return fail(429, { message: 'Too many requests' });
 
-		// Créer l'utilisateur
+		/* ---------- 4. Création de l’utilisateur --------------------------- */
 		const user = await createUser(form.data.email, form.data.username, form.data.password);
+		log('✅  User created', { id: user.id, email: user.email });
 
-		// Créer la demande de vérification de l'email
-		const emailVerificationRequest = await createEmailVerificationRequest(user.id, user.email);
+		/* ---------- 5. Demande de vérification e-mail ---------------------- */
+		const evReq = await createEmailVerificationRequest(user.id, user.email);
+		try {
+			await sendVerificationEmail(evReq.email, evReq.code);
+			log('📧  Verification e-mail sent →', evReq.email);
+		} catch (err) {
+			log('⚠️  FAILED to send verification e-mail', err);
+		}
+		setEmailVerificationRequestCookie(event, evReq);
 
-		sendVerificationEmail(emailVerificationRequest.email, emailVerificationRequest.code);
-		setEmailVerificationRequestCookie(event, emailVerificationRequest);
+		/* ---------- 6. Création session + cookie Lucia --------------------- */
+		// 👉 on laisse Lucia s’en occuper
+		const session = await auth.createSession(user.id, {
+			twoFactorVerified: false // flags stockés dans la session
+		});
+		const cookie = auth.createSessionCookie(session.id);
 
-		// Créer une session pour l'utilisateur
-		const sessionFlags: SessionFlags = {
-			twoFactorVerified: false
-		};
+		event.cookies.set(cookie.name, cookie.value, {
+			path: '/',
+			...cookie.attributes
+		});
+		log('✅  Session created', { sid: session.id });
 
-		const sessionToken = generateSessionToken();
-
-		const session = await createSession(sessionToken, user.id, sessionFlags);
-
-		setSessionTokenCookie(event, sessionToken, session.expiresAt);
-
-		// Rediriger vers la configuration de la 2FA
-		redirect(302, '/auth/2fa/setup');
+		/* ---------- 7. Redirection finale ---------------------------------- */
+		log('Redirect to 2FA setup');
+		throw redirect(303, '/auth/2fa/setup');
 	}
 };
