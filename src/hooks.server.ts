@@ -8,12 +8,14 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { RefillingTokenBucket } from '$lib/lucia/rate-limit';
 import { auth } from '$lib/lucia';
 import { createPendingOrder, findPendingOrder } from '$lib/prisma/order/prendingOrder';
+import { getUserByIdPrisma } from '$lib/prisma/user/user'; // 👈 nécessaire pour refresh
+
+import { redirect } from '@sveltejs/kit';
 
 /* -------------------------------------------------------------------------- */
 /*  Utils                                                                     */
 /* -------------------------------------------------------------------------- */
 
-/** Petit helper de log — préfixé pour filtrer facilement dans la console */
 function log(...args: unknown[]) {
 	console.log('[hooks]', ...args);
 }
@@ -76,6 +78,14 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		session = res.session;
 		user = res.user;
 
+		// 🔁 Re-fetch l'utilisateur depuis la DB si une session existe
+		if (user && session) {
+			const freshUser = await getUserByIdPrisma(user.id);
+			if (freshUser) {
+				user = { ...user, ...freshUser }; // overwrite emailVerified et autres
+			}
+		}
+
 		if (session && session.fresh) {
 			const c = auth.createSessionCookie(session.id);
 			event.cookies.set(c.name, c.value, { path: '/', ...c.attributes });
@@ -101,12 +111,13 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	log('Incoming request', event.url.pathname, '| session id =', session?.id ?? '∅');
 	log('locals', {
 		user: user?.id ?? null,
+		emailVerified: user?.emailVerified ?? null,
 		role: event.locals.role,
 		pendingOrder: !!event.locals.pendingOrder
 	});
 
-	// 👇 Redirection automatique si l’email est déjà vérifié et qu’on accède encore à /auth/verify-email
-	if (user?.emailVerified && event.url.pathname === '/auth/verify-email') {
+	// Redirection bloquante si email déjà vérifié
+	if (user?.emailVerified === true && event.url.pathname === '/auth/verify-email') {
 		log('Email déjà vérifié → redirect to /auth/');
 		throw redirect(302, '/auth/');
 	}

@@ -314,3 +314,22 @@ export async function latestUsers() {
 		totpKey: user.totpKey ? Array.from(user.totpKey) : null // Uint8Array -> tableau
 	}));
 }
+
+/**
+ * Récupère un utilisateur par son ID depuis Prisma.
+ * Renvoie `null` s’il n’existe pas.
+ */
+
+export async function getUserByIdPrisma(id: string) {
+	return await prisma.user.findUnique({
+		where: { id },
+		select: {
+			id: true,
+			email: true,
+			emailVerified: true,
+			username: true,
+			role: true,
+			isMfaEnabled: true
+		}
+	});
+}
