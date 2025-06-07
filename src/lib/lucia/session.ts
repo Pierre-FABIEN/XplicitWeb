@@ -11,6 +11,7 @@ import {
 	updateSessionExpiry,
 	verifyTwoFactorForSession
 } from '$lib/prisma/session/sessions';
+import { auth } from '.';
 
 export interface SessionFlags {
 	twoFactorVerified: boolean;
@@ -136,24 +137,31 @@ export async function invalidateUserSessions(userId: string): Promise<void> {
 
 // Définit le cookie du token de session
 export function setSessionTokenCookie(event: RequestEvent, token: string, expiresAt: Date): void {
-	event.cookies.set('session', token, {
-		httpOnly: true,
-		path: '/',
-		secure: import.meta.env.PROD,
-		sameSite: 'lax',
-		expires: expiresAt
-	});
+	event.cookies.set(
+		auth.sessionCookieName, // ✅ même nom que Lucia
+		token,
+		{
+			httpOnly: true,
+			path: '/',
+			secure: import.meta.env.PROD,
+			sameSite: 'lax',
+			expires: expiresAt
+		}
+	);
 }
-
 // Supprime le cookie du token de session
 export function deleteSessionTokenCookie(event: RequestEvent): void {
-	event.cookies.set('session', '', {
-		httpOnly: true,
-		path: '/',
-		secure: import.meta.env.PROD,
-		sameSite: 'lax',
-		maxAge: -1
-	});
+	event.cookies.set(
+		auth.sessionCookieName, // ✅
+		'',
+		{
+			httpOnly: true,
+			path: '/',
+			secure: import.meta.env.PROD,
+			sameSite: 'lax',
+			maxAge: -1
+		}
+	);
 }
 
 // Marque la session comme vérifiée pour la 2FA

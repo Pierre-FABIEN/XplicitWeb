@@ -1,16 +1,16 @@
 // -----------------------------------------------------------------------------
-// hooks.server.ts — Rate-limit + Auth + “pending order” + DevTools + Email guards
+// hooks.server.ts — Rate-limit + Auth + pendingOrder + DevTools + Email guards
 // -----------------------------------------------------------------------------
 
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
+import { redirect } from '@sveltejs/kit';
 
 import { RefillingTokenBucket } from '$lib/lucia/rate-limit';
 import { auth } from '$lib/lucia';
-import { createPendingOrder, findPendingOrder } from '$lib/prisma/order/prendingOrder';
-import { getUserByIdPrisma } from '$lib/prisma/user/user'; // 👈 nécessaire pour refresh
 
-import { redirect } from '@sveltejs/kit';
+import { createPendingOrder, findPendingOrder } from '$lib/prisma/order/prendingOrder';
+import { getUserByIdPrisma } from '$lib/prisma/user/user';
 
 /* -------------------------------------------------------------------------- */
 /*  Utils                                                                     */
@@ -64,39 +64,58 @@ const cookieGuard: Handle = async ({ event, resolve }) => {
 };
 
 /* -------------------------------------------------------------------------- */
-/*  Auth (Lucia v3)                                                           */
+/*  Auth (Lucia v3) – avec enrichissement utilisateur                         */
 /* -------------------------------------------------------------------------- */
 
 const authHandle: Handle = async ({ event, resolve }) => {
+	/* 1. Debug : header cookie brut */
+	log('Cookie header reçu ➜', event.request.headers.get('cookie') ?? '(none)');
+
+	/* 2. Récupération du SID */
 	const sid = event.cookies.get(auth.sessionCookieName);
+	log('Lucia attend ➜', auth.sessionCookieName, '| valeur ➜', sid ?? '(undefined)');
 
 	let session: import('lucia').Session | null = null;
 	let user: import('lucia').User | null = null;
 
 	if (sid) {
+		/* 3. Validation côté Lucia */
 		const res = await auth.validateSession(sid);
 		session = res.session;
 		user = res.user;
+		log('validateSession ➜', res);
 
-		// 🔁 Re-fetch l'utilisateur depuis la DB si une session existe
-		if (user && session) {
-			const freshUser = await getUserByIdPrisma(user.id);
-			if (freshUser) {
-				user = { ...user, ...freshUser }; // overwrite emailVerified et autres
+		/* 3.1  Rafraîchissement de l’utilisateur depuis la BDD
+		       → on récupère les colonnes manquantes (emailVerified, 2FA, etc.) */
+		if (user) {
+			const fresh = await getUserByIdPrisma(user.id);
+			if (fresh) {
+				user = {
+					...user,
+					emailVerified: fresh.emailVerified,
+					registered2FA: fresh.totpKey !== null,
+					isMfaEnabled: fresh.isMfaEnabled,
+					role: fresh.role
+				};
 			}
 		}
 
-		if (session && session.fresh) {
+		/* 3.2  Rotation du cookie si session fraîche */
+		if (session?.fresh) {
 			const c = auth.createSessionCookie(session.id);
 			event.cookies.set(c.name, c.value, { path: '/', ...c.attributes });
 		}
 
+		/* 3.3  Session invalide → blank cookie */
 		if (!session) {
 			const blank = auth.createBlankSessionCookie();
 			event.cookies.set(blank.name, blank.value, { path: '/', ...blank.attributes });
 		}
+	} else {
+		log('Aucun SID trouvé ➜ utilisateur anonyme');
 	}
 
+	/* 4. locals enrichis */
 	event.locals = {
 		...event.locals,
 		session,
@@ -108,18 +127,12 @@ const authHandle: Handle = async ({ event, resolve }) => {
 			: null
 	};
 
-	log('Incoming request', event.url.pathname, '| session id =', session?.id ?? '∅');
-	log('locals', {
-		user: user?.id ?? null,
-		emailVerified: user?.emailVerified ?? null,
-		role: event.locals.role,
-		pendingOrder: !!event.locals.pendingOrder
-	});
+	log('locals.user ➜', user ? `${user.id} | emailVerified=${user.emailVerified}` : null);
+	log('locals.session ➜', session?.id ?? null);
 
-	// Redirection bloquante si email déjà vérifié
-	if (user?.emailVerified === true && event.url.pathname === '/auth/verify-email') {
-		log('Email déjà vérifié → redirect to /auth/');
-		throw redirect(302, '/auth/');
+	/* 5. Ex. : verrou access settings (redir. centralisée si tu veux) */
+	if (event.url.pathname.startsWith('/auth/settings') && !user) {
+		throw redirect(302, '/auth/login');
 	}
 
 	return resolve(event);

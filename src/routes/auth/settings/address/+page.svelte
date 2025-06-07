@@ -43,7 +43,7 @@
 </script>
 
 <!-- ─────────────────────────── Layout ───────────────────────────── -->
-<section class="w-[100vw] h-[100vh] mx-auto px-4 py-6 space-y-6 ccc">
+<section class="w-[100vw] h-[100%] mx-auto px-4 py-6 space-y-6 ccc">
 	<!-- Top bar: title + add button -->
 	<div class="max-w-[300px]">
 		<h2 class="text-xl font-semibold">Addresses</h2>
