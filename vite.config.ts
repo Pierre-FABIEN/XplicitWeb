@@ -9,6 +9,10 @@ const config = {
 		sveltekit(),
 	],
 
+	optimizeDeps: {
+		exclude: ['@node-rs/argon2', '@node-rs/bcrypt']
+	},
+
 	resolve: {
 		preserveSymlinks: true
 	},

@@ -72,12 +72,14 @@ const cookieGuard: Handle = async ({ event, resolve }) => {
 const authHandle: Handle = async ({ event, resolve }) => {
 	/* 1. Extraction du cookie session */
 	const sid = event.cookies.get(auth.sessionCookieName);
+	console.log('[hooks] Session ID from cookie (sid):', sid);
 
 	let session: Session | null = null;
 	let user: User | null = null;
 
 	if (sid) {
 		const res = await auth.validateSession(sid);
+		console.log('[hooks] Raw result from auth.validateSession:', res);
 		const luciaSession = res.session;
 		const luciaUser = res.user;
 

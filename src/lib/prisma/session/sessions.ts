@@ -46,10 +46,12 @@ export const deleteSessionsByUserId = async (userId: string) => {
 };
 
 export const verifyTwoFactorForSession = async (sessionId: string) => {
-	return await prisma.session.update({
+	const updatedSession = await prisma.session.update({
 		where: { id: sessionId },
 		data: { twoFactorVerified: true }
 	});
+	console.log('[prisma/session] Session mise à jour pour 2FA:', updatedSession);
+	return updatedSession;
 };
 
 export const resetTwoFactorVerificationForUser = async (userId: string) => {

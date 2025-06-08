@@ -3,6 +3,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { getUserTOTPKey } from '$lib/lucia/user';
 import { verifyTOTP } from '@oslojs/otp';
 import { setSessionAs2FAVerified } from '$lib/lucia/session';
+import { auth } from '$lib/lucia';
 
 import type { Actions, RequestEvent } from './$types';
 import { zod } from 'sveltekit-superforms/adapters';
@@ -29,7 +30,7 @@ export const load = async (event: RequestEvent) => {
 };
 
 export const actions: Actions = {
-	totp: async ({ request, locals }) => {
+	totp: async ({ request, locals, cookies }) => {
 		const formData = await request.formData();
 
 		const form = await superValidate(formData, zod(totpCodeSchema));
@@ -88,6 +89,22 @@ export const actions: Actions = {
 
 		totpBucket.reset(locals.user.id);
 		await setSessionAs2FAVerified(locals.session.id);
+
+		// Invalider la session actuelle de Lucia
+		await auth.invalidateSession(locals.session.id);
+
+		// Créer une nouvelle session pour l'utilisateur avec twoFactorVerified à true
+		const newSession = await auth.createSession(locals.user.id, { twoFactorVerified: true });
+
+		// Définir le nouveau cookie de session
+		const newSessionCookie = auth.createSessionCookie(newSession.id);
+		cookies.set(newSessionCookie.name, newSessionCookie.value, {
+			path: '/',
+			...newSessionCookie.attributes
+		});
+
+		console.log('locals.session.twoFactorVerified avant redirection (nouvelle session):', true); // Devrait toujours être true pour la nouvelle session
+
 		redirect(302, '/auth/');
 	}
 };
