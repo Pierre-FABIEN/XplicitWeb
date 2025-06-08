@@ -10,6 +10,7 @@ import { renderSVG } from 'uqr';
 
 import type { Actions, RequestEvent } from './$types';
 import { zod } from 'sveltekit-superforms/adapters';
+import { auth } from '$lib/lucia';
 
 const totpUpdateBucket = new RefillingTokenBucket<number>(3, 60 * 10);
 
@@ -21,7 +22,7 @@ export const load = async (event: RequestEvent) => {
 		return redirect(302, '/auth/verify-email');
 	}
 
-	console.log(event.locals.user, 'slkrjghxkgujh');
+	console.log(event.locals, 'slkrjghxkgujh SETUP');
 	if (!event.locals.user.googleId || !event.locals.user.isMfaEnabled) {
 		if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
 			if (event.locals.user.isMfaEnabled) {
@@ -122,13 +123,18 @@ export const actions: Actions = {
 
 			console.log('Marquage de la session comme vérifiée pour la 2FA...');
 			await setSessionAs2FAVerified(event.locals.session.id);
+
 			console.log('Session marquée comme vérifiée.');
+			event.locals.session.twoFactorVerified = true;
+			// après avoir mis à jour la BDD et marqué la session comme vérifiée
+			event.locals.user.isMfaEnabled = true;
+			event.locals.user.registered2FA = true;
 		} catch (error) {
 			console.error('Erreur lors de la mise à jour de la clé TOTP ou de la session:', error);
 			return fail(500, { message: 'Internal server error', form });
 		}
 
 		console.log('Redirection vers la page des codes de récupération.');
-		redirect(302, '/auth/recovery-code');
+		return redirect(303, '/auth/recovery-code');
 	}
 };

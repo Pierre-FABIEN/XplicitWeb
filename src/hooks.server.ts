@@ -8,9 +8,12 @@ import { redirect } from '@sveltejs/kit';
 
 import { RefillingTokenBucket } from '$lib/lucia/rate-limit';
 import { auth } from '$lib/lucia';
+import type { User } from '$lib/lucia/user';
+import type { Session } from '$lib/lucia/session';
 
 import { createPendingOrder, findPendingOrder } from '$lib/prisma/order/prendingOrder';
 import { getUserByIdPrisma } from '$lib/prisma/user/user';
+import { findSessionById } from '$lib/prisma/session/sessions';
 
 /* -------------------------------------------------------------------------- */
 /*  Utils                                                                     */
@@ -50,7 +53,6 @@ const rateLimit: Handle = async ({ event, resolve }) => {
 		log('Rate-limit BLOCK', ip);
 		return new Response('Too many requests', { status: 429 });
 	}
-	log('Rate-limit OK', ip);
 	return resolve(event);
 };
 
@@ -64,73 +66,111 @@ const cookieGuard: Handle = async ({ event, resolve }) => {
 };
 
 /* -------------------------------------------------------------------------- */
-/*  Auth (Lucia v3) – avec enrichissement utilisateur                         */
+/*  Auth (Lucia v3)                                                           */
 /* -------------------------------------------------------------------------- */
 
 const authHandle: Handle = async ({ event, resolve }) => {
-	/* 1. Debug : header cookie brut */
-	log('Cookie header reçu ➜', event.request.headers.get('cookie') ?? '(none)');
-
-	/* 2. Récupération du SID */
+	/* 1. Extraction du cookie session */
 	const sid = event.cookies.get(auth.sessionCookieName);
-	log('Lucia attend ➜', auth.sessionCookieName, '| valeur ➜', sid ?? '(undefined)');
 
-	let session: import('lucia').Session | null = null;
-	let user: import('lucia').User | null = null;
+	let session: Session | null = null;
+	let user: User | null = null;
 
 	if (sid) {
-		/* 3. Validation côté Lucia */
 		const res = await auth.validateSession(sid);
-		session = res.session;
-		user = res.user;
-		log('validateSession ➜', res);
+		const luciaSession = res.session;
+		const luciaUser = res.user;
 
-		/* 3.1  Rafraîchissement de l’utilisateur depuis la BDD
-		       → on récupère les colonnes manquantes (emailVerified, 2FA, etc.) */
-		if (user) {
-			const fresh = await getUserByIdPrisma(user.id);
-			if (fresh) {
+		console.log('[hooks] Lucia Session object from validateSession:', luciaSession);
+		console.log('[hooks] Lucia User object from validateSession:', luciaUser);
+
+		/* Rafraîchissement des données utilisateur */
+		if (luciaUser) {
+			const freshUser = await getUserByIdPrisma(luciaUser.id);
+			if (freshUser) {
+				console.log('fresh user data in hooks:', freshUser);
+				const registered2FA = freshUser.totpKey !== null;
+				console.log('calculated registered2FA in hooks:', registered2FA);
 				user = {
-					...user,
-					emailVerified: fresh.emailVerified,
-					registered2FA: fresh.totpKey !== null,
-					isMfaEnabled: fresh.isMfaEnabled,
-					role: fresh.role
+					id: freshUser.id,
+					email: freshUser.email,
+					username: freshUser.username,
+					emailVerified: freshUser.emailVerified,
+					registered2FA: registered2FA,
+					googleId: freshUser.googleId,
+					name: freshUser.name,
+					picture: freshUser.picture,
+					role: freshUser.role,
+					isMfaEnabled: freshUser.isMfaEnabled,
+					totpKey: freshUser.totpKey
 				};
 			}
 		}
 
-		/* 3.2  Rotation du cookie si session fraîche */
+		/* Rafraîchissement des données de session */
+		if (luciaSession) {
+			const dbSession = await findSessionById(luciaSession.id);
+			console.log('[hooks] dbSession from findSessionById:', dbSession);
+			if (dbSession) {
+				session = {
+					id: dbSession.id,
+					userId: dbSession.userId,
+					expiresAt: dbSession.expiresAt,
+					twoFactorVerified: dbSession.twoFactorVerified,
+					oauthProvider: dbSession.oauthProvider,
+					fresh: luciaSession.fresh
+				};
+				console.log('[hooks] Mapped session object for event.locals:', session);
+			}
+		}
+
+		/* Rotation du cookie si session fraîche */
 		if (session?.fresh) {
 			const c = auth.createSessionCookie(session.id);
 			event.cookies.set(c.name, c.value, { path: '/', ...c.attributes });
 		}
 
-		/* 3.3  Session invalide → blank cookie */
+		/* Session invalide ➜ effacement */
 		if (!session) {
 			const blank = auth.createBlankSessionCookie();
 			event.cookies.set(blank.name, blank.value, { path: '/', ...blank.attributes });
 		}
-	} else {
-		log('Aucun SID trouvé ➜ utilisateur anonyme');
 	}
 
-	/* 4. locals enrichis */
+	/* 2. Enrichissement de locals */
 	event.locals = {
 		...event.locals,
 		session,
 		user,
 		role: user?.role ?? null,
 		isMfaEnabled: user?.isMfaEnabled ?? false,
+		registered2FA: user?.registered2FA ?? false,
 		pendingOrder: user
 			? ((await findPendingOrder(user.id)) ?? (await createPendingOrder(user.id)))
 			: null
 	};
 
-	log('locals.user ➜', user ? `${user.id} | emailVerified=${user.emailVerified}` : null);
-	log('locals.session ➜', session?.id ?? null);
+	console.log('[hooks] event.locals.session before redirect logic:', event.locals.session);
+	console.log('[hooks] event.locals.user before redirect logic:', event.locals.user);
 
-	/* 5. Ex. : verrou access settings (redir. centralisée si tu veux) */
+	/* 3. Redirections MFA */
+	if (user && user.isMfaEnabled) {
+		// A. Secret pas encore enregistré ➜ /auth/2fa/setup
+		if (!user.registered2FA) {
+			if (!event.url.pathname.startsWith('/auth/2fa/setup')) {
+				throw redirect(302, '/auth/2fa/setup');
+			}
+		}
+
+		// B. Secret enregistré mais session non vérifiée ➜ /auth/2fa
+		else if (session && !session.twoFactorVerified) {
+			if (!event.url.pathname.startsWith('/auth/2fa')) {
+				throw redirect(302, '/auth/2fa');
+			}
+		}
+	}
+
+	/* 4. Exemple : page settings accessible seulement connecté */
 	if (event.url.pathname.startsWith('/auth/settings') && !user) {
 		throw redirect(302, '/auth/login');
 	}

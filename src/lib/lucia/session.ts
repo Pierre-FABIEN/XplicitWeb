@@ -21,7 +21,8 @@ export interface Session extends SessionFlags {
 	id: string;
 	expiresAt: Date;
 	userId: string;
-	oauthProvider?: string;
+	oauthProvider: string | null;
+	fresh?: boolean;
 }
 
 type SessionValidationResult = { session: Session; user: User } | { session: null; user: null };
@@ -49,12 +50,12 @@ export async function createSession(
 			userId,
 			expiresAt,
 			twoFactorVerified: flags.twoFactorVerified,
-			oauthProvider: oauthProvider ?? undefined
+			oauthProvider: oauthProvider ?? null
 		});
 
 		return {
 			...session,
-			oauthProvider: session.oauthProvider ?? undefined
+			oauthProvider: session.oauthProvider
 		};
 	} catch (error) {
 		console.error('Erreur lors de la création de la session :', error);
@@ -90,6 +91,7 @@ export async function validateSessionToken(token: string): Promise<SessionValida
 			expiresAt: result.expiresAt,
 			twoFactorVerified: result.twoFactorVerified,
 			oauthProvider: result.oauthProvider
+			// fresh: result.fresh // Retiré, car fresh vient de Lucia, pas de Prisma
 		};
 
 		const user: User = {
@@ -102,14 +104,19 @@ export async function validateSessionToken(token: string): Promise<SessionValida
 			name: result.user.name,
 			picture: result.user.picture,
 			role: result.user.role,
-			order: result.user.order,
-			isMfaEnabled: result.user.isMfaEnabled
+			isMfaEnabled: result.user.isMfaEnabled,
+			totpKey: result.user.totpKey
 		};
 
 		return { session, user };
-	} catch (error) {
-		console.error('Erreur lors de la validation de la session :', error);
-		return { session: null, user: null };
+	} catch (error: unknown) {
+		if (error instanceof Error) {
+			console.error('Erreur lors de la validation de la session :', error);
+			return { session: null, user: null };
+		} else {
+			console.error('Erreur inconnue lors de la validation de la session :', error);
+			return { session: null, user: null };
+		}
 	}
 }
 
@@ -117,8 +124,12 @@ export async function validateSessionToken(token: string): Promise<SessionValida
 export async function invalidateSession(sessionId: string): Promise<void> {
 	try {
 		await deleteSession(sessionId);
-	} catch (error) {
-		console.warn("Erreur lors de l'invalidation de la session :", error.message);
+	} catch (error: unknown) {
+		if (error instanceof Error) {
+			console.warn("Erreur lors de l'invalidation de la session :", error.message);
+		} else {
+			console.warn("Erreur inconnue lors de l'invalidation de la session :", error);
+		}
 	}
 }
 
@@ -130,8 +141,15 @@ export async function invalidateUserSessions(userId: string): Promise<void> {
 
 	try {
 		await deleteSessionsByUserId(userId);
-	} catch (error) {
-		console.warn("Erreur lors de l'invalidation des sessions de l'utilisateur :", error.message);
+	} catch (error: unknown) {
+		if (error instanceof Error) {
+			console.warn("Erreur lors de l'invalidation des sessions de l'utilisateur :", error.message);
+		} else {
+			console.warn(
+				"Erreur inconnue lors de l'invalidation des sessions de l'utilisateur : ",
+				error
+			);
+		}
 	}
 }
 
@@ -180,7 +198,25 @@ export async function handleGoogleOAuth(
 	let user = await findUserByGoogleId(googleId);
 
 	if (!user) {
-		user = await createUserWithGoogleOAuth({ googleId, email, name, picture });
+		const createdUser: any = await createUserWithGoogleOAuth(googleId, email, name, picture);
+		user = {
+			id: createdUser.id,
+			email: createdUser.email,
+			username: createdUser.username,
+			emailVerified: createdUser.emailVerified,
+			registered2FA: createdUser.totpKey !== null,
+			googleId: createdUser.googleId,
+			name: createdUser.name,
+			picture: createdUser.picture,
+			role: createdUser.role,
+			isMfaEnabled: createdUser.isMfaEnabled,
+			totpKey: createdUser.totpKey
+		};
+	}
+
+	if (user === null) {
+		console.error("L'objet utilisateur est null après le traitement OAuth Google.");
+		throw new Error("Échec de la récupération ou de la création de l'utilisateur après OAuth.");
 	}
 
 	const token = generateSessionToken();

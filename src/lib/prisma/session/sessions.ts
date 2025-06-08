@@ -6,7 +6,7 @@ export const createSessionInDB = async (data: {
 	userId: string;
 	expiresAt: Date;
 	twoFactorVerified: boolean;
-	oauthProvider?: string;
+	oauthProvider?: string | null;
 }) => {
 	return await prisma.session.create({
 		data

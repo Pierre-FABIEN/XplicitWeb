@@ -1,4 +1,6 @@
+import { decrypt, encrypt } from '$lib/lucia/encryption';
 import { prisma } from '$lib/server';
+import { Role } from '@prisma/client';
 
 export const findUserWithRecoveryCode = async (userId: string) => {
 	return await prisma.user.findUnique({
@@ -50,7 +52,7 @@ export const createUserInDatabase = async (
 	username: string,
 	passwordHash: string,
 	recoveryCode: string,
-	role: string,
+	role: Role,
 	emailVerified: boolean,
 	totpKey: string | null,
 	googleId?: string | null
@@ -101,6 +103,7 @@ export const getUserByEmailPrisma = async (email: string) => {
 			name: true,
 			picture: true,
 			isMfaEnabled: true,
+			role: true,
 			createdAt: true
 		}
 	});
@@ -119,7 +122,9 @@ export const getUserByGoogleIdPrisma = async (googleId: string) => {
 			googleId: true,
 			name: true,
 			picture: true,
-			createdAt: true // Ajout de la date de création
+			isMfaEnabled: true,
+			role: true,
+			createdAt: true
 		}
 	});
 };
@@ -162,14 +167,23 @@ export const updateUserRecoveryCode = async (userId: string, encryptedCode: stri
 	});
 };
 
-export const updateUserTotpKey = async (userId: string, encryptedKey: string) => {
-	return await prisma.user.update({
+// lib/prisma/user/user.ts (ou équivalent)
+// DAO : écrit la clé et passe isMfaEnabled à true
+// lib/lucia/user.ts
+export async function updateUserTOTPKey(userId: string, key: Uint8Array) {
+	const encryptedKey = encrypt(key);
+
+	const result = await prisma.user.update({
 		where: { id: userId },
 		data: {
-			totpKey: encryptedKey
-		}
+			totpKey: encryptedKey,
+			isMfaEnabled: true
+		},
+		select: { id: true, totpKey: true }
 	});
-};
+
+	console.log('[updateUserTOTPKey] wrote:', result);
+}
 
 export const getUserTotpKey = async (
 	userId: string
@@ -187,7 +201,7 @@ export const getUserPasswordHashPrisma = async (whereClause: {
 	id?: string;
 	email?: string;
 }): Promise<{ passwordHash: string | null } | null> => {
-	return await prisma.user.findUnique({
+	return await prisma.user.findFirst({
 		where: whereClause,
 		select: {
 			passwordHash: true // Récupère uniquement le hash du mot de passe
@@ -224,9 +238,14 @@ export const getAllUsers = async () => {
 		});
 
 		return users;
-	} catch (error) {
-		console.error('Error fetching users:', error);
-		throw new Error('Could not fetch users');
+	} catch (error: unknown) {
+		if (error instanceof Error) {
+			console.error('Error fetching users:', error);
+			throw new Error('Could not fetch users');
+		} else {
+			console.error('Unknown error fetching users:', error);
+			throw new Error('An unknown error occurred');
+		}
 	} finally {
 		await prisma.$disconnect();
 	}
@@ -251,12 +270,16 @@ export async function deleteUser(userId: string) {
 		});
 
 		return { success: true };
-	} catch (error) {
-		throw new Error('Error deleting user: ' + error.message);
+	} catch (error: unknown) {
+		if (error instanceof Error) {
+			throw new Error('Error deleting user: ' + error.message);
+		} else {
+			throw new Error('An unknown error occurred during user deletion.');
+		}
 	}
 }
 
-export const updateUserRole = async (id: string, role: string) => {
+export const updateUserRole = async (id: string, role: Role) => {
 	try {
 		const updatedUser = await prisma.user.update({
 			where: { id },
@@ -264,9 +287,14 @@ export const updateUserRole = async (id: string, role: string) => {
 		});
 		console.log('User role updated:', updatedUser);
 		return updatedUser;
-	} catch (error) {
-		console.error('Error updating user role:', error);
-		throw error;
+	} catch (error: unknown) {
+		if (error instanceof Error) {
+			console.error('Error updating user role:', error);
+			throw error;
+		} else {
+			console.error('Unknown error updating user role:', error);
+			throw new Error('An unknown error occurred during role update.');
+		}
 	} finally {
 		await prisma.$disconnect();
 	}
@@ -317,7 +345,7 @@ export async function latestUsers() {
 
 /**
  * Récupère un utilisateur par son ID depuis Prisma.
- * Renvoie `null` s’il n’existe pas.
+ * Renvoie `null` s'il n'existe pas.
  */
 
 export async function getUserByIdPrisma(id: string) {
@@ -329,7 +357,37 @@ export async function getUserByIdPrisma(id: string) {
 			emailVerified: true,
 			username: true,
 			role: true,
-			isMfaEnabled: true
+			isMfaEnabled: true,
+			totpKey: true,
+			googleId: true,
+			name: true,
+			picture: true
 		}
 	});
+}
+
+export async function getUserRecoverCode(userId: string): Promise<string> {
+	const user = await getUserRecoveryAndGoogleId(userId);
+	if (!user) throw new Error('User not found.');
+	return user.recoveryCode || '';
+}
+
+export async function getUserTOTPKey(userId: string): Promise<Uint8Array | null> {
+	const user = await getUserTotpKey(userId);
+
+	return user && user.totpKey ? decrypt(user.totpKey) : null;
+}
+
+export async function getUserPasswordHash(userId?: string, email?: string): Promise<string | null> {
+	if (!userId && !email) throw new Error('Missing user identifier: userId or email is required.');
+	const whereClause = userId ? { id: userId } : { email };
+	const user = await prisma.user.findFirst({
+		where: whereClause,
+		select: {
+			passwordHash: true // Récupère uniquement le hash du mot de passe
+			// Ajoutez createdAt: true si nécessaire
+		}
+	});
+	if (!user) throw new Error('User not found.');
+	return user.passwordHash;
 }

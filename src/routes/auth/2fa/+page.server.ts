@@ -17,9 +17,9 @@ export const load = async (event: RequestEvent) => {
 		return redirect(302, '/auth/verify-email');
 	}
 	if (!event.locals.user.registered2FA) {
-				if (event.locals.user.isMfaEnabled) {
-		return redirect(302, '/auth/2fa/setup');
-	}
+		if (event.locals.user.isMfaEnabled) {
+			return redirect(302, '/auth/2fa/setup');
+		}
 	}
 	if (event.locals.session.twoFactorVerified) {
 		return redirect(302, '/auth/');
@@ -77,7 +77,12 @@ export const actions: Actions = {
 				return fail(400, { message: 'Invalid TOTP code', form });
 			}
 			console.log('Vérification TOTP réussie.');
-		} catch (error) {
+		} catch (error: unknown) {
+			if (error instanceof Error) {
+				console.error('Erreur lors de la vérification TOTP :', error.message);
+			} else {
+				console.error('Erreur inconnue lors de la vérification TOTP :', error);
+			}
 			return fail(500, { message: 'Internal server error', form });
 		}
 
