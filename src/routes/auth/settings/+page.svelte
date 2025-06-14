@@ -182,7 +182,7 @@
 				</section>
 			{/if}
 			<!-- Section pour le code de récupération -->
-			{#if data.recoveryCode !== null}
+			<!-- {#if data.recoveryCode !== null}
 				<section class="mb-8">
 					{#if data.recoveryCode !== null}
 						<h2 class="text-xl font-semibold mb-4">Code de récupération</h2>
@@ -195,7 +195,7 @@
 						{/await}
 					{/if}
 				</section>
-			{/if}
+			{/if} -->
 		</div>
 	</div>
 </section>
