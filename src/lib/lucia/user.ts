@@ -15,7 +15,6 @@ import {
 	updateUserEmail,
 	updateUserPasswordPrisma,
 	updateUserRecoveryCode,
-	updateUserTOTPKey,
 	verifyUserEmail
 } from '$lib/prisma/user/user';
 
