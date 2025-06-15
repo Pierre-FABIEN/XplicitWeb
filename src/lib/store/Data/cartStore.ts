@@ -296,7 +296,7 @@ export function resetCart() {
 		return c;
 	});
 
-	toast.success('Commande validée, panier vidé.');
+	// toast.success('Commande validée, panier vidé.');
 }
 
 // Debug

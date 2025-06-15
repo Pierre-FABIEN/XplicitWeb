@@ -3,7 +3,8 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
-		"dev": "concurrently \"vite dev --port 1000\" \"npm run prettier:watch\" ",
+		"clean:vite": "rimraf node_modules/.vite",
+		"dev": "npm run clean:vite && concurrently \"vite dev --port 1000\" \"npm run prettier:watch\"",
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -56,6 +57,7 @@
 		"prettier-plugin-svelte": "^3.4.0",
 		"prettier-plugin-tailwindcss": "^0.6.11",
 		"prisma": "5.22.0",
+		"rimraf": "^6.0.1",
 		"sass-embedded": "^1.89.0",
 		"svelte": "^5.33.2",
 		"svelte-check": "^4.2.1",

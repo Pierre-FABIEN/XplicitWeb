@@ -6,16 +6,22 @@
 	import '@fontsource-variable/open-sans';
 	import '@fontsource-variable/raleway';
 
-	import { cart, removeFromCart, updateCartItemQuantity } from '$lib/store/Data/cartStore';
+	import {
+		cart,
+		removeFromCart,
+		updateCartItemQuantity,
+		resetCart
+	} from '$lib/store/Data/cartStore';
 	import { Badge } from '$shadcn/badge';
 	import Button from '$shadcn/button/button.svelte';
 	import * as Sheet from '$shadcn/sheet/index.js';
 	import { Trash, ShoppingCart } from 'lucide-svelte';
 	import Input from '../shadcn/ui/input/input.svelte';
+	import { toast } from 'svelte-sonner';
 
 	import { goto, invalidateAll } from '$app/navigation';
 
-	/*  👉 le store ‘mode’  */
+	/*  👉 le store 'mode'  */
 	import { mode as modeStore } from 'mode-watcher';
 
 	/* ------------------------------------------------------------------
@@ -64,11 +70,16 @@
 
 	async function handleSignOut() {
 		const res = await fetch('/auth/signout', { method: 'POST' });
-		if (!res.ok) return console.error('Échec déconnexion');
+		if (!res.ok) {
+			toast.error('Échec de la déconnexion');
+			return;
+		}
 
+		resetCart();
 		user = null;
 		await invalidateAll();
 		sidebarOpen = false;
+		toast.success('Vous avez été déconnecté.');
 		goto('/');
 	}
 </script>

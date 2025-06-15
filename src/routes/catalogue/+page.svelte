@@ -103,7 +103,7 @@
 							>
 								<h3
 									class="titleHome text-xl font-semibold"
-									style="-webkit-text-stroke: 2px {product.colorProduct}"
+									style="-webkit-text-stroke: 1px {product.colorProduct}"
 								>
 									{product.name}
 								</h3>
@@ -165,9 +165,9 @@
 		font-family: 'Open Sans Variable', sans-serif;
 		font-style: italic;
 		text-align: left;
-		font-size: 57px;
+		font-size: 50px;
 		margin-bottom: 12px;
-		-webkit-text-stroke: 2px black;
+		-webkit-text-stroke: 1px black;
 		color: transparent;
 		text-transform: uppercase;
 		font-weight: 900;
