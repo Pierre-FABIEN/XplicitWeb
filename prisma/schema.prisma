@@ -47,7 +47,7 @@ model Session {
   /// ID écrit par Lucia (nanoid) → plus de contrainte ObjectId
   id                String   @id @map("_id")
 
-  /// relation vers l’utilisateur
+  /// relation vers l'utilisateur
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId            String
 
@@ -356,4 +356,16 @@ model BlogPostTag {
   tagId  String @db.ObjectId
 
   @@unique([postId, tagId]) 
+}
+
+model ContactSubmission {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String
+  subject   String
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("contact_submissions")
 }
