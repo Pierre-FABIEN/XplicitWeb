@@ -106,11 +106,78 @@
 							</p>
 						{/if}
 
-						{#if $cart.items.length}
-							<!-- ---------- LISTE DES ARTICLES ------------------------ -->
+						{#if $cart && $cart.items && $cart.items.length > 0}
 							<div class="max-h-[500px] overflow-y-auto">
 								{#each $cart.items as item (item.id)}
-									<!-- … carte produit inchangée … -->
+									<div
+										class="p-4 border rounded-lg shadow-sm flex justify-between items-center mb-2"
+									>
+										<img
+											src={(item.custom?.length > 0 && item.custom[0].image) ||
+												(Array.isArray(item.product.images)
+													? item.product.images[0]
+													: item.product.images) ||
+												''}
+											alt={item.product.name}
+											class="w-20 h-20 object-cover mr-5"
+										/>
+
+										<div class="flex-1 mx-4">
+											<h3 class="text-lg font-semibold">
+												{item.product.name}
+												{#if item.custom && item.custom.length > 0}
+													<span class="text-sm font-normal text-gray-500">Custom</span>
+												{/if}
+											</h3>
+											<p class="text-gray-600">${item.product.price.toFixed(2)}€</p>
+
+											{#if item.custom && item.custom.length > 0}
+												<!-- Custom items: Use predefined quantity options -->
+												<select
+													class="border rounded px-3 py-2 w-full"
+													onchange={(e) =>
+														changeQuantity(
+															item.product.id,
+															parseInt(e.target.value),
+															item.custom?.[0]?.id
+														)}
+												>
+													<option value="" disabled selected>Select a quantity option...</option>
+													{#each quantityOptions as option}
+														<option value={option.value} selected={item.quantity === option.value}>
+															{option.label}
+														</option>
+													{/each}
+												</select>
+											{:else}
+												<Input
+													type="number"
+													class="border p-2 rounded w-[60px]"
+													value={item.quantity}
+													oninput={(e) =>
+														changeQuantity(
+															item.product.id,
+															parseInt(e.target.value),
+															item.custom?.id
+														)}
+													min="24"
+													max="72"
+													step="24"
+												/>
+											{/if}
+										</div>
+										<div class="flex flex-col items-end">
+											<p class="text-lg font-semibold">
+												{(item.price * item.quantity).toFixed(2)}€
+											</p>
+											<button
+												onclick={() => handleRemoveFromCart(item.product.id, item.custom?.id)}
+												class="text-red-600 hover:text-red-800"
+											>
+												<Trash />
+											</button>
+										</div>
+									</div>
 								{/each}
 							</div>
 
