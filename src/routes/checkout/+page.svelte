@@ -3,19 +3,24 @@
 	import { MapLibre, Marker, Popup } from 'svelte-maplibre-gl';
 	import * as Popover from '$shadcn/popover/index.js';
 	import * as Command from '$shadcn/command/index.js';
+	import * as Card from '$shadcn/card/index.js';
 	import { loadStripe } from '@stripe/stripe-js';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import SmoothScrollBar from '$lib/components/smoothScrollBar/SmoothScrollBar.svelte';
-
-	import Trash from 'lucide-svelte/icons/trash';
+	import {
+		Package,
+		MapPin,
+		CreditCard,
+		ShoppingCart,
+		Trash,
+		Check,
+		ChevronsUpDown
+	} from 'lucide-svelte';
 	import Button from '$shadcn/button/button.svelte';
 	import { Input } from '$lib/components/shadcn/ui/input/index.js';
-
 	import { OrderSchema } from '$lib/schema/order/order.js';
 	import { toast } from 'svelte-sonner';
-
-	// Le store du panier
 	import {
 		cart as cartStore,
 		removeFromCart,
@@ -23,7 +28,6 @@
 		updateCartItemQuantity
 	} from '$lib/store/Data/cartStore';
 	import { tick } from 'svelte';
-	import { Check, ChevronsUpDown } from 'lucide-svelte';
 	import { cn } from 'tailwind-variants';
 
 	let { data } = $props();
@@ -62,7 +66,7 @@
 		tick().then(() => addressTriggerRef?.focus());
 	}
 
-	// Offset pour la popup (optionnel, reprenant l’exemple maplibre)
+	// Offset pour la popup (optionnel, reprenant l'exemple maplibre)
 	let offset = $state(24);
 	let offsets: maplibregl.Offset = $derived({
 		top: [0, offset],
@@ -222,7 +226,7 @@
 		}
 
 		const carrierCode = chosenOption?.carrier?.code;
-		// Vérifier si c’est un point relais
+		// Vérifier si c'est un point relais
 		const isServicePoint = chosenOption?.functionalities?.last_mile === 'service_point';
 
 		if (isServicePoint && carrierCode) {
@@ -230,7 +234,7 @@
 			showMap = true;
 			fetchServicePoints(carrierCode);
 		} else {
-			// Si ce n’est pas un point relais, on masque la carte et on reset les données du point
+			// Si ce n'est pas un point relais, on masque la carte et on reset les données du point
 			showMap = false;
 			selectedPoint = null;
 		}
@@ -344,293 +348,358 @@
 	});
 </script>
 
-<div class="ccc w-screen h-screen">
+<div class="min-h-screen w-[100vw]">
 	<SmoothScrollBar>
-		<div class="ctc w-[100vw] mb-[200px]">
-			<!-- Liste d'adresses -->
-			<div class="container mx-auto p-4">
-				<h2 class="text-2xl font-bold mb-4 mt-5">Vos adresses</h2>
-				<div class="clc">
-					{#if data?.addresses?.length > 0}
-						<Popover.Root bind:open={addressOpen}>
-							<!-- Trigger ------------------------------------------------- -->
-							<Popover.Trigger bind:ref={addressTriggerRef}>
-								{#snippet child({ props })}
-									<Button
-										variant="outline"
-										class="w-[100%] justify-between"
-										{...props}
-										role="combobox"
-										aria-expanded={addressOpen}
-										aria-controls="address-combobox"
-									>
-										{addressLabel}
-										<ChevronsUpDown class="opacity-50" />
-									</Button>
-								{/snippet}
-							</Popover.Trigger>
-
-							<!-- Content ------------------------------------------------- -->
-							<Popover.Content class="w-[340px] p-0" id="address-combobox">
-								<Command.Root>
-									<Command.Input placeholder="Rechercher…" />
-
-									<Command.List>
-										<Command.Empty>Aucun résultat.</Command.Empty>
-
-										<Command.Group value="addresses">
-											{#each data.addresses as address (address.id)}
-												<Command.Item
-													value={`${address.first_name} ${address.last_name} ${address.street} ${address.city} ${address.country}`}
-													onSelect={() => {
-														selectAddress(address.id);
-														closeAddressPopover();
-													}}
-													class="flex flex-col items-start px-2 py-1.5 gap-0.5"
+		<div class="container mx-auto px-4 py-8 max-w-7xl">
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-[100px]">
+				<!-- Section Adresse -->
+				<div class="space-y-6">
+					<div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+						<div class="p-6 flex flex-col space-y-1.5">
+							<h3
+								class="text-2xl font-semibold leading-none tracking-tight flex items-center gap-2"
+							>
+								<MapPin class="w-5 h-5" />
+								Adresse de livraison
+							</h3>
+						</div>
+						<div class="p-6 pt-0">
+							<div class="space-y-4">
+								{#if data?.addresses?.length > 0}
+									<Popover.Root bind:open={addressOpen}>
+										<Popover.Trigger bind:ref={addressTriggerRef}>
+											{#snippet child({ props })}
+												<Button
+													variant="outline"
+													class="w-full justify-between"
+													{...props}
+													role="combobox"
+													aria-expanded={addressOpen}
+													aria-controls="address-combobox"
 												>
-													<Check
-														class={`address-${selectedAddressId === address.id ? 'selected' : 'unselected'} ${true ? 'shrink-0' : ''}`}
-													/>
+													{addressLabel}
+													<ChevronsUpDown class="opacity-50" />
+												</Button>
+											{/snippet}
+										</Popover.Trigger>
 
-													<span class="text-sm">
-														{address.first_name}
-														{address.last_name}
-													</span>
-													<span class="text-xs text-muted-foreground">
-														{address.street}, {address.city}
-														{address.zip}, {address.country}
-													</span>
-												</Command.Item>
-											{/each}
-										</Command.Group>
-									</Command.List>
-								</Command.Root>
-							</Popover.Content>
-						</Popover.Root>
-					{:else}
-						<p class="text-gray-600">Aucune adresse renseignée.</p>
-					{/if}
+										<Popover.Content class="w-[340px] p-0" id="address-combobox">
+											<Command.Root>
+												<Command.Input placeholder="Rechercher…" />
 
-					<Button class="mt-4 w-[100%]">
-						<a data-sveltekit-preload-data href="/auth/settings/address">Créer une adresse</a>
-					</Button>
-				</div>
-			</div>
+												<Command.List>
+													<Command.Empty>Aucun résultat.</Command.Empty>
 
-			<!-- Panier -->
-			<div class="container mx-auto p-4">
-				{#if $cartStore.items.length > 0}
-					<!-- Affichage des items en direct depuis $cartStore -->
-					<div class="ccc max-h-[80vh]">
-						{#each $cartStore.items as item (item.id)}
-							<div class="p-4 border rounded-lg shadow-sm flex justify-between w-[100%] mb-2">
-								<div class="flex">
-									<img
-										src={(item.custom?.length > 0 && item.custom[0].image) ||
-											(Array.isArray(item.product.images)
-												? item.product.images[0]
-												: item.product.images) ||
-											''}
-										alt={item.product.name}
-										class="w-20 h-20 object-cover mr-5"
-									/>
-									<div class="flex-1 flex flex-col justify-between">
-										<h3 class="text-lg font-semibold">{item.product.name}</h3>
-										<p class="text-gray-600">{item.product.price.toFixed(2)}€</p>
+													<Command.Group value="addresses">
+														{#each data.addresses as address (address.id)}
+															<Command.Item
+																value={`${address.first_name} ${address.last_name} ${address.street} ${address.city} ${address.country}`}
+																onSelect={() => {
+																	selectAddress(address.id);
+																	closeAddressPopover();
+																}}
+																class="flex flex-col items-start px-2 py-1.5 gap-0.5"
+															>
+																<Check
+																	class={`address-${selectedAddressId === address.id ? 'selected' : 'unselected'} ${true ? 'shrink-0' : ''}`}
+																/>
 
-										<!-- Quantité -->
-										{#if item.custom?.length > 0}
-											<select
-												class="border rounded px-3 py-2 w-full"
-												onchange={(e) =>
-													changeQuantity(
-														item.product.id,
-														parseInt(e.target.value),
-														item.custom[0]?.id
-													)}
-											>
-												<option value="" disabled selected>Sélectionnez une quantité...</option>
-												<option value="576" selected={item.quantity === 576}>
-													24 packs de 24 canettes (576 unités)
-												</option>
-												<option value="720" selected={item.quantity === 720}>
-													1/4 de palette (720 unités)
-												</option>
-											</select>
-										{:else}
-											<Input
-												type="number"
-												class="border p-2 rounded w-[60px]"
-												value={item.quantity}
-												oninput={(e) => validateQuantity(item, e)}
-												min="1"
-												max={item.product.stock}
+																<span class="text-sm">
+																	{address.first_name}
+																	{address.last_name}
+																</span>
+																<span class="text-xs text-muted-foreground">
+																	{address.street}, {address.city}
+																	{address.zip}, {address.country}
+																</span>
+															</Command.Item>
+														{/each}
+													</Command.Group>
+												</Command.List>
+											</Command.Root>
+										</Popover.Content>
+									</Popover.Root>
+								{:else}
+									<p class="text-muted-foreground">Aucune adresse renseignée.</p>
+								{/if}
+
+								<Button variant="outline" class="w-full">
+									<a
+										data-sveltekit-preload-data
+										href="/auth/settings/address"
+										class="flex items-center gap-2"
+									>
+										<MapPin class="w-4 h-4" />
+										Créer une adresse
+									</a>
+								</Button>
+							</div>
+						</div>
+					</div>
+
+					{#if shippingOptions.length > 0}
+						<Card.Root>
+							<Card.Header>
+								<Card.Title class="flex items-center gap-2">
+									<Package class="w-5 h-5" />
+									Options de livraison
+								</Card.Title>
+							</Card.Header>
+							<Card.Content>
+								<div class="space-y-4">
+									{#each shippingOptions as option (option.code)}
+										<div
+											class="flex items-center space-x-4 rounded-lg border p-4 hover:bg-accent/50 transition-colors"
+										>
+											<input
+												id={option.code}
+												type="radio"
+												name="shippingOption"
+												value={option.code}
+												checked={selectedShippingOption === option.code}
+												onchange={() => chooseShippingOption(option)}
+												class="h-4 w-4 border-primary"
 											/>
-										{/if}
+											<label for={option.code} class="flex-1 cursor-pointer">
+												<div class="font-medium">{option.carrier.name}</div>
+												<div class="text-sm text-muted-foreground">
+													{option.product.name}
+												</div>
+												<div class="text-sm font-medium mt-1">
+													{option.quotes?.[0]?.price?.total?.value
+														? option.quotes[0].price.total.value + ' €'
+														: 'Prix indisponible'}
+												</div>
+											</label>
+										</div>
+									{/each}
+								</div>
+							</Card.Content>
+						</Card.Root>
+					{/if}
+				</div>
+
+				<!-- Colonne de droite - Panier et Paiement -->
+				<div class="space-y-6">
+					{#if showMap}
+						<Card.Root>
+							<Card.Header>
+								<Card.Title class="flex items-center gap-2">
+									<MapPin class="w-5 h-5" />
+									Points relais disponibles
+								</Card.Title>
+							</Card.Header>
+							<Card.Content>
+								<MapLibre
+									class="w-full h-[400px] rounded-lg overflow-hidden"
+									style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+									{zoom}
+									center={centerCoordinates}
+								>
+									{#each servicePoints as point}
+										<Marker lnglat={[point.longitude, point.latitude]}>
+											{#snippet content()}
+												<!-- Visuel du marker -->
+												<div class="bg-blue-600 text-white p-2 rounded cursor-pointer"></div>
+											{/snippet}
+											<!-- Popup à l'intérieur du Marker -->
+											<Popup
+												class="text-black"
+												offset={offsets}
+												open={selectedPoint?.id === point.id}
+											>
+												<div class="p-2">
+													<h3 class="font-bold mb-1">{point.name}</h3>
+													<p>Adresse : {point.street}</p>
+													<p>{point.postal_code} {point.city}</p>
+													<button onclick={() => handleMarkerClick(point)}>Valider</button>
+												</div>
+											</Popup>
+										</Marker>
+									{/each}
+								</MapLibre>
+
+								{#if selectedPoint}
+									<div class="mt-4 p-4 rounded-lg border bg-accent/50">
+										<h3 class="font-semibold mb-2">Point relais sélectionné</h3>
+										<p class="text-sm">{selectedPoint.name}</p>
+										<p class="text-sm text-muted-foreground">
+											{selectedPoint.street}, {selectedPoint.postal_code}
+											{selectedPoint.city}
+										</p>
+									</div>
+								{/if}
+							</Card.Content>
+						</Card.Root>
+					{/if}
+					<Card.Root>
+						<div class="p-6 flex flex-col space-y-1.5">
+							<h3
+								class="text-2xl font-semibold leading-none tracking-tight flex items-center gap-2"
+							>
+								<ShoppingCart class="w-5 h-5" />
+								Votre panier
+							</h3>
+						</div>
+						<div class="p-6 pt-0">
+							{#if $cartStore.items.length > 0}
+								<div class="space-y-4">
+									{#each $cartStore.items as item (item.id)}
+										<div class="flex gap-4 p-4 rounded-lg border bg-background">
+											<img
+												src={(item.custom?.length > 0 && item.custom[0].image) ||
+													(Array.isArray(item.product.images)
+														? item.product.images[0]
+														: item.product.images) ||
+													''}
+												alt={item.product.name}
+												class="w-24 h-24 object-cover rounded-md"
+											/>
+											<div class="flex-1 space-y-2">
+												<div class="flex justify-between">
+													<h3 class="font-medium">{item.product.name}</h3>
+													<button
+														onclick={() => handleRemoveFromCart(item.product.id)}
+														class="text-destructive hover:text-destructive/80"
+													>
+														<Trash class="w-4 h-4" />
+													</button>
+												</div>
+												<p class="text-sm text-muted-foreground">
+													{item.product.price.toFixed(2)}€ l'unité
+												</p>
+
+												{#if item.custom?.length > 0}
+													<select
+														class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+														onchange={(e) =>
+															changeQuantity(
+																item.product.id,
+																parseInt(e.target.value),
+																item.custom[0]?.id
+															)}
+													>
+														<option value="" disabled selected>Sélectionnez une quantité...</option>
+														<option value="576" selected={item.quantity === 576}>
+															24 packs de 24 canettes (576 unités)
+														</option>
+														<option value="720" selected={item.quantity === 720}>
+															1/4 de palette (720 unités)
+														</option>
+													</select>
+												{:else}
+													<Input
+														type="number"
+														class="w-24"
+														value={item.quantity}
+														oninput={(e) => validateQuantity(item, e)}
+														min="1"
+														max={item.product.stock}
+													/>
+												{/if}
+
+												<p class="text-right font-medium">
+													{(item.price * item.quantity).toFixed(2)}€
+												</p>
+											</div>
+										</div>
+									{/each}
+								</div>
+
+								<div class="mt-6 space-y-4 rounded-lg border p-4 bg-muted/50">
+									<div class="flex justify-between text-sm">
+										<span>Sous-total (HT)</span>
+										<span>{$cartStore.subtotal.toFixed(2)}€</span>
+									</div>
+									<div class="flex justify-between text-sm">
+										<span>Livraison</span>
+										<span>
+											{shippingCost > 0
+												? shippingCost.toFixed(2) + '€'
+												: selectedShippingOption
+													? 'En cours...'
+													: 'Non sélectionné'}
+										</span>
+									</div>
+									<div class="flex justify-between text-sm">
+										<span>TVA (5,5%)</span>
+										<span>{$cartStore.tax.toFixed(2)}€</span>
+									</div>
+									<div class="flex justify-between text-lg font-semibold pt-2 border-t">
+										<span>Total TTC</span>
+										<span>{totalTTC.toFixed(2)}€</span>
 									</div>
 								</div>
-								<div class="text-right flex flex-col justify-between items-end">
-									<p class="text-lg font-semibold">
-										{(item.price * item.quantity).toFixed(2)}€
-									</p>
-									<button
-										onclick={() => handleRemoveFromCart(item.product.id)}
-										class="text-red-600 hover:text-red-800"
-									>
-										<Trash />
-									</button>
+
+								<form
+									method="POST"
+									action="?/checkout"
+									use:createPaymentEnhance
+									onsubmit={handleCheckout}
+									class="mt-6"
+								>
+									<input type="hidden" name="orderId" bind:value={$createPaymentData.orderId} />
+									<input type="hidden" name="addressId" bind:value={$createPaymentData.addressId} />
+									<input
+										type="hidden"
+										name="shippingOption"
+										bind:value={$createPaymentData.shippingOption}
+									/>
+									<input
+										type="hidden"
+										name="shippingCost"
+										bind:value={$createPaymentData.shippingCost}
+									/>
+
+									<input
+										type="hidden"
+										name="servicePointId"
+										bind:value={$createPaymentData.servicePointId}
+									/>
+									<input
+										type="hidden"
+										name="servicePointPostNumber"
+										bind:value={$createPaymentData.servicePointPostNumber}
+									/>
+									<input
+										type="hidden"
+										name="servicePointLatitude"
+										bind:value={$createPaymentData.servicePointLatitude}
+									/>
+									<input
+										type="hidden"
+										name="servicePointLongitude"
+										bind:value={$createPaymentData.servicePointLongitude}
+									/>
+									<input
+										type="hidden"
+										name="servicePointType"
+										bind:value={$createPaymentData.servicePointType}
+									/>
+									<input
+										type="hidden"
+										name="servicePointExtraRefCab"
+										bind:value={$createPaymentData.servicePointExtraRefCab}
+									/>
+									<input
+										type="hidden"
+										name="servicePointExtraShopRef"
+										bind:value={$createPaymentData.servicePointExtraShopRef}
+									/>
+
+									<Button type="submit" class="w-full" size="lg">
+										<CreditCard class="w-4 h-4 mr-2" />
+										Payer {totalTTC.toFixed(2)}€
+									</Button>
+								</form>
+							{:else}
+								<div class="text-center py-8">
+									<ShoppingCart class="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+									<p class="text-muted-foreground">Votre panier est vide.</p>
 								</div>
-							</div>
-						{/each}
-					</div>
-
-					<hr class="my-5" />
-
-					<!-- Options de livraison -->
-					{#each shippingOptions as option (option.code)}
-						<div class="mb-4 p-2 border rounded">
-							<div class="flex items-center">
-								<input
-									id={option.code}
-									type="radio"
-									name="shippingOption"
-									value={option.code}
-									checked={selectedShippingOption === option.code}
-									onchange={() => chooseShippingOption(option)}
-								/>
-								<label for={option.code} class="ml-2">
-									<strong>{option.carrier.name}</strong> – {option.product.name}
-									({option.quotes?.[0]?.price?.total?.value
-										? option.quotes[0].price.total.value + ' €'
-										: 'Prix indisponible'})
-								</label>
-							</div>
-							<!-- Informations supplémentaires (deadline, signature, etc.) -->
-							<!-- ... -->
+							{/if}
 						</div>
-					{/each}
-
-					{#if showMap}
-						<MapLibre
-							class="w-full h-[500px]"
-							style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-							{zoom}
-							center={centerCoordinates}
-						>
-							{#each servicePoints as point}
-								<Marker lnglat={[point.longitude, point.latitude]}>
-									{#snippet content()}
-										<!-- Visuel du marker -->
-										<div class="bg-blue-600 text-white p-2 rounded cursor-pointer"></div>
-									{/snippet}
-									<!-- Popup à l’intérieur du Marker -->
-									<Popup class="text-black" offset={offsets} open={selectedPoint?.id === point.id}>
-										<div class="p-2">
-											<h3 class="font-bold mb-1">{point.name}</h3>
-											<p>Adresse : {point.street}</p>
-											<p>{point.postal_code} {point.city}</p>
-											<button onclick={() => handleMarkerClick(point)}>Valider</button>
-										</div>
-									</Popup>
-								</Marker>
-							{/each}
-						</MapLibre>
-					{/if}
-
-					{#if selectedPoint}
-						<div class="border p-2 mt-3">
-							<h3 class="font-bold">Selected Point:</h3>
-							<p>ID: {selectedPoint.id}</p>
-							<p>Name: {selectedPoint.name}</p>
-							<!-- You can display more fields like address, postal code, city, etc. -->
-						</div>
-					{/if}
-
-					<!-- Récapitulatif et paiement -->
-					<div class="mt-4 p-4 border-t rounded-none">
-						<div class="flex justify-between">
-							<span class="text-lg">Sous-total (HT) :</span>
-							<span class="text-lg">{$cartStore.subtotal.toFixed(2)}€</span>
-						</div>
-						<div class="flex justify-between mt-2">
-							<span class="text-lg">Livraison :</span>
-							<span class="text-lg">
-								{shippingCost > 0
-									? shippingCost.toFixed(2) + '€'
-									: selectedShippingOption
-										? 'En cours...'
-										: 'Non sélectionné'}
-							</span>
-						</div>
-
-						<div class="flex justify-between mt-2">
-							<span class="text-lg">TVA (5,5%) :</span>
-							<span class="text-lg">{$cartStore.tax.toFixed(2)}€</span>
-						</div>
-						<div class="flex justify-between mt-2">
-							<span class="text-xl font-semibold">Total TTC :</span>
-							<span class="text-xl font-semibold">{totalTTC.toFixed(2)}€</span>
-						</div>
-					</div>
-				{:else}
-					<p class="text-gray-600">Votre panier est vide.</p>
-				{/if}
-
-				<!-- Formulaire de paiement -->
-				<div class="mt-4">
-					<form
-						method="POST"
-						action="?/checkout"
-						use:createPaymentEnhance
-						onsubmit={handleCheckout}
-					>
-						<input type="hidden" name="orderId" bind:value={$createPaymentData.orderId} />
-						<input type="hidden" name="addressId" bind:value={$createPaymentData.addressId} />
-						<input
-							type="hidden"
-							name="shippingOption"
-							bind:value={$createPaymentData.shippingOption}
-						/>
-						<input type="hidden" name="shippingCost" bind:value={$createPaymentData.shippingCost} />
-
-						<input
-							type="hidden"
-							name="servicePointId"
-							bind:value={$createPaymentData.servicePointId}
-						/>
-						<input
-							type="hidden"
-							name="servicePointPostNumber"
-							bind:value={$createPaymentData.servicePointPostNumber}
-						/>
-						<input
-							type="hidden"
-							name="servicePointLatitude"
-							bind:value={$createPaymentData.servicePointLatitude}
-						/>
-						<input
-							type="hidden"
-							name="servicePointLongitude"
-							bind:value={$createPaymentData.servicePointLongitude}
-						/>
-						<input
-							type="hidden"
-							name="servicePointType"
-							bind:value={$createPaymentData.servicePointType}
-						/>
-						<input
-							type="hidden"
-							name="servicePointExtraRefCab"
-							bind:value={$createPaymentData.servicePointExtraRefCab}
-						/>
-						<input
-							type="hidden"
-							name="servicePointExtraShopRef"
-							bind:value={$createPaymentData.servicePointExtraShopRef}
-						/>
-
-						<Button type="submit" class="w-full">Payer</Button>
-					</form>
+					</Card.Root>
 				</div>
 			</div>
 		</div>

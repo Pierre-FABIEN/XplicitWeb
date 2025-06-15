@@ -108,7 +108,7 @@ export async function POST({ request }) {
 			weight,
 
 			// Hardcoded functionalities
-			functionalities: { signature: true },
+			//functionalities: { signature: true },
 
 			// Use Sendcloud Broker
 			direct_contract_only: false,

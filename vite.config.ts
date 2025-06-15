@@ -10,7 +10,8 @@ const config = {
 	],
 
 	optimizeDeps: {
-		exclude: ['@node-rs/argon2', '@node-rs/bcrypt']
+		exclude: ['@node-rs/argon2', '@node-rs/bcrypt'],
+		force: true
 	},
 
 	resolve: {
@@ -22,10 +23,22 @@ const config = {
 	},
 
 	server: {
-		port: 1000
+		port: 1000,
+		watch: {
+			usePolling: true,
+			interval: 1000
+		}
 	},
 
-	preprocess: [vitePreprocess()]
+	preprocess: [vitePreprocess()],
+
+	cacheDir: '.vite_cache',
+	clearScreen: false,
+	build: {
+		rollupOptions: {
+			cache: false
+		}
+	}
 };
 
 export default config;
