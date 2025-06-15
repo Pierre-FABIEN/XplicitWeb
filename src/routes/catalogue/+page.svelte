@@ -17,9 +17,10 @@
 	/**
 	 * @function addCart
 	 * @param {string} productId - The product ID to add to the cart
+	 * @param {number} quantity - The quantity of the product to add to the cart
 	 * @description Checks if user is logged in, then adds the product to the cart.
 	 */
-	function addCart(productId: string) {
+	function addCart(productId: string, quantity: number) {
 		// If user is not logged in, show an error toast
 		if (data.user === null) {
 			toast.error('Veuillez vous connecter pour ajouter au panier.');
@@ -33,7 +34,7 @@
 			// Create an item to add to the cart
 			const result = {
 				id: crypto.randomUUID(),
-				quantity: 24,
+				quantity: quantity,
 				price: item.price,
 				product: {
 					id: item.id,
@@ -93,12 +94,12 @@
 				{#each data.Products as product (product.id)}
 					<Carousel.Item class="p-5 md:basis-[400px]">
 						<Card.Root
-							class="cardStagger bg-transparent backdrop-blur-2xl shadow-xl border border-[#ffffff88] rounded-[16px] flex justify-end items-center p-2 space-x-4"
+							class="cardStagger bg-[#171717] shadow-xl border border-[#ffffff88] rounded-[16px] flex justify-end items-center p-2 space-x-4"
 							style="border-color: {product.colorProduct}"
 							onmouseenter={() => textureStore.set(product.images[0])}
 						>
 							<Card.Content
-								class="w-[400px] h-[200px] flex flex-col items-center justify-center p-6 space-y-4"
+								class=" h-[160px] flex flex-col items-center justify-center space-y-4 ccs"
 							>
 								<h3
 									class="titleHome text-xl font-semibold"
@@ -111,11 +112,43 @@
 									{product.description}
 								</p> -->
 
-								<div class="rcb w-[100%]">
-									<p class="text-lg font-medium text-indigo-600">
-										{product.price} €
-									</p>
-									<Button onclick={() => addCart(product.id)}>Acheter</Button>
+								<div class="flex items-center justify-center gap-4">
+									<div
+										class="price"
+										onclick={() => addCart(product.id, 12)}
+										onkeydown={(e) =>
+											(e.key === 'Enter' || e.key === ' ') && addCart(product.id, 12)}
+										role="button"
+										tabindex="0"
+									>
+										<div class="price-number">
+											{Math.floor(product.price)}€
+											<sup class="price-cents">
+												{String(Math.round((product.price % 1) * 100)).padStart(2, '0')}
+											</sup>
+											<span class="price-quantity">
+												<sup>x</sup>12
+											</span>
+										</div>
+									</div>
+									<div
+										class="price"
+										onclick={() => addCart(product.id, 24)}
+										onkeydown={(e) =>
+											(e.key === 'Enter' || e.key === ' ') && addCart(product.id, 24)}
+										role="button"
+										tabindex="0"
+									>
+										<div class="price-number">
+											{Math.floor(product.price)}€
+											<sup class="price-cents">
+												{String(Math.round((product.price % 1) * 100)).padStart(2, '0')}
+											</sup>
+											<span class="price-quantity">
+												<sup>x</sup>24
+											</span>
+										</div>
+									</div>
 								</div>
 							</Card.Content>
 						</Card.Root>
@@ -126,7 +159,7 @@
 	</div>
 </div>
 
-<style>
+<style lang="scss">
 	.titleHome {
 		text-align: center;
 		font-family: 'Open Sans Variable', sans-serif;
@@ -138,10 +171,58 @@
 		color: transparent;
 		text-transform: uppercase;
 		font-weight: 900;
-		width: 100%;
 	}
 
 	p {
 		font-family: 'Raleway Variable', sans-serif;
+	}
+
+	.price {
+		cursor: pointer;
+		position: relative;
+		width: 120px;
+		height: 60px;
+		.price-number {
+			position: absolute;
+			color: white;
+			text-decoration: none;
+			transform: scale(1);
+			transition: transform 0.5s ease-in-out;
+			font-family: 'Open Sans Variable', sans-serif;
+			font-style: italic;
+			text-align: left;
+			-webkit-text-stroke: 1px white;
+			text-align: center;
+			font-size: 40px;
+			text-transform: black;
+			font-weight: 900;
+			color: black;
+			z-index: 1;
+			&:hover {
+				transform: scale(1.2);
+
+				sup {
+					transform: scale(0.5);
+				}
+			}
+
+			.price-quantity {
+				font-size: 35px;
+				position: absolute;
+				left: 20px;
+				top: -20px;
+				transform: rotate(-10deg);
+				z-index: -1;
+				color: white;
+
+				sup {
+					font-size: 25px;
+				}
+			}
+
+			.price-cents {
+				left: -7px !important;
+			}
+		}
 	}
 </style>
