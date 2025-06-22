@@ -5,24 +5,17 @@ import { fail, message, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 
 export const load = async (event) => {
-	if (event.locals.session === null || event.locals.user === null) {
-		return redirect(302, '/auth/login');
+	if (!event.locals.session || !event.locals.user) {
+		throw redirect(302, '/auth/login');
 	}
 
-	if (!event.locals.user.googleId || !event.locals.user.isMfaEnabled) {
-		if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
-			if (event.locals.user.isMfaEnabled) {
-				return redirect(302, '/auth/2fa');
-			}
-		}
+	const { user, session } = event.locals;
+
+	if (!user.googleId && user.isMfaEnabled && user.registered2FA && !session.twoFactorVerified) {
+		throw redirect(302, '/auth/2fa');
 	}
 
-	const userId = event.locals.user.id;
-
-	console.log(userId, 'userId');
-
-	const address = await getUserAddresses(userId);
-
+	const address = await getUserAddresses(user.id);
 	console.log(address, 'address');
 
 	const IdeleteAddressSchema = await superValidate(zod(deleteAddressSchema));
@@ -47,9 +40,10 @@ export const actions: Actions = {
 			await deleteAddress(addressId);
 
 			return message(form, 'Address deleted successfully');
-		} catch (error: any) {
+		} catch (error: unknown) {
 			console.error('Error deleting address:', error);
-			return fail(500, { form, error: 'An error occurred while deleting the address' });
+			const errorMessage = error instanceof Error ? error.message : 'An error occurred while deleting the address';
+			return fail(500, { form, error: errorMessage });
 		}
 	}
 };

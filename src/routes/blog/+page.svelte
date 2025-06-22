@@ -5,6 +5,7 @@
 	import { tick } from 'svelte';
 	import { gsap } from 'gsap';
 	import { Button } from '$shadcn/button';
+	import { mode } from 'mode-watcher';
 
 	// -----------------------------
 	// ✅ TYPES
@@ -48,6 +49,14 @@
 	// -----------------------------
 	let posts = $state(data.posts || []);
 	let containerRef: HTMLElement | null = null;
+	
+	let strokeColor = $state('black');
+
+	$effect(() => {
+		/* se relance automatiquement quand mode.current change */
+		strokeColor = mode.current === 'light' ? '#00021a' : '#00c2ff';
+	});
+
 
 	// -----------------------------
 	// ✅ GSAP $effect + cleanup
@@ -124,7 +133,7 @@
 ✅ TEMPLATE
 ============================= -->
 <main bind:this={containerRef} class="w-full h-full mx-auto px-4 py-6">
-	<h1 class="title text-4xl font-bold mb-8">Liste des Articles</h1>
+	<h1 class="title text-4xl font-bold mb-8 titleHome" style={`-webkit-text-stroke-color: ${strokeColor};`}>Le blog</h1>
 
 	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 		{#each posts as article}
@@ -160,6 +169,17 @@
 	</div>
 </main>
 
-<style>
-	/* You can expand if needed */
+<style lang="scss">
+	.titleHome {
+		text-align: center;
+		font-family: 'Open Sans Variable', sans-serif;
+		font-style: italic;
+		text-align: left;
+		font-size: 50px;
+		margin-bottom: 12px;
+		-webkit-text-stroke: 1px black;
+		color: transparent;
+		text-transform: uppercase;
+		font-weight: 900;
+	}
 </style>

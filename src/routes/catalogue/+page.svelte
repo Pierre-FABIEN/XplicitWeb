@@ -81,8 +81,8 @@
   The carousel is wrapped in a parent div that uses the "fly" transition.
   We also add a .cardStagger class to each Card.Root for GSAP to target.
 -->
-<div class="w-[100vw] h-[300px] absolute left-0 top-0 ccc">
-	<div transition:fly={{ y: -300, duration: 600 }} class="w-[100vw] h-[300px] ccc">
+<div class="w-[100vw] h-[200px] absolute left-0 top-0 ccc">
+	<div transition:fly={{ y: -300, duration: 600 }} class="w-[100vw] h-[200px] ccc">
 		<Carousel.Root
 			opts={{
 				align: 'start'
@@ -90,11 +90,11 @@
 			orientation="horizontal"
 			class="w-[100%] ccc wrapperCarousel"
 		>
-			<Carousel.Content class="w-[100vw] h-[300px]">
+			<Carousel.Content class="w-[100vw] h-[200px]">
 				{#each data.Products as product (product.id)}
 					<Carousel.Item class="p-5 md:basis-[400px]">
 						<Card.Root
-							class="cardStagger bg-[#171717] shadow-xl border border-[#ffffff88] rounded-[16px] flex justify-end items-center p-2 space-x-4"
+							class="cardStagger bg-[#171717] border border-[#ffffff88] rounded-[16px] flex justify-end items-center p-2 space-x-4"
 							style="border-color: {product.colorProduct}"
 							onmouseenter={() => textureStore.set(product.images[0])}
 						>

@@ -4,7 +4,9 @@
 	"type": "module",
 	"scripts": {
 		"clean:vite": "rimraf node_modules/.vite .vite_cache",
-		"dev": "npm run clean:vite && concurrently \"vite dev --force --port 1000\" \"npm run prettier:watch\"",
+		"dev": "vite dev --port 1000",
+		"cacheclean": "npm cache clean --force",
+		"sync": "svelte-kit sync",
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",

@@ -191,7 +191,7 @@
 			</Card.Root>
 
 			<!-- Authentification à deux facteurs -->
-			<Card.Root>
+			<!-- <Card.Root>
 				<Card.Header>
 					<Card.Title class="flex items-center gap-2">
 						<ShieldCheck class="w-6 h-6 text-primary" />
@@ -223,7 +223,7 @@
 						</a>
 					</Card.Footer>
 				{/if}
-			</Card.Root>
+			</Card.Root> -->
 		{/if}
 	</div>
 </div>
