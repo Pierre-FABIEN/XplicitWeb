@@ -23,7 +23,7 @@ const config = {
 	},
 
 	server: {
-		port: 1000,
+		port: 2000,
 		watch: {
 			usePolling: true,
 			interval: 1000

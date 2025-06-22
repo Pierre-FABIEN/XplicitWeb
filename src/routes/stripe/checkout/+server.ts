@@ -42,8 +42,8 @@ export const POST: RequestHandler = async ({ request }) => {
 				allowed_countries: ['NO'] // Pays autorisés
 			},
 			mode: 'payment',
-			success_url: `http://localhost:1000/stripe/success`,
-			cancel_url: `http://localhost:1000/stripe/cancel`,
+			success_url: `http://localhost:2000/stripe/success`,
+			cancel_url: `http://localhost:2000/stripe/cancel`,
 			phone_number_collection: {
 				enabled: true // Collecte des numéros de téléphone
 			}
