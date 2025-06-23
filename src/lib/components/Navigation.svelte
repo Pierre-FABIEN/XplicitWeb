@@ -21,7 +21,7 @@
 
 	/* ── State ────────────────────────────────────────────────────────────── */
 	let drawerOpen = $state(false); // bound to Drawer.Root
-	let strokeColor = $derived($mode === 'light' ? '#00021a' : '#00c2ff');
+	let strokeColor = $derived(mode.current === 'light' ? '#00021a' : '#00c2ff');
 
 	/* ── Helpers ──────────────────────────────────────────────────────────── */
 	function navigateAndClose(href: string) {

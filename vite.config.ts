@@ -1,9 +1,11 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import { defineConfig } from 'vite';
+import path from 'path';
 
 /** @type {import('vite').UserConfig} */
-const config = {
+export default defineConfig({
 	plugins: [
 		tailwindcss(),
 		sveltekit(),
@@ -39,6 +41,4 @@ const config = {
 			cache: false
 		}
 	}
-};
-
-export default config;
+});
