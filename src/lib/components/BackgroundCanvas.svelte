@@ -32,11 +32,19 @@
 	// Synchronisation des couleurs depuis les stores
 	$effect(() => {
 		const unsubscribeBackground = BackgroundColorStore.subscribe((color) => {
+			console.log('🎨 [BackgroundCanvas] Nouvelle couleur background:', color);
 			backgroundColor = color || '#000000';
 		});
 
 		const unsubscribeLight = LightColorStore.subscribe((color) => {
+			console.log('🎨 [BackgroundCanvas] Nouvelle couleur light:', color);
 			lightColor = color || '#ffffff';
+		});
+
+		console.log('🎨 [BackgroundCanvas] Couleurs actuelles:', {
+			backgroundColor,
+			lightColor,
+			pathname: typeof window !== 'undefined' ? window.location.pathname : 'N/A'
 		});
 
 		return () => {

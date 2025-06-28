@@ -2,6 +2,7 @@
 	import { MoonIcon, SunIcon, Minimize2Icon, Maximize2Icon } from 'lucide-svelte';
 	import { toggleMode } from 'mode-watcher';
 	import { Switch } from '$shadcn/switch/index.js';
+	import { updateSceneColors } from '$lib/store/animationTimelineStore';
 
 	const DARK_MODE_KEY = 'mode-watcher-mode';
 	let darkMod = $state(false);
@@ -20,14 +21,51 @@
 	}
 
 	function toggleDarkMode() {
+		console.log('🌙 [Options] toggleDarkMode appelé, état avant:', {
+			darkMod,
+			localStorage: localStorage.getItem(DARK_MODE_KEY),
+			systemPreference: window.matchMedia('(prefers-color-scheme: dark)').matches
+		});
+		
 		toggleMode();
+		
+		// On attend un tick pour que mode-watcher mette à jour
+		setTimeout(() => {
+			const newDarkModeLocal = localStorage.getItem(DARK_MODE_KEY);
+			const newState = newDarkModeLocal
+				? newDarkModeLocal === 'dark'
+				: window.matchMedia('(prefers-color-scheme: dark)').matches;
+			
+			console.log('🌙 [Options] toggleDarkMode après:', {
+				darkMod,
+				newState,
+				localStorage: newDarkModeLocal,
+				systemPreference: window.matchMedia('(prefers-color-scheme: dark)').matches
+			});
+			
+			darkMod = newState;
+			
+			// ✨ CORRECTION : Mettre à jour les couleurs du BackgroundCanvas
+			console.log('🔄 [Options] Mise à jour des couleurs de la scène...');
+			updateSceneColors();
+		}, 50);
 	}
 
 	$effect(() => {
 		const darkModeLocal = localStorage.getItem(DARK_MODE_KEY);
+		const systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches;
+		
 		darkMod = darkModeLocal
 			? darkModeLocal === 'dark'
-			: window.matchMedia('(prefers-color-scheme: dark)').matches;
+			: systemPreference;
+			
+		console.log('🌙 [Options] $effect - initialisation:', {
+			darkModeLocal,
+			systemPreference,
+			darkMod,
+			htmlClass: document.documentElement.classList.contains('dark')
+		});
+		
 		isFullscreen = !!document.fullscreenElement;
 
 		document.addEventListener('fullscreenchange', updateFullscreenStatus);

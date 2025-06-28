@@ -54,20 +54,67 @@ const palettes: Record<string, { dark: { light: Hex; bg: Hex }; light: { light: 
 		}
 	};
 
+// Variable pour garder trace de la page courante
+let currentPage = '/';
+
 function setSceneColors(page: string, currentMode: 'light' | 'dark') {
+	console.log('🎨 [setSceneColors] DEBUG:', {
+		page,
+		currentMode,
+		browser,
+		modeWatcherValue: browser ? mode.current : 'N/A (not in browser)'
+	});
+
 	const p = palettes[page] ?? palettes['/'];
 	const { light, bg } = p[currentMode];
+
+	console.log('🎨 [setSceneColors] Palette sélectionnée:', {
+		pageFound: page in palettes,
+		palette: p,
+		selectedColors: { light, bg }
+	});
 
 	LightColorStore.set(light);
 	BackgroundColorStore.set(bg);
 	color1Tweened.set(bg);
 	color2Tweened.set(bg);
+
+	console.log('🎨 [setSceneColors] Couleurs appliquées:', {
+		lightColor: light,
+		backgroundColor: bg
+	});
 }
 
-/* ---------- 3. API publique -------------------------------------------- */
+/* ---------- 3. Fonction pour mettre à jour seulement les couleurs ------ */
+export function updateSceneColors(): void {
+	if (!browser) return;
+	
+	const currentMode: 'light' | 'dark' = mode.current ?? 'light';
+	console.log('🔄 [updateSceneColors] Mise à jour couleurs:', {
+		currentPage,
+		currentMode
+	});
+	
+	setSceneColors(currentPage, currentMode);
+}
+
+/* ---------- 4. API publique -------------------------------------------- */
 export function updateCameraPosition(pathname: string): void {
 	const currentMode: 'light' | 'dark' = browser ? (mode.current ?? 'light') : 'light';
 	const mobile = get(isSmall);
+
+	// Sauvegarder la page courante
+	currentPage = pathname;
+
+	console.log('📸 [updateCameraPosition] DEBUG:', {
+		pathname,
+		currentMode,
+		mobile,
+		browser,
+		modeWatcherRaw: browser ? mode.current : 'N/A',
+		localStorage: browser ? localStorage.getItem('mode-watcher-mode') : 'N/A',
+		systemPreference: browser ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'N/A'
+	});
 
 	let x = 0,
 		y = 0.3,
@@ -98,6 +145,11 @@ export function updateCameraPosition(pathname: string): void {
 			[tx, ty, tz] = [0.5, 1, 0];
 			break;
 	}
+
+	console.log('📸 [updateCameraPosition] Position calculée:', {
+		camera: [x, y, z],
+		target: [tx, ty, tz]
+	});
 
 	/* Palette couleurs selon le thème */
 	setSceneColors(pathname, currentMode);
