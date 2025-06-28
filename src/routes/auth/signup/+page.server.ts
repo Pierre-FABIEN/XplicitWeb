@@ -3,7 +3,7 @@
 // -----------------------------------------------------------------------------
 
 import { redirect, fail } from '@sveltejs/kit';
-import { superValidate } from 'sveltekit-superforms';
+import { message, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 
 import { signupSchema } from '$lib/schema/auth/signupSchema';
@@ -76,19 +76,30 @@ export const actions: Actions = {
 		const form = await superValidate(event, zod(signupSchema));
 		log('Form received', form.data);
 
-		if (!form.valid) return fail(400, { form });
+		if (!form.valid) {
+			log('❌ Form validation failed:', form.errors);
+			return fail(400, { 
+				message: 'Erreurs de validation. Vérifiez vos données.'
+			});
+		}
+
+		// Extraire toutes les données du formulaire pour éviter les problèmes de sérialisation
+		const { email, username, password } = form.data;
+		log('📧 Extracted data:', { email, username });
 
 		/* ---------- 3. Email déjà utilisé ? -------------------------------- */
-		if (!(await checkEmailAvailability(form.data.email))) {
-			form.errors.email = ['Cet email est déjà utilisé.'];
-			return fail(400, { form });
+		if (!(await checkEmailAvailability(email))) {
+			log('❌ Email already exists:', email);
+			log('⚠️ About to return early with simple object');
+			// Retour d'un objet simple sérialisable pour test
+			return message(form , 'vous etes deja inscrit avec cette adresse email.')
 		}
 
 		/* Consommation réelle du token RL */
 		if (!ipBucket.consume(ip, 1)) return fail(429, { message: 'Too many requests' });
 
 		/* ---------- 4. Création de l’utilisateur --------------------------- */
-		const user = await createUser(form.data.email, form.data.username, form.data.password);
+		const user = await createUser(email, username, password);
 		log('✅  User created', { id: user.id, email: user.email });
 
 		/* ---------- 5. Demande de vérification e-mail ---------------------- */

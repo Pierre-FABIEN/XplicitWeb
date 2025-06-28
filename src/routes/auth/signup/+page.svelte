@@ -18,8 +18,8 @@
 	const { form: signupData, enhance: signupEnhance, message: signupMessage } = signupForm;
 
 	$effect(() => {
-		if ($signupMessage === 'Inscription réussie !') {
-			toast.success($signupMessage);
+		if ($signupMessage === 'vous etes deja inscrit avec cette adresse email.') {
+			toast.error($signupMessage);
 			setTimeout(() => goto('/auth/login'), 0);
 		}
 	});

@@ -46,7 +46,6 @@
 			darkMod = newState;
 			
 			// ✨ CORRECTION : Mettre à jour les couleurs du BackgroundCanvas
-			console.log('🔄 [Options] Mise à jour des couleurs de la scène...');
 			updateSceneColors();
 		}, 50);
 	}
@@ -59,12 +58,6 @@
 			? darkModeLocal === 'dark'
 			: systemPreference;
 			
-		console.log('🌙 [Options] $effect - initialisation:', {
-			darkModeLocal,
-			systemPreference,
-			darkMod,
-			htmlClass: document.documentElement.classList.contains('dark')
-		});
 		
 		isFullscreen = !!document.fullscreenElement;
 
