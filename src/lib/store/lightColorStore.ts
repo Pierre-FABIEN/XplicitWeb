@@ -32,13 +32,13 @@ export const LightStore = writable({
 });
 
 // Stores tweened pour les couleurs avec interpolation personnalisée
-export const color1Tweened = tweened('#ffff00', {
+export const color1Tweened = tweened('#ffffff', {
 	duration: 800,
 	easing: linear,
 	interpolate: colorInterpolator
 });
 
-export const color2Tweened = tweened('#00ffff', {
+export const color2Tweened = tweened('#ffffff', {
 	duration: 800,
 	easing: linear,
 	interpolate: colorInterpolator
