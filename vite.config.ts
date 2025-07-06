@@ -12,12 +12,7 @@ export default defineConfig({
 	],
 
 	optimizeDeps: {
-		exclude: ['@node-rs/argon2', '@node-rs/bcrypt'],
-		force: true
-	},
-
-	resolve: {
-		preserveSymlinks: true
+		exclude: ['@node-rs/argon2', '@node-rs/bcrypt']
 	},
 
 	test: {
@@ -34,11 +29,5 @@ export default defineConfig({
 
 	preprocess: [vitePreprocess()],
 
-	cacheDir: '.vite_cache',
-	clearScreen: false,
-	build: {
-		rollupOptions: {
-			cache: false
-		}
-	}
+	clearScreen: false
 });

@@ -133,7 +133,7 @@
 ✅ TEMPLATE
 ============================= -->
 <main bind:this={containerRef} class="w-full h-full mx-auto px-4 py-6">
-	<h1 class="title text-4xl font-bold mb-8 titleHome" style={`-webkit-text-stroke-color: ${strokeColor};`}>Le blog</h1>
+	<h1 class="title font-bold mb-8 titleHome" style={`-webkit-text-stroke-color: ${strokeColor};`}>Le blog</h1>
 
 	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 		{#each posts as article}
@@ -175,7 +175,7 @@
 		font-family: 'Open Sans Variable', sans-serif;
 		font-style: italic;
 		text-align: left;
-		font-size: 50px;
+		font-size: 10vw;
 		margin-bottom: 12px;
 		-webkit-text-stroke: 1px black;
 		color: transparent;

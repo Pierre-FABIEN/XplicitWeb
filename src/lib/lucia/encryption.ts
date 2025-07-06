@@ -50,7 +50,8 @@ export function decrypt(encrypted: string | Uint8Array): Uint8Array {
 		try {
 			encrypted = decodeBase64(encrypted);
 		} catch (error) {
-			throw new Error(`Erreur lors du décodage Base64 : ${error.message}`);
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+			throw new Error(`Erreur lors du décodage Base64 : ${errorMessage}`);
 		}
 	}
 
@@ -76,7 +77,8 @@ export function decrypt(encrypted: string | Uint8Array): Uint8Array {
 		const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 		return decrypted;
 	} catch (error) {
-		throw new Error(`Erreur lors du déchiffrement : ${error.message}`);
+		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+		throw new Error(`Erreur lors du déchiffrement : ${errorMessage}`);
 	}
 }
 

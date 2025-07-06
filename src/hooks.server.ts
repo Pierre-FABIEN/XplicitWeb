@@ -151,7 +151,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 							picture: freshUser.picture,
 							role: freshUser.role,
 							isMfaEnabled: freshUser.isMfaEnabled,
-							totpKey: freshUser.totpKey
+							totpKey: freshUser.totpKey ? freshUser.totpKey.toString() : null
 						};
 						log('DEBUG', 'Auth', 'Mapped user object:', user);
 					} else {
@@ -159,6 +159,13 @@ const authHandle: Handle = async ({ event, resolve }) => {
 					}
 				} catch (error) {
 					log('ERROR', 'Auth', 'Error fetching fresh user data:', error);
+					// Ne pas faire échouer l'authentification si la récupération de données utilisateur échoue
+					// Forcer la déconnexion pour éviter des états incohérents
+					log('WARN', 'Auth', 'Forcing logout due to user data fetch error');
+					const blank = auth.createBlankSessionCookie();
+					event.cookies.set(blank.name, blank.value, { path: '/', ...blank.attributes });
+					user = null;
+					session = null;
 				}
 			}
 
@@ -198,6 +205,23 @@ const authHandle: Handle = async ({ event, resolve }) => {
 
 	/* 2. Enrichissement de locals */
 	log('DEBUG', 'Auth', 'Enriching event.locals');
+	
+	let pendingOrder = null;
+	if (user) {
+		try {
+			log('DEBUG', 'Auth', 'Fetching pending order for user:', user.id);
+			pendingOrder = await findPendingOrder(user.id);
+			if (!pendingOrder) {
+				log('DEBUG', 'Auth', 'Creating new pending order for user:', user.id);
+				pendingOrder = await createPendingOrder(user.id);
+			}
+		} catch (error) {
+			log('ERROR', 'Auth', 'Error handling pending order:', error);
+			// Ne pas faire échouer l'authentification pour un problème de commande
+			pendingOrder = null;
+		}
+	}
+	
 	event.locals = {
 		...event.locals,
 		session,
@@ -205,9 +229,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		role: user?.role ?? null,
 		isMfaEnabled: user?.isMfaEnabled ?? false,
 		registered2FA: user?.registered2FA ?? false,
-		pendingOrder: user
-			? ((await findPendingOrder(user.id)) ?? (await createPendingOrder(user.id)))
-			: null
+		pendingOrder
 	};
 
 	log('DEBUG', 'Auth', 'Final event.locals:', {
