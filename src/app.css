@@ -118,6 +118,10 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Assure une lisibilité correcte des menus déroulants (balise <select>) quel que soit le thème */
+  select {
+    @apply bg-background text-foreground;
+  }
 }
 
 

@@ -110,14 +110,14 @@ async function main() {
 		const products = [
 			{
 				_id: '676476b4f216ed08d1b0c692',
-				name: 'Black',
+				name: 'Original',
 				description:
 					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
 				price: 10,
 				stock: 100000,
-				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1736256236/black_ljftei.png'],
-				slug: 'black',
-				colorProduct: '#6554E3',
+				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751910825/Xplicitdrink_Original_-_2026-min_hnctpa.png'],
+				slug: 'original',
+				colorProduct: '#844c6d',
 				createdAt: '2024-12-19T19:40:36.809+00:00',
 				updatedAt: '2024-12-19T19:40:36.809+00:00',
 				categories: beverageCategory?.id
@@ -129,9 +129,9 @@ async function main() {
 					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
 				price: 10,
 				stock: 100000,
-				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1736256236/dragon_zwpsh4.png'],
+				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751910825/Xplicitdrink_-_Dragon_-_2026-min_bweo6l.png'],
 				slug: 'dragon',
-				colorProduct: '#EB3BE6',
+				colorProduct: '#ec008c',
 				createdAt: '2024-12-19T19:41:01.519+00:00',
 				updatedAt: '2024-12-19T19:41:01.519+00:00',
 				categories: snackCategory?.id
@@ -143,12 +143,26 @@ async function main() {
 					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
 				price: 10,
 				stock: 100000,
-				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1736256236/wild_tftmjn.png'],
+				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751910825/Xplicitdrink_-_Fresh_-_2026-min_ika4zh.png'],
 				slug: 'fresh',
-				colorProduct: '#48DAE5',
+				colorProduct: '#74c92b',
 				createdAt: '2024-12-19T19:41:42.780+00:00',
 				updatedAt: '2024-12-19T19:41:42.780+00:00',
 				categories: beverageCategory?.id
+			},
+			{
+				_id: '6764770cf216ed08d1b0c698',
+				name: 'Pulsar',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+				price: 10,
+				stock: 100000,
+				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751910825/Xplicitdrink_-_Pulsar_-_2026-min_ej2tcu.png'],
+				slug: 'pulsar',
+				colorProduct: '#f68712',
+				createdAt: '2024-12-19T19:42:04.914+00:00',
+				updatedAt: '2024-12-19T19:42:04.914+00:00',
+				categories: snackCategory?.id
 			},
 			{
 				_id: '6764770cf216ed08d1b0c698',
@@ -157,9 +171,9 @@ async function main() {
 					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
 				price: 10,
 				stock: 100000,
-				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1736256236/fresh_goefxv.png'],
+				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751911954/Xplicitdrink_-_Wild_-_2026-min_tzibxu.png'],
 				slug: 'wild',
-				colorProduct: '#5BEA53',
+				colorProduct: '#00adef',
 				createdAt: '2024-12-19T19:42:04.914+00:00',
 				updatedAt: '2024-12-19T19:42:04.914+00:00',
 				categories: snackCategory?.id

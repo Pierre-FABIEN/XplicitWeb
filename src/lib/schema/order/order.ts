@@ -3,8 +3,8 @@ import { z } from 'zod';
 export const OrderSchema = z.object({
   orderId: z.string().min(1, "L'ID de commande est requis"),
   addressId: z.string().min(1, "L'adresse est requise"),
-  shippingOption: z.string().min(1, 'Veuillez choisir une option de livraison'),
-  shippingCost: z.string().min(1, 'Le coût de la livraison est requis'),
+  shippingOption: z.string().optional(),
+  shippingCost: z.string().optional(),
 
   // Champs plats pour les informations du point relais
   servicePointId: z.string().optional(),

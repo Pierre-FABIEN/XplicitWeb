@@ -75,6 +75,44 @@ export const shippingMethodMap = {
 			volumeUnit: 'cm3'
 		}
 	},
+	'colissimo:home/fr': {
+		3: {
+			id: 1093,
+			name: 'Colissimo Home France 2-3kg',
+			length: 40,
+			width: 30,
+			height: 20,
+			unit: 'cm',
+			weight: 3,
+			weightUnit: 'kg',
+			volume: 24000,
+			volumeUnit: 'cm3'
+		},
+		6: {
+			id: 1096,
+			name: 'Colissimo Home France 5-6kg',
+			length: 50,
+			width: 40,
+			height: 30,
+			unit: 'cm',
+			weight: 6,
+			weightUnit: 'kg',
+			volume: 60000,
+			volumeUnit: 'cm3'
+		},
+		9: {
+			id: 1099,
+			name: 'Colissimo Home France 8-9kg',
+			length: 60,
+			width: 50,
+			height: 40,
+			unit: 'cm',
+			weight: 9,
+			weightUnit: 'kg',
+			volume: 120000,
+			volumeUnit: 'cm3'
+		}
+	},
 	'colissimo:home/signature,fr': {
 		3: {
 			id: 1096,

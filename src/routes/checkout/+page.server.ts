@@ -12,11 +12,14 @@ import { OrderSchema } from '$lib/schema/order/order';
 
 dotenv.config();
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 
 export const load = (async ({ locals }) => {
 	// Récupérer l'utilisateur
-	const userId = locals.user.id;
+	const userId = locals.user?.id;
+	if (!userId) {
+		throw new Error('Utilisateur non connecté');
+	}
 	// Préparer la validation Superform
 	const IOrderSchema = await superValidate(zod(OrderSchema));
 	// Charger les adresses
@@ -51,23 +54,35 @@ export const actions: Actions = {
 		} = form.data;
 
 		// Basic checks
-		if (!orderId || !addressId || !shippingOption || !shippingCost) {
+		if (!orderId || !addressId) {
 			return json({ error: 'Veuillez sélectionner une option de livraison.' }, { status: 400 });
 		}
-
-		// 2) Get the order from DB
+		
+		// Vérifier si la commande contient des personnalisations
 		const order = await getOrderById(orderId);
 		if (!order) {
 			return json({ error: 'Commande introuvable' }, { status: 404 });
 		}
+		
+		const hasCustomItems = order.items.some(item => (item as any).custom && (item as any).custom.length > 0);
+		
+		// Pour les commandes personnalisées, on accepte des valeurs par défaut
+		const finalShippingOption = hasCustomItems ? 'no_shipping' : (shippingOption || '');
+		const finalShippingCost = hasCustomItems ? '0' : (shippingCost || '0');
+		
+		// Validation pour les commandes non-personnalisées
+		if (!hasCustomItems && (!finalShippingOption || !finalShippingCost)) {
+			return json({ error: 'Veuillez sélectionner une option de livraison.' }, { status: 400 });
+		}
+
 		const userId = order.userId;
 
 		// 3) Update the order in DB with shipping info
 		const updatedOrder = await updateOrder(
 			orderId,
 			addressId,
-			shippingOption,
-			shippingCost, // ex: "16.76"
+			finalShippingOption,
+			finalShippingCost, // ex: "16.76"
 			servicePointId,
 			servicePointPostNumber,
 			servicePointLatitude,
@@ -93,8 +108,8 @@ export const actions: Actions = {
 		});
 
 		// 5) Add a single lineItem for shipping if shippingCost > 0
-		const shippingCostFloat = parseFloat(updatedOrder.shippingCost.toString());
-		if (shippingCostFloat > 0) {
+		const shippingCostFloat = parseFloat((updatedOrder.shippingCost || 0).toString());
+		if (shippingCostFloat > 0 && !hasCustomItems) {
 			lineItems.push({
 				price_data: {
 					currency: 'eur',
@@ -116,8 +131,8 @@ export const actions: Actions = {
 			cancel_url: `${request.headers.get('origin')}/auth`,
 			metadata: {
 				order_id: orderId,
-				shipping_option: shippingOption,
-				shipping_cost: updatedOrder.shippingCost
+				shipping_option: finalShippingOption,
+				shipping_cost: (updatedOrder.shippingCost || 0).toString()
 			},
 			payment_intent_data: {
 				metadata: {
@@ -128,6 +143,6 @@ export const actions: Actions = {
 		});
 
 		// 7) Redirect user to Stripe checkout
-		throw redirect(303, session.url);
+		throw redirect(303, session.url || '/');
 	}
 };

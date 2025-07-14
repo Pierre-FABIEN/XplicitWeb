@@ -53,6 +53,20 @@
 	let addressOpen = $state(false);
 	let addressTriggerRef = $state<HTMLButtonElement>(null!);
 
+	// Détecter si la commande contient des canettes personnalisées
+	let hasCustomItems = $derived($cartStore.items.some(item => item.custom?.length > 0));
+	
+	// Si la commande contient des personnalisations, on désactive la livraison
+	$effect(() => {
+		if (hasCustomItems) {
+			shippingOptions = [];
+			selectedShippingOption = 'no_shipping';
+			shippingCost = 0;
+			showMap = false;
+			selectedPoint = null;
+		}
+	});
+
 	/* Selected address prettified for the trigger button */
 	const addressLabel = $derived(
 		selectedAddressObj
@@ -147,7 +161,10 @@
 		shippingCost = 0;
 		shippingOptions = [];
 
-		fetchSendcloudShippingOptions();
+		// Ne pas récupérer les options de livraison si la commande contient des personnalisations
+		if (!hasCustomItems) {
+			fetchSendcloudShippingOptions();
+		}
 	}
 
 	// Calcul dynamique du poids, directement depuis $cartStore
@@ -317,13 +334,14 @@
 			toast.error('Veuillez choisir une adresse.');
 			return;
 		}
-		if (!selectedShippingOption) {
+		// Pour les commandes personnalisées, on accepte 'no_shipping' comme option valide
+		if (!selectedShippingOption && !hasCustomItems) {
 			toast.error('Veuillez choisir un mode de livraison.');
 			return;
 		}
 
 		// Vérification si un point relais est requis
-		if (showMap && !selectedPoint) {
+		if (showMap && !selectedPoint && !hasCustomItems) {
 			toast.error('Veuillez sélectionner un point relais.');
 			return;
 		}
@@ -476,6 +494,24 @@
 								</div>
 							</Card.Content>
 						</Card.Root>
+					{:else if hasCustomItems}
+						<Card.Root>
+							<Card.Header>
+								<Card.Title class="flex items-center gap-2">
+									<Package class="w-5 h-5" />
+									Livraison - Commandes personnalisées
+								</Card.Title>
+							</Card.Header>
+							<Card.Content>
+								<div class="p-4 rounded-lg border bg-blue-50 dark:bg-blue-950/20">
+									<p class="text-sm text-blue-700 dark:text-blue-300">
+										📦 <strong>Commande personnalisée détectée</strong><br/>
+										Les commandes avec canettes personnalisées ne nécessitent pas de frais de livraison.
+										Votre commande sera traitée sans coût de transport supplémentaire.
+									</p>
+								</div>
+							</Card.Content>
+						</Card.Root>
 					{/if}
 				</div>
 
@@ -614,11 +650,13 @@
 									<div class="flex justify-between text-sm">
 										<span>Livraison</span>
 										<span>
-											{shippingCost > 0
-												? shippingCost.toFixed(2) + '€'
-												: selectedShippingOption
-													? 'En cours...'
-													: 'Non sélectionné'}
+											{hasCustomItems 
+												? 'Gratuit (commande personnalisée)'
+												: shippingCost > 0
+													? shippingCost.toFixed(2) + '€'
+													: selectedShippingOption
+														? 'En cours...'
+														: 'Non sélectionné'}
 										</span>
 									</div>
 									<div class="flex justify-between text-sm">
