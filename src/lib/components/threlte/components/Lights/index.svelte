@@ -6,8 +6,8 @@
 
 <T.AmbientLight intensity={1} />
 
-<!-- <LightRounded />
-<LightColors /> -->
+<LightRounded />
+<LightColors />
 
 <T.DirectionalLight
 	position={[0, 0.5, 2]}
