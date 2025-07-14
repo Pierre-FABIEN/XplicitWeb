@@ -41,6 +41,15 @@
 	/*  Options de quantité (simplifiées) */
 	let quantityOptions = $state([24, 48, 72]);
 
+	/*  Options de quantité pour les articles personnalisés */
+	let customQuantityOptions = $state([
+		{ label: '24 packs de 24 canettes (576 unités)', value: 576 },
+		{ label: '1/4 de palette : 30 packs (720 unités)', value: 720 },
+		{ label: '1/2 palette : 60 packs (1 440 unités)', value: 1440 },
+		{ label: '1 palette : 120 packs (2 880 unités)', value: 2880 },
+		{ label: '3 palettes : 360 packs (8 640 unités)', value: 8640 }
+	]);
+
 	// Calculer le total des quantités pour les commandes non-personnalisées
 	let totalNonCustomQuantity = $derived(
 		$cart.items
@@ -103,8 +112,8 @@
 			<Sheet.Trigger>
 				<button
 					class="m-5 ccc"
-					class:text-black={currentMode === 'light'}
-					class:text-white={currentMode === 'dark'}
+					class:text-black={currentMode.current === 'light'}
+					class:text-white={currentMode.current === 'dark'}
 				>
 					<ShoppingCart class="w-8 h-8 absolute right-0 top-0 stroke-current transition-colors" />
 					<Badge class="bulletCart font-bold absolute z-10 left-0 bottom-0">
@@ -154,13 +163,13 @@
 
 											{#if item.custom && Array.isArray(item.custom) && item.custom.length > 0}
 												<!-- Custom items: Use predefined quantity options -->
-												<div class="flex gap-2">
-													{#each quantityOptions as option}
+												<div class="flex gap-2 flex-wrap">
+													{#each customQuantityOptions as option}
 														<button
-															class="px-3 py-1 border rounded text-sm {item.quantity === option ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}"
-															onclick={() => changeQuantity(item.product.id, option, item.custom?.[0]?.id)}
+															class="px-3 py-1 border rounded text-sm {item.quantity === option.value ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'}"
+															onclick={() => changeQuantity(item.product.id, option.value, item.custom?.[0]?.id)}
 														>
-															{option}
+															{option.value}
 														</button>
 													{/each}
 												</div>
@@ -169,7 +178,7 @@
 												<div class="flex gap-2">
 													{#each quantityOptions as option}
 														<button
-															class="px-3 py-1 border rounded text-sm {item.quantity === option ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'} {!canAddQuantity(option, item.quantity, false) ? 'opacity-50 cursor-not-allowed' : ''}"
+															class="px-3 py-1 border rounded text-sm {item.quantity === option ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'} {!canAddQuantity(option, item.quantity, false) ? 'opacity-50 cursor-not-allowed' : ''}"
 															onclick={() => canAddQuantity(option, item.quantity, false) && changeQuantity(item.product.id, option)}
 															disabled={!canAddQuantity(option, item.quantity, false)}
 														>

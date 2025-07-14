@@ -28,9 +28,8 @@
 			}
 		},
 		onResult: (dataReturn) => {
-			const result = dataReturn.result.data.form.message.data;
-			if (result) {
-				addToCart(result);
+			if (dataReturn.result.type === 'success' && dataReturn.result.data?.form?.message?.data) {
+				addToCart(dataReturn.result.data.form.message.data);
 			}
 			editModel = false;
 		}
@@ -95,6 +94,13 @@
 			$createCustomData.quantity = selectedValue;
 		}
 	}
+
+	// Initialiser avec une quantité par défaut
+	$effect(() => {
+		if (!$createCustomData.quantity) {
+			$createCustomData.quantity = 576; // Quantité par défaut
+		}
+	});
 </script>
 
 <!-- Conteneur global -->
@@ -201,10 +207,11 @@
 									name="quantity"
 									class="border rounded px-3 py-2 w-full"
 									onchange={handleQuantityOptionChange}
+									required
 								>
 									<option value="" disabled selected>Select a quantity option...</option>
 									{#each quantityOptions as option}
-										<option value={option.value}>{option.label}</option>
+										<option value={option.value} selected={$createCustomData.quantity === option.value}>{option.label}</option>
 									{/each}
 								</select>
 							</Form.Control>

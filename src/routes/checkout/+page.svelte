@@ -602,23 +602,38 @@
 												</p>
 
 												{#if item.custom?.length > 0}
-													<select
-														class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-														onchange={(e) =>
-															changeQuantity(
-																item.product.id,
-																parseInt(e.target.value),
-																item.custom[0]?.id
-															)}
-													>
-														<option value="" disabled selected>Sélectionnez une quantité...</option>
-														<option value="576" selected={item.quantity === 576}>
-															24 packs de 24 canettes (576 unités)
-														</option>
-														<option value="720" selected={item.quantity === 720}>
-															1/4 de palette (720 unités)
-														</option>
-													</select>
+													<div class="flex gap-2 flex-wrap">
+														<button
+															class="px-3 py-1 border rounded text-sm {item.quantity === 576 ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'}"
+															onclick={() => changeQuantity(item.product.id, 576, item.custom[0]?.id)}
+														>
+															576
+														</button>
+														<button
+															class="px-3 py-1 border rounded text-sm {item.quantity === 720 ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'}"
+															onclick={() => changeQuantity(item.product.id, 720, item.custom[0]?.id)}
+														>
+															720
+														</button>
+														<button
+															class="px-3 py-1 border rounded text-sm {item.quantity === 1440 ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'}"
+															onclick={() => changeQuantity(item.product.id, 1440, item.custom[0]?.id)}
+														>
+															1440
+														</button>
+														<button
+															class="px-3 py-1 border rounded text-sm {item.quantity === 2880 ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'}"
+															onclick={() => changeQuantity(item.product.id, 2880, item.custom[0]?.id)}
+														>
+															2880
+														</button>
+														<button
+															class="px-3 py-1 border rounded text-sm {item.quantity === 8640 ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'}"
+															onclick={() => changeQuantity(item.product.id, 8640, item.custom[0]?.id)}
+														>
+															8640
+														</button>
+													</div>
 												{:else}
 													<Input
 														type="number"

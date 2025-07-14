@@ -57,7 +57,7 @@ export const actions: Actions = {
 		if (!orderId || !addressId) {
 			return json({ error: 'Veuillez sélectionner une option de livraison.' }, { status: 400 });
 		}
-		
+
 		// Vérifier si la commande contient des personnalisations
 		const order = await getOrderById(orderId);
 		if (!order) {
