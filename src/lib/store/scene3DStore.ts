@@ -8,7 +8,7 @@ import * as THREE from 'three';
 // 1. STORES DE BASE POUR LA CAMÉRA
 // ============================================================================
 
-const cameraOpts = { duration: 500, easing: cubicOut };
+const cameraOpts = { duration: 800, easing: cubicOut };
 
 export const cameraX = tweened(0, cameraOpts);
 export const cameraY = tweened(0.3, cameraOpts);
@@ -33,9 +33,9 @@ export const cameraTarget = derived(
 // 2. STORES POUR LES CONTRÔLES UTILISATEUR
 // ============================================================================
 
-// Contrôles de zoom et rotation
-export const zoomLevel = writable(1);
-export const lightIntensity = writable(8);
+// Contrôles de zoom et rotation avec transitions fluides
+export const zoomLevel = tweened(1, { duration: 600, easing: cubicOut });
+export const lightIntensity = tweened(8, { duration: 600, easing: cubicOut });
 
 // Contrôles de rotation du modèle
 export const modelRotation = writable({ x: 0, y: 0 });
@@ -82,13 +82,13 @@ function colorInterpolator(from: string, to: string) {
 
 // Stores tweened pour les couleurs avec interpolation personnalisée
 export const color1Tweened = tweened('#ffffff', {
-	duration: 800,
+	duration: 1000,
 	easing: cubicOut,
 	interpolate: colorInterpolator
 });
 
 export const color2Tweened = tweened('#ffffff', {
-	duration: 800,
+	duration: 1000,
 	easing: cubicOut,
 	interpolate: colorInterpolator
 });
@@ -117,7 +117,8 @@ export const BackgroundColorStore = (() => {
 			{ color: currentColor },
 			{
 				color: newColor,
-				duration: 1,
+				duration: 1.2,
+				ease: "power2.out",
 				onUpdate: function () {
 					originalSet(this.targets()[0].color);
 				}
@@ -149,7 +150,8 @@ export const LightColorStore = (() => {
 			{ color: currentColor },
 			{
 				color: newColor,
-				duration: 1,
+				duration: 1.2,
+				ease: "power2.out",
 				onUpdate: function () {
 					originalSet(this.targets()[0].color);
 				}
@@ -183,6 +185,19 @@ export function resetUserControls() {
 	modelRotation.set({ x: 0, y: 0 });
 	targetRotation.set({ x: 0, y: 0 });
 	isInteracting.set(false);
+}
+
+// Fonction pour réinitialiser les contrôles de l'atelier
+export function resetAtelierControls() {
+	zoomLevel.set(1);
+	lightIntensity.set(8);
+}
+
+// Fonction pour réinitialiser les contrôles de l'atelier avec transition fluide
+export function resetAtelierControlsWithTransition() {
+	// Transition fluide vers les valeurs par défaut
+	zoomLevel.set(1);
+	lightIntensity.set(8);
 }
 
 // Fonction pour mettre à jour la position de la caméra avec zoom
@@ -304,7 +319,7 @@ export function updateSceneColors(): void {
 	setSceneColors(currentPage, currentMode);
 }
 
-// API publique pour mettre à jour la position de la caméra
+// API publique pour mettre à jour la position de la caméra avec transitions fluides
 export function updateCameraPosition(pathname: string): void {
 	const currentMode: 'light' | 'dark' = browser ? (mode.current ?? 'light') : 'light';
 	const mobile = get(isSmall);
@@ -323,29 +338,38 @@ export function updateCameraPosition(pathname: string): void {
 		case '/':
 			if (mobile) ([x, y, z] = [1, 1, 1]), ([tx, ty, tz] = [0, 0.7, 0]);
 			else ([x, y, z] = [0.8, 0.3, 1.6]), ([tx, ty, tz] = [-0.7, 0.5, 0]);
+			// Réinitialiser les contrôles de l'atelier avec transition
+			resetAtelierControlsWithTransition();
 			break;
 		case '/atelier':
 			[x, y, z] = [1, 1, 1];
 			[tx, ty, tz] = [0, 0.5, 0];
+			// Pas de réinitialisation dans l'atelier
 			break;
 		case '/catalogue':
 			if (mobile) ([x, y, z] = [1, 1, 1]), ([tx, ty, tz] = [0, 0.7, 0]);
 			else ([x, y, z] = [1, 1, 1]), ([tx, ty, tz] = [0, 0.6, 0]);
+			// Réinitialiser les contrôles de l'atelier avec transition
+			resetAtelierControlsWithTransition();
 			break;
 		case '/blog':
 			[x, y, z] = [0.8, 0.5, 0.8];
 			[tx, ty, tz] = [-0.8, 0.5, 0];
+			// Réinitialiser les contrôles de l'atelier avec transition
+			resetAtelierControlsWithTransition();
 			break;
 		case '/contact':
 			[x, y, z] = [0.5, 2, 0.5];
 			[tx, ty, tz] = [0.5, 1, 0];
+			// Réinitialiser les contrôles de l'atelier avec transition
+			resetAtelierControlsWithTransition();
 			break;
 	}
 
 	/* Palette couleurs selon le thème */
 	setSceneColors(pathname, currentMode);
 
-	/* Mise à jour des tweened */
+	/* Mise à jour des tweened avec transitions fluides */
 	cameraX.set(x);
 	cameraY.set(y);
 	cameraZ.set(z);

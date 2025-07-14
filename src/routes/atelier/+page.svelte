@@ -64,6 +64,15 @@
 		lightIntensity.set(lightIntensityValue);
 	});
 
+	// Réinitialiser les contrôles quand on quitte l'atelier
+	$effect(() => {
+		return () => {
+			// Cette fonction se déclenche quand le composant est détruit
+			zoomLevel.set(1);
+			lightIntensity.set(8);
+		};
+	});
+
 	const openTutoriel = () => {
 		showTutoriel = true;
 		currentStep = 0;
@@ -122,28 +131,31 @@
 	<div class="rcb max-w-[800px] w-[80vw]">
 		<!-- 1) Bouton pour ouvrir le Sheet (enveloppé dans un <div>) -->
 		<div class="rbs">
-						<!-- 3) Contrôles de zoom et lumière -->
-						<div transition:fly={{ y: 100, duration: 600, opacity: 0.2, delay: 200 }} class="flex flex-col gap-4 p-4">
-							<!-- Contrôle du zoom -->
-							<div class="flex items-center gap-3">
-								<ZoomIn style="width: 20px; height: 20px" class="text-gray-600" />
-								<div class="flex-1">
-									<label class="text-sm font-medium text-gray-700 mb-2 block">Zoom</label>
-									<Slider type="single" bind:value={zoomLevelValue} max={3} min={0.5} step={0.1} />
-									<div class="text-xs text-gray-500 mt-1">{zoomLevelValue.toFixed(1)}x</div>
-								</div>
-							</div>
-			
-							<!-- Contrôle de l'intensité lumineuse -->
-							<div class="flex items-center gap-3">
-								<Sun style="width: 20px; height: 20px" class="text-gray-600" />
-								<div class="flex-1">
-									<label class="text-sm font-medium text-gray-700 mb-2 block">Intensité lumineuse</label>
-									<Slider type="single" bind:value={lightIntensityValue} max={15} min={1} step={0.5} />
-									<div class="text-xs text-gray-500 mt-1">{lightIntensityValue.toFixed(1)}</div>
-								</div>
-							</div>
-						</div>
+										<!-- 3) Contrôles de zoom et lumière -->
+		<div 
+			transition:fly={{ y: 100, duration: 800, opacity: 0.2, delay: 200 }} 
+			class="flex flex-col gap-4 p-4 "
+		>
+			<!-- Contrôle du zoom -->
+			<div class="flex items-center gap-3">
+				<ZoomIn style="width: 20px; height: 20px" class="text-gray-600 dark:text-gray-400" />
+				<div class="flex-1">
+					<label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Zoom</label>
+					<Slider type="single" bind:value={zoomLevelValue} max={3} min={0.5} step={0.1} />
+					<div class="text-xs text-gray-500 dark:text-gray-400 mt-1">{zoomLevelValue.toFixed(1)}x</div>
+				</div>
+			</div>
+
+			<!-- Contrôle de l'intensité lumineuse -->
+			<div class="flex items-center gap-3">
+				<Sun style="width: 20px; height: 20px" class="text-gray-600 dark:text-gray-400" />
+				<div class="flex-1">
+					<label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Intensité lumineuse</label>
+					<Slider type="single" bind:value={lightIntensityValue} max={15} min={1} step={0.5} />
+					<div class="text-xs text-gray-500 dark:text-gray-400 mt-1">{lightIntensityValue.toFixed(1)}</div>
+				</div>
+			</div>
+		</div>
 			<div class="rbc">
 				<div transition:fly={{ y: 100, duration: 400, opacity: 0.2 }}>
 					<Sheet.Root bind:open={editModel}>
