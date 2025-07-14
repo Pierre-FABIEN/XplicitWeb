@@ -40,7 +40,7 @@
 						</div>
 					</div>
 					
-					<h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight">
+					<h1 class="articleTitle">
 						{data.post?.title || 'Titre inconnu'}
 					</h1>
 				</div>
@@ -126,6 +126,19 @@
 </div>
 
 <style>
+	/* Style du titre adapté */
+	.articleTitle {
+		font-family: 'Open Sans Variable', sans-serif;
+		font-style: italic;
+		font-size: clamp(1.5rem, 6vw, 4rem);
+		margin-bottom: 12px;
+		-webkit-text-stroke: 1px black;
+		color: transparent;
+		text-transform: uppercase;
+		font-weight: 900;
+		line-height: 1;
+	}
+	
 	/* Styles personnalisés pour améliorer la lisibilité */
 	:global(.prose) {
 		line-height: 1.8;
