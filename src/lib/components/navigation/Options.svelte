@@ -21,11 +21,11 @@
 	}
 
 	function toggleDarkMode() {
-		console.log('🌙 [Options] toggleDarkMode appelé, état avant:', {
-			darkMod,
-			localStorage: localStorage.getItem(DARK_MODE_KEY),
-			systemPreference: window.matchMedia('(prefers-color-scheme: dark)').matches
-		});
+		// console.log('🌙 [Options] toggleDarkMode appelé, état avant:', {
+		// 	darkMod,
+		// 	localStorage: localStorage.getItem(DARK_MODE_KEY),
+		// 	systemPreference: window.matchMedia('(prefers-color-scheme: dark)').matches
+		// });
 		
 		toggleMode();
 		
@@ -36,12 +36,12 @@
 				? newDarkModeLocal === 'dark'
 				: window.matchMedia('(prefers-color-scheme: dark)').matches;
 			
-			console.log('🌙 [Options] toggleDarkMode après:', {
-				darkMod,
-				newState,
-				localStorage: newDarkModeLocal,
-				systemPreference: window.matchMedia('(prefers-color-scheme: dark)').matches
-			});
+			// console.log('🌙 [Options] toggleDarkMode après:', {
+			// 	darkMod,
+			// 	newState,
+			// 	localStorage: newDarkModeLocal,
+			// 	systemPreference: window.matchMedia('(prefers-color-scheme: dark)').matches
+			// });
 			
 			darkMod = newState;
 			

@@ -22,7 +22,7 @@
 			toast.error($totpMessage);
 		}
 
-		console.log($totpData);
+		//console.log($totpData);
 	});
 </script>
 

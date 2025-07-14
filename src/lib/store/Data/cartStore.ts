@@ -300,6 +300,6 @@ export function resetCart() {
 }
 
 // Debug
-cart.subscribe((currentCart) => {
-	console.log('Cart updated =>', JSON.stringify(currentCart, null, 2));
-});
+// cart.subscribe((currentCart) => {
+// 	console.log('Cart updated =>', JSON.stringify(currentCart, null, 2));
+// });

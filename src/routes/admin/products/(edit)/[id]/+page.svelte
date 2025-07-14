@@ -15,7 +15,7 @@
 
 	let { data } = $props();
 
-	console.log(data);
+	//console.log(data);
 
 	const updateProduct = superForm(data.IupdateProductSchema, {
 		validators: zodClient(updateProductSchema),

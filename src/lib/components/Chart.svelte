@@ -5,7 +5,7 @@
 	let { data = [], options = {} } = $props();
 
 	// Juste un petit console.log pour vérifier au runtime
-	console.log('Chart data in Chart.svelte:', data);
+	//console.log('Chart data in Chart.svelte:', data);
 
 	$effect(async () => {
 		if (typeof window === 'undefined') return;

@@ -31,7 +31,7 @@
 	$effect(() => {
 		const pageData = get(page);
 		id = pageData.params.id;
-		console.log('Category ID on mount:', id);
+		//console.log('Category ID on mount:', id);
 	});
 
 	$effect(() => {

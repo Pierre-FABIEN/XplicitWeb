@@ -114,10 +114,6 @@
 	});
 
 	$effect(() => {
-		console.log($createPaymentData, 'khsblsihjbsliub');
-	});
-
-	$effect(() => {
 		if (selectedPoint) {
 			$createPaymentData.servicePointId = selectedPoint.id.toString();
 			$createPaymentData.servicePointPostNumber = selectedPoint.extra_data?.shop_ref || '';
@@ -191,7 +187,7 @@
 		}
 
 		try {
-			console.log(selectedAddressObj, 'selectedAddressObj');
+			//console.log(selectedAddressObj, 'selectedAddressObj');
 
 			const totalWeight = computeTotalWeight(); // Fonction locale qui calcule le poids total du panier
 			const totalQuantity = computeTotalQuantity(); // Fonction locale qui calcule le nombre d'articles total
@@ -220,7 +216,7 @@
 			if (!shippingOptions.length) {
 				toast.error("Aucune option de livraison n'a été trouvée.");
 			} else {
-				console.log('Options de livraison reçues:', shippingOptions);
+				//console.log('Options de livraison reçues:', shippingOptions);
 			}
 		} catch (err) {
 			console.error('❌ Erreur API Sendcloud:', err);
@@ -229,7 +225,7 @@
 	}
 
 	function chooseShippingOption(chosenOption: any) {
-		console.log('Option choisie:', chosenOption);
+		//console.log('Option choisie:', chosenOption);
 
 		selectedShippingOption = chosenOption.code;
 
@@ -282,7 +278,7 @@
 
 			// Stocker les points relais reçus
 			servicePoints = data;
-			console.log('✅ Points relais reçus:', servicePoints);
+			//console.log('✅ Points relais reçus:', servicePoints);
 
 			if (!servicePoints.length) {
 				toast.error('Aucun point relais trouvé pour ce transporteur.');
@@ -350,12 +346,12 @@
 		$createPaymentData.shippingCost = shippingCost.toString();
 		$createPaymentData.shippingOption = selectedShippingOption;
 
-		console.log(
-			'Checkout avec option de livraison:',
-			selectedShippingOption,
-			'coût:',
-			shippingCost
-		);
+		// console.log(
+		// 	'Checkout avec option de livraison:',
+		// 	selectedShippingOption,
+		// 	'coût:',
+		// 	shippingCost
+		// );
 	}
 
 	$effect(() => {

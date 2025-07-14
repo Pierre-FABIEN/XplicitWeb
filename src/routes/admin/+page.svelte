@@ -16,7 +16,7 @@
 	 */
 	let { data } = $props();
 
-	console.log(data, 'iugoiluhg');
+	//console.log(data, 'iugoiluhg');
 
 	// Sécuriser l'accès au tableau de transactions
 	const transactions = Array.isArray(data.transactions) ? data.transactions : [];

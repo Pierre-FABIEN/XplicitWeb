@@ -15,7 +15,7 @@
 
 	let { data } = $props();
 
-	console.log(data);
+	//console.log(data);
 
 	const updateAddress = superForm(data.IupdateAddressSchema, {
 		validators: zodClient(updateAddressSchema),
@@ -57,12 +57,12 @@
 	}
 
 	function selectSuggestion(suggestion: any) {
-		console.log('Suggestion sélectionnée :', suggestion);
+		//console.log('Suggestion sélectionnée :', suggestion);
 
 		// Force la conversion du Proxy en objet standard
 		const components = JSON.parse(JSON.stringify(suggestion.components));
 
-		console.log('Données extraites après transformation :', components); // Vérification
+		//console.log('Données extraites après transformation :', components); // Vérification
 
 		// Extraction sécurisée des données avec les bons noms de clés
 		$updateAddressData.street_number = components.house_number || '';
@@ -84,7 +84,7 @@
 	}
 
 	$effect(() => {
-		console.log($updateAddressMessage);
+		//console.log($updateAddressMessage);
 
 		if ($updateAddressMessage === 'Address updated successfully') {
 			toast.success($updateAddressMessage);

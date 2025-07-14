@@ -114,9 +114,9 @@
 		openCategory = false;
 	}
 
-	$effect(() => {
-		console.log(JSON.stringify($updateData, null, 2), JSON.stringify(checkedTagIds, null, 2));
-	});
+	// $effect(() => {
+	// 	console.log(JSON.stringify($updateData, null, 2), JSON.stringify(checkedTagIds, null, 2));
+	// });
 </script>
 
 <form method="POST" action="?/updatePost" use:updateEnhance class="space-y-4">

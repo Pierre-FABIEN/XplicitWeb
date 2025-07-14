@@ -12,7 +12,7 @@
 	// Props
 	let { data } = $props();
 
-	console.log(data, 'data');
+	//console.log(data, 'data');
 
 	// Form handling with superForm
 	const deleteBlogPost = superForm(data?.IdeleteBlogPostSchema ?? {}, {

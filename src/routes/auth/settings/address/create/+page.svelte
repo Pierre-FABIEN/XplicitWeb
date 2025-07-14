@@ -38,7 +38,7 @@
 	});
 
 	$effect(() => {
-		console.log($createAddressData);
+		//console.log($createAddressData);
 	});
 
 	$effect(() => {
@@ -81,12 +81,12 @@
 	}
 
 	function selectSuggestion(suggestion: any) {
-		console.log('Suggestion sélectionnée :', suggestion);
+		//console.log('Suggestion sélectionnée :', suggestion);
 
 		// Force la conversion du Proxy en objet standard
 		const components = JSON.parse(JSON.stringify(suggestion.components));
 
-		console.log('Données extraites après transformation :', components); // Vérification
+		//console.log('Données extraites après transformation :', components); // Vérification
 
 		// Extraction sécurisée des données avec les bons noms de clés
 		$createAddressData.street_number = components.house_number || '';

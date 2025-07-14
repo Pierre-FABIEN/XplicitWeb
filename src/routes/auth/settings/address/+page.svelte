@@ -15,7 +15,7 @@
 
 	/* ───────────────────────────── Props ─────────────────────────────── */
 	let { data } = $props(); // addresses from parent load()
-	console.log('[AddressPage] Data loaded:', data);
+	//console.log('[AddressPage] Data loaded:', data);
 
 	/* ───────────────────────────── Forms ─────────────────────────────── */
 	const deleteAddress = superForm(data?.IdeleteAddressSchema ?? {}, {
@@ -32,18 +32,18 @@
 	/* ───────────────────────────── Effects ───────────────────────────── */
 	$effect(() => {
 		if ($deleteAddressMessage) {
-			console.log(`[AddressPage] Form message: ${$deleteAddressMessage}`);
+			//console.log(`[AddressPage] Form message: ${$deleteAddressMessage}`);
 			toast($deleteAddressMessage);
 		}
 	});
 
 	/* ───────────────────────────── Helpers ───────────────────────────── */
 	function edit(id: string) {
-		console.log(`[AddressPage] Navigating to edit address ID: ${id}`);
+		//console.log(`[AddressPage] Navigating to edit address ID: ${id}`);
 		goto(`/auth/settings/address/${id}`);
 	}
 	function add() {
-		console.log('[AddressPage] Navigating to create new address.');
+		//console.log('[AddressPage] Navigating to create new address.');
 		goto('/auth/settings/address/create');
 	}
 </script>

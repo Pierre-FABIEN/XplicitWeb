@@ -15,8 +15,6 @@
 
 	let { data } = $props();
 
-	console.log(data, 'ihygihguiyguyg');
-
 	// Initialiser les formulaires Superform
 	const emailForm = superForm(data.emailForm, {
 		validators: zodClient(emailSchema),

@@ -46,7 +46,7 @@
 			};
 			// Add the product to the cart
 			addToCart(result);
-			console.log('Produit ajouté au panier :', result);
+			//console.log('Produit ajouté au panier :', result);
 		}
 	}
 

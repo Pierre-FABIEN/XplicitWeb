@@ -92,9 +92,6 @@
 
 	const roleOptions = ['ADMIN', 'CLIENT'];
 
-	$effect(() => {
-		console.log('form', $form);
-	});
 </script>
 
 <div class="min-h-screen min-w-[100vw] absolute">
