@@ -113,7 +113,7 @@ async function main() {
 				name: 'Original',
 				description:
 					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-				price: 10,
+				price: 0.9166666666666667,
 				stock: 100000,
 				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751910825/Xplicitdrink_Original_-_2026-min_hnctpa.png'],
 				slug: 'original',
@@ -127,7 +127,7 @@ async function main() {
 				name: 'Dragon',
 				description:
 					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-				price: 10,
+				price: 0.9166666666666667,
 				stock: 100000,
 				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751910825/Xplicitdrink_-_Dragon_-_2026-min_bweo6l.png'],
 				slug: 'dragon',
@@ -141,7 +141,7 @@ async function main() {
 				name: 'Fresh',
 				description:
 					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-				price: 10,
+				price: 0.9166666666666667,
 				stock: 100000,
 				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751910825/Xplicitdrink_-_Fresh_-_2026-min_ika4zh.png'],
 				slug: 'fresh',
@@ -155,7 +155,7 @@ async function main() {
 				name: 'Pulsar',
 				description:
 					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-				price: 10,
+				price: 0.9166666666666667,
 				stock: 100000,
 				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751910825/Xplicitdrink_-_Pulsar_-_2026-min_ej2tcu.png'],
 				slug: 'pulsar',
@@ -169,7 +169,7 @@ async function main() {
 				name: 'Wild',
 				description:
 					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-				price: 10,
+				price: 0.9166666666666667,
 				stock: 100000,
 				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751911954/Xplicitdrink_-_Wild_-_2026-min_tzibxu.png'],
 				slug: 'wild',

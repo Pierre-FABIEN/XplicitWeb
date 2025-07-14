@@ -122,9 +122,9 @@
 										tabindex="0"
 									>
 										<div class="price-number">
-											{Math.floor(product.price)}€
+											{Math.floor(product.price * 12)}€
 											<sup class="price-cents">
-												{String(Math.round((product.price % 1) * 100)).padStart(2, '0')}
+												{String(Math.round(((product.price * 12) % 1) * 100)).padStart(2, '0')}
 											</sup>
 											<span class="price-quantity">
 												<sup>x</sup>12
@@ -140,9 +140,9 @@
 										tabindex="0"
 									>
 										<div class="price-number">
-											{Math.floor(product.price)}€
+											{Math.floor(product.price * 24)}€
 											<sup class="price-cents">
-												{String(Math.round((product.price % 1) * 100)).padStart(2, '0')}
+												{String(Math.round(((product.price * 24) % 1) * 100)).padStart(2, '0')}
 											</sup>
 											<span class="price-quantity">
 												<sup>x</sup>24
