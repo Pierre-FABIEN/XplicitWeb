@@ -39,12 +39,22 @@
 	let isNativeOrder = $state(false);
 
 	/*  Options de quantité (simplifiées) */
-	let quantityOptions = $state([
-		{ label: '24 packs (576)', value: 576 },
-		{ label: '30 packs (720)', value: 720 },
-		{ label: '60 packs (1 440)', value: 1440 },
-		{ label: '120 packs (2 880)', value: 2880 }
-	]);
+	let quantityOptions = $state([24, 48, 72]);
+
+	// Calculer le total des quantités pour les commandes non-personnalisées
+	let totalNonCustomQuantity = $derived(
+		$cart.items
+			.filter(item => !item.custom || (Array.isArray(item.custom) && item.custom.length === 0))
+			.reduce((acc, item) => acc + item.quantity, 0)
+	);
+
+	// Fonction pour vérifier si on peut ajouter une quantité
+	function canAddQuantity(newQuantity: number, currentQuantity: number, isCustom: boolean): boolean {
+		if (isCustom) return true; // Pas de limite pour les personnalisées
+		
+		const otherItemsQuantity = totalNonCustomQuantity - currentQuantity;
+		return (otherItemsQuantity + newQuantity) <= 72;
+	}
 
 	/* ------------------------------------------------------------------
 	   RÉACTIONS
@@ -54,7 +64,7 @@
 	});
 
 	$effect(() => {
-		isNativeOrder = $cart.items.every((i) => !Array.isArray(i.custom) || i.custom.length === 0);
+		isNativeOrder = $cart.items.every((i) => !i.custom || (Array.isArray(i.custom) && i.custom.length === 0));
 	});
 
 	/* ------------------------------------------------------------------
@@ -124,7 +134,7 @@
 										class="p-4 border rounded-lg shadow-sm flex justify-between items-center mb-2"
 									>
 										<img
-											src={(item.custom?.length > 0 && item.custom[0].image) ||
+											src={(item.custom && Array.isArray(item.custom) && item.custom.length > 0 && item.custom[0].image) ||
 												(Array.isArray(item.product.images)
 													? item.product.images[0]
 													: item.product.images) ||
@@ -136,45 +146,40 @@
 										<div class="flex-1 mx-4">
 											<h3 class="text-lg font-semibold">
 												{item.product.name}
-												{#if item.custom && item.custom.length > 0}
+												{#if item.custom && Array.isArray(item.custom) && item.custom.length > 0}
 													<span class="text-sm font-normal text-gray-500">Custom</span>
 												{/if}
 											</h3>
 											<p class="text-gray-600">${item.product.price.toFixed(2)}€</p>
 
-											{#if item.custom && item.custom.length > 0}
+											{#if item.custom && Array.isArray(item.custom) && item.custom.length > 0}
 												<!-- Custom items: Use predefined quantity options -->
-												<select
-													class="border rounded px-3 py-2 w-full"
-													onchange={(e) =>
-														changeQuantity(
-															item.product.id,
-															parseInt(e.target.value),
-															item.custom?.[0]?.id
-														)}
-												>
-													<option value="" disabled selected>Select a quantity option...</option>
+												<div class="flex gap-2">
 													{#each quantityOptions as option}
-														<option value={option.value} selected={item.quantity === option.value}>
-															{option.label}
-														</option>
+														<button
+															class="px-3 py-1 border rounded text-sm {item.quantity === option ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}"
+															onclick={() => changeQuantity(item.product.id, option, item.custom?.[0]?.id)}
+														>
+															{option}
+														</button>
 													{/each}
-												</select>
+												</div>
 											{:else}
-												<Input
-													type="number"
-													class="border p-2 rounded w-[60px]"
-													value={item.quantity}
-													oninput={(e) =>
-														changeQuantity(
-															item.product.id,
-															parseInt(e.target.value),
-															item.custom?.id
-														)}
-													min="24"
-													max="72"
-													step="24"
-												/>
+												<!-- Non-custom items: Use buttons with quantity limit -->
+												<div class="flex gap-2">
+													{#each quantityOptions as option}
+														<button
+															class="px-3 py-1 border rounded text-sm {item.quantity === option ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'} {!canAddQuantity(option, item.quantity, false) ? 'opacity-50 cursor-not-allowed' : ''}"
+															onclick={() => canAddQuantity(option, item.quantity, false) && changeQuantity(item.product.id, option)}
+															disabled={!canAddQuantity(option, item.quantity, false)}
+														>
+															{option}
+														</button>
+													{/each}
+												</div>
+												{#if totalNonCustomQuantity > 72}
+													<p class="text-xs text-red-500 mt-1">Limite de 72 unités atteinte pour les commandes non-personnalisées</p>
+												{/if}
 											{/if}
 										</div>
 										<div class="flex flex-col items-end">

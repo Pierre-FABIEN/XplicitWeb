@@ -114,25 +114,7 @@
 
 								<div class="flex items-center justify-center gap-4">
 									<div
-										class="price"
-										onclick={() => addCart(product.id, 12)}
-										onkeydown={(e) =>
-											(e.key === 'Enter' || e.key === ' ') && addCart(product.id, 12)}
-										role="button"
-										tabindex="0"
-									>
-										<div class="price-number">
-											{Math.floor(product.price * 12)}€
-											<sup class="price-cents">
-												{String(Math.round(((product.price * 12) % 1) * 100)).padStart(2, '0')}
-											</sup>
-											<span class="price-quantity">
-												<sup>x</sup>12
-											</span>
-										</div>
-									</div>
-									<div
-										class="price"
+										class="price ccc"
 										onclick={() => addCart(product.id, 24)}
 										onkeydown={(e) =>
 											(e.key === 'Enter' || e.key === ' ') && addCart(product.id, 24)}
@@ -146,6 +128,42 @@
 											</sup>
 											<span class="price-quantity">
 												<sup>x</sup>24
+											</span>
+										</div>
+									</div>
+									<div
+										class="price"
+										onclick={() => addCart(product.id, 48)}
+										onkeydown={(e) =>
+											(e.key === 'Enter' || e.key === ' ') && addCart(product.id, 48)}
+										role="button"
+										tabindex="0"
+									>
+										<div class="price-number">
+											{Math.floor(product.price * 48)}€
+											<sup class="price-cents">
+												{String(Math.round(((product.price * 48) % 1) * 100)).padStart(2, '0')}
+											</sup>
+											<span class="price-quantity">
+												<sup>x</sup>48
+											</span>
+										</div>
+									</div>
+									<div
+										class="price"
+										onclick={() => addCart(product.id, 72)}
+										onkeydown={(e) =>
+											(e.key === 'Enter' || e.key === ' ') && addCart(product.id, 72)}
+										role="button"
+										tabindex="0"
+									>
+										<div class="price-number">
+											{Math.floor(product.price * 72)}€
+											<sup class="price-cents">
+												{String(Math.round(((product.price * 72) % 1) * 100)).padStart(2, '0')}
+											</sup>
+											<span class="price-quantity">
+												<sup>x</sup>72
 											</span>
 										</div>
 									</div>
@@ -180,7 +198,7 @@
 	.price {
 		cursor: pointer;
 		position: relative;
-		width: 120px;
+		width: 100px;
 		height: 60px;
 		.price-number {
 			position: absolute;
@@ -193,11 +211,13 @@
 			text-align: left;
 			-webkit-text-stroke: 1px white;
 			text-align: center;
-			font-size: 40px;
+			font-size: 30px;
 			text-transform: black;
 			font-weight: 900;
 			color: black;
 			z-index: 1;
+			top: 15px;
+
 			&:hover {
 				transform: scale(1.2);
 
@@ -207,16 +227,16 @@
 			}
 
 			.price-quantity {
-				font-size: 35px;
+				font-size: 25px;
 				position: absolute;
 				left: 20px;
-				top: -20px;
+				top: -17px;
 				transform: rotate(-10deg);
 				z-index: -1;
 				color: white;
 
 				sup {
-					font-size: 25px;
+					font-size: 20px;
 				}
 			}
 
