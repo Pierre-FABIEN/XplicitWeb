@@ -9,7 +9,9 @@
 	<article class=" shadow-md rounded-lg overflow-hidden">
 		<div class="p-6">
 			<h1 class="text-3xl font-bold mb-4">{data.post.title}</h1>
-			<p class=" mb-6">{data.post.content}</p>
+			<div class="mb-6 prose prose-lg max-w-none">
+				{@html data.post.content}
+			</div>
 
 			<div class="flex items-center justify-between text-sm mb-4">
 				<div>
