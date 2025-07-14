@@ -25,6 +25,27 @@
 	import { mode as modeStore } from 'mode-watcher';
 
 	/* ------------------------------------------------------------------
+	   FONCTIONS UTILITAIRES
+	------------------------------------------------------------------ */
+	// Fonction pour calculer le prix des canettes personnalisées
+	function getCustomCanPrice(quantity: number): number {
+		switch (quantity) {
+			case 576:
+				return 1.60;
+			case 720:
+				return 1.40;
+			case 1440:
+				return 0.99;
+			case 2880:
+				return 0.79;
+			case 8640:
+				return 0.69;
+			default:
+				return 1.60;
+		}
+	}
+
+	/* ------------------------------------------------------------------
 	   PROPS & ÉTAT
 	------------------------------------------------------------------ */
 	let { data } = $props();
@@ -159,7 +180,13 @@
 													<span class="text-sm font-normal text-gray-500">Custom</span>
 												{/if}
 											</h3>
-											<p class="text-gray-600">${item.product.price.toFixed(2)}€</p>
+											<p class="text-gray-600">
+												{#if item.custom && Array.isArray(item.custom) && item.custom.length > 0}
+													{getCustomCanPrice(item.quantity).toFixed(2)}€ l'unité
+												{:else}
+													{item.product.price.toFixed(2)}€
+												{/if}
+											</p>
 
 											{#if item.custom && Array.isArray(item.custom) && item.custom.length > 0}
 												<!-- Custom items: Use predefined quantity options -->
@@ -193,10 +220,14 @@
 										</div>
 										<div class="flex flex-col items-end">
 											<p class="text-lg font-semibold">
-												{(item.price * item.quantity).toFixed(2)}€
+												{#if item.custom && Array.isArray(item.custom) && item.custom.length > 0}
+													{(getCustomCanPrice(item.quantity) * item.quantity).toFixed(2)}€
+												{:else}
+													{(item.price * item.quantity).toFixed(2)}€
+												{/if}
 											</p>
 											<button
-												onclick={() => handleRemoveFromCart(item.product.id, item.custom?.id)}
+												onclick={() => handleRemoveFromCart(item.product.id, item.custom?.[0]?.id)}
 												class="text-red-600 hover:text-red-800"
 											>
 												<Trash />

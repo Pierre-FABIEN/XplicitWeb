@@ -13,11 +13,11 @@ export type OrderItem = {
 	};
 	quantity: number;
 	price: number;
-	custom?: {
+	custom?: Array<{
 		id: string;
 		image: string;
 		userMessage: string;
-	};
+	}>;
 };
 
 type CartState = {
@@ -44,6 +44,29 @@ export const cart = writable<CartState>({
 	total: 0,
 	lastModified: Date.now()
 });
+
+/**
+ * Calcule le prix unitaire pour les canettes personnalisées selon la quantité
+ * @param quantity - Quantité de canettes
+ * @returns Prix unitaire en euros
+ */
+function getCustomCanPrice(quantity: number): number {
+	switch (quantity) {
+		case 576:
+			return 1.60;
+		case 720:
+			return 1.40;
+		case 1440:
+			return 0.99;
+		case 2880:
+			return 0.79;
+		case 8640:
+			return 0.69;
+		default:
+			// Prix par défaut si la quantité ne correspond pas aux paliers
+			return 1.60;
+	}
+}
 
 /**
  * Helper function to recalc the final total
@@ -180,11 +203,12 @@ export const addToCart = (product: OrderItem) => {
 			});
 		}
 
-		// Recalc product subtotal
-		const newSubtotal = currentCart.items.reduce(
-			(sum, item) => sum + item.product.price * item.quantity,
-			0
-		);
+		// Recalc product subtotal with custom pricing for personalized items
+		const newSubtotal = currentCart.items.reduce((sum, item) => {
+			const isCustom = Array.isArray(item.custom) && item.custom.length > 0;
+			const unitPrice = isCustom ? getCustomCanPrice(item.quantity) : item.product.price;
+			return sum + unitPrice * item.quantity;
+		}, 0);
 		const newTax = parseFloat((newSubtotal * 0.055).toFixed(2));
 
 		currentCart.subtotal = newSubtotal;
@@ -203,7 +227,7 @@ export const addToCart = (product: OrderItem) => {
 export const removeFromCart = (productId: string, customId?: string) => {
 	cart.update((currentCart) => {
 		const itemToRemoveExists = currentCart.items.some(
-			(item) => item.product.id === productId && (!customId || item.custom?.id === customId)
+			(item) => item.product.id === productId && (!customId || item.custom?.[0]?.id === customId)
 		);
 
 		if (!itemToRemoveExists) {
@@ -213,15 +237,17 @@ export const removeFromCart = (productId: string, customId?: string) => {
 
 		currentCart.items = currentCart.items.filter((item) => {
 			if (customId) {
-				return !(item.product.id === productId && item.custom?.id === customId);
+				return !(item.product.id === productId && item.custom?.[0]?.id === customId);
 			}
 			return item.product.id !== productId;
 		});
 
-		const newSubtotal = currentCart.items.reduce(
-			(sum, item) => sum + item.product.price * item.quantity,
-			0
-		);
+		// Recalc product subtotal with custom pricing for personalized items
+		const newSubtotal = currentCart.items.reduce((sum, item) => {
+			const isCustom = Array.isArray(item.custom) && item.custom.length > 0;
+			const unitPrice = isCustom ? getCustomCanPrice(item.quantity) : item.product.price;
+			return sum + unitPrice * item.quantity;
+		}, 0);
 		const newTax = parseFloat((newSubtotal * 0.055).toFixed(2));
 
 		currentCart.subtotal = newSubtotal;
@@ -240,7 +266,7 @@ export const removeFromCart = (productId: string, customId?: string) => {
 export const updateCartItemQuantity = (productId: string, quantity: number, customId?: string) => {
 	cart.update((currentCart) => {
 		const itemIndex = currentCart.items.findIndex(
-			(item) => item.product.id === productId && (!customId || item.custom?.id === customId)
+			(item) => item.product.id === productId && (!customId || item.custom?.[0]?.id === customId)
 		);
 
 		if (itemIndex === -1) {
@@ -271,7 +297,12 @@ export const updateCartItemQuantity = (productId: string, quantity: number, cust
 
 		currentItem.quantity = newQuantity;
 
-		const newSubtotal = currentCart.items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+		// Recalc product subtotal with custom pricing for personalized items
+		const newSubtotal = currentCart.items.reduce((sum, i) => {
+			const isCustom = Array.isArray(i.custom) && i.custom.length > 0;
+			const unitPrice = isCustom ? getCustomCanPrice(i.quantity) : i.product.price;
+			return sum + unitPrice * i.quantity;
+		}, 0);
 		const newTax = parseFloat((newSubtotal * 0.055).toFixed(2));
 
 		currentCart.subtotal = newSubtotal;

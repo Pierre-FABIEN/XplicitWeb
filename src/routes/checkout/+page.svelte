@@ -32,6 +32,24 @@
 
 	let { data } = $props();
 
+	// Fonction pour calculer le prix des canettes personnalisées
+	function getCustomCanPrice(quantity: number): number {
+		switch (quantity) {
+			case 576:
+				return 1.60;
+			case 720:
+				return 1.40;
+			case 1440:
+				return 0.99;
+			case 2880:
+				return 0.79;
+			case 8640:
+				return 0.69;
+			default:
+				return 1.60;
+		}
+	}
+
 	// Runes Svelte 5
 	let stripe = $state(null);
 	let selectedAddressId = $state<string | undefined>(undefined);
@@ -598,7 +616,11 @@
 													</button>
 												</div>
 												<p class="text-sm text-muted-foreground">
-													{item.product.price.toFixed(2)}€ l'unité
+													{#if item.custom?.length > 0}
+														{getCustomCanPrice(item.quantity).toFixed(2)}€ l'unité
+													{:else}
+														{item.product.price.toFixed(2)}€ l'unité
+													{/if}
 												</p>
 
 												{#if item.custom?.length > 0}
@@ -646,7 +668,11 @@
 												{/if}
 
 												<p class="text-right font-medium">
-													{(item.price * item.quantity).toFixed(2)}€
+													{#if item.custom?.length > 0}
+														{(getCustomCanPrice(item.quantity) * item.quantity).toFixed(2)}€
+													{:else}
+														{(item.price * item.quantity).toFixed(2)}€
+													{/if}
 												</p>
 											</div>
 										</div>
