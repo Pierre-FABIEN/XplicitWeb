@@ -132,30 +132,27 @@
 		<!-- 1) Bouton pour ouvrir le Sheet (enveloppé dans un <div>) -->
 		<div class="rbs">
 										<!-- 3) Contrôles de zoom et lumière -->
-		<div 
-			transition:fly={{ y: 100, duration: 800, opacity: 0.2, delay: 200 }} 
-			class="flex flex-col gap-4 p-4 "
-		>
+
 			<!-- Contrôle du zoom -->
-			<div class="flex items-center gap-3">
-				<ZoomIn style="width: 20px; height: 20px" class="text-gray-600 dark:text-gray-400" />
+			<div transition:fly={{ y: 100, duration: 800, opacity: 0.2, delay: 200 }}  class="flex items-center mx-5">
+				<ZoomIn style="width: 20px; height: 20px" class="text-gray-600 dark:text-gray-400 m-2" />
 				<div class="flex-1">
-					<label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Zoom</label>
-					<Slider type="single" bind:value={zoomLevelValue} max={3} min={0.5} step={0.1} />
+					<label for="zoom-slider" class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Zoom</label>
+					<Slider id="zoom-slider" type="single" bind:value={zoomLevelValue} max={3} min={0.5} step={0.1}  class="w-[120px]"/>
 					<div class="text-xs text-gray-500 dark:text-gray-400 mt-1">{zoomLevelValue.toFixed(1)}x</div>
 				</div>
 			</div>
 
 			<!-- Contrôle de l'intensité lumineuse -->
-			<div class="flex items-center gap-3">
-				<Sun style="width: 20px; height: 20px" class="text-gray-600 dark:text-gray-400" />
+			<div transition:fly={{ y: 100, duration: 800, opacity: 0.2, delay: 200 }}  class="flex items-center mx-5">
+				<Sun style="width: 20px; height: 20px" class="text-gray-600 dark:text-gray-400 m-2" />
 				<div class="flex-1">
-					<label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Intensité lumineuse</label>
-					<Slider type="single" bind:value={lightIntensityValue} max={15} min={1} step={0.5} />
+					<label for="light-slider" class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Intensité lumineuse</label>
+					<Slider id="light-slider" type="single" bind:value={lightIntensityValue} max={15} min={1} step={0.5} class="w-[120px]" />
 					<div class="text-xs text-gray-500 dark:text-gray-400 mt-1">{lightIntensityValue.toFixed(1)}</div>
 				</div>
 			</div>
-		</div>
+
 			<div class="rbc">
 				<div transition:fly={{ y: 100, duration: 400, opacity: 0.2 }}>
 					<Sheet.Root bind:open={editModel}>
