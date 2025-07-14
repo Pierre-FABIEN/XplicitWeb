@@ -37,7 +37,7 @@
 </script>
 
 <!-- UI Table -->
-<div class="ccc w-xl m-5">
+<div class="ccc w-[100%]">
 	<Table
 		name="Ventes"
 		columns={userColumns}

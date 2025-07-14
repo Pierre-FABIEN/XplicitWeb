@@ -16,3 +16,33 @@ export const createContactSubmission = async (data: CreateContactSubmissionData)
 		throw new Error('Could not create contact submission.');
 	}
 };
+
+export const getAllContactSubmissions = async () => {
+	try {
+		const submissions = await prisma.contactSubmission.findMany({
+			orderBy: {
+				createdAt: 'desc'
+			}
+		});
+		return submissions;
+	} catch (error) {
+		console.error('Error retrieving contact submissions:', error);
+		throw new Error('Could not retrieve contact submissions.');
+	} finally {
+		await prisma.$disconnect();
+	}
+};
+
+export const getContactSubmissionById = async (id: string) => {
+	try {
+		const submission = await prisma.contactSubmission.findUnique({
+			where: { id }
+		});
+		return submission;
+	} catch (error) {
+		console.error('Error retrieving contact submission:', error);
+		throw new Error('Could not retrieve contact submission.');
+	} finally {
+		await prisma.$disconnect();
+	}
+};

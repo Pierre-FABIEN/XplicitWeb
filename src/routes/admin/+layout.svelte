@@ -17,7 +17,8 @@
 					{ title: 'ventes', url: '/admin/sales' },
 					{ title: 'utilisateurs', url: '/admin/users' },
 					{ title: 'produits', url: '/admin/products' },
-					{ title: 'blog', url: '/admin/blog' }
+					{ title: 'blog', url: '/admin/blog' },
+					{ title: 'contacts', url: '/admin/contacts' }
 				]
 			}
 		]

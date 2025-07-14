@@ -121,7 +121,7 @@
 <h1 class="m-5 text-4xl">Gestion produits</h1>
 
 <!-- UI Table -->
-<div class="ccc w-xl m-5">
+<div class="ccc w-[100%]">
 	<Table
 		name="Produits"
 		columns={productColumns}
@@ -131,7 +131,7 @@
 	/>
 </div>
 
-<div class="ccc w-xl m-5">
+<div class="ccc w-[100%]">
 	<Table
 		name="Catégories"
 		columns={categoryColumns}

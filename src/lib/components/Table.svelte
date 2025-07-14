@@ -105,7 +105,7 @@
 	});
 </script>
 
-<div class="rcs w-full">
+<div class="rcs w-[90%]">
 	<div class="w-full mt-10">
 		<div class="border rounded p-2">
 			<h2 class="text-2xl font-bold mb-5">{name}</h2>

@@ -69,7 +69,7 @@
 	});
 </script>
 
-<div class="ccc w-xl m-5">
+<div class="ccc w-[100%]">
 	<div class="m-5 p-5 border rounded w-[100%]">
 		<form
 			method="POST"
