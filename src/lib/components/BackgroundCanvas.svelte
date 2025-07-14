@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { BackgroundColorStore } from '$lib/store/BackgroundColorStore';
-	import { LightColorStore } from '$lib/store/BackgroundColorStore';
+	import { BackgroundColorStore } from '$lib/store/scene3DStore';
+	import { LightColorStore } from '$lib/store/scene3DStore';
 
 	let canvas: HTMLCanvasElement;
 

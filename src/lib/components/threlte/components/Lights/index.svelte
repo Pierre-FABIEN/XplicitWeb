@@ -2,6 +2,7 @@
 	import { T, useTask } from '@threlte/core';
 	import LightColors from './LightColors.svelte';
 	import LightRounded from './LightRounded.svelte';
+	import { lightIntensity } from '$lib/store/scene3DStore';
 </script>
 
 <T.AmbientLight intensity={1} />
@@ -11,7 +12,7 @@
 
 <T.DirectionalLight
 	position={[0, 0.5, 2]}
-	intensity={8}
+	intensity={$lightIntensity}
 	castShadow
 	shadow.mapSize.width={4096}
 	shadow.mapSize.height={4096}

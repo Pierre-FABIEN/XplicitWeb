@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core';
-	import { LightStore, color1Tweened, color2Tweened } from '$lib/store/lightColorStore';
+	import { LightStore, color1Tweened, color2Tweened } from '$lib/store/scene3DStore';
 	import { get } from 'svelte/store';
 	import * as THREE from 'three';
 

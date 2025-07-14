@@ -2,7 +2,7 @@
 	import { MoonIcon, SunIcon, Minimize2Icon, Maximize2Icon } from 'lucide-svelte';
 	import { toggleMode } from 'mode-watcher';
 	import { Switch } from '$shadcn/switch/index.js';
-	import { updateSceneColors } from '$lib/store/animationTimelineStore';
+	import { updateSceneColors } from '$lib/store/scene3DStore';
 
 	const DARK_MODE_KEY = 'mode-watcher-mode';
 	let darkMod = $state(false);
@@ -63,7 +63,7 @@
 
 		document.addEventListener('fullscreenchange', updateFullscreenStatus);
 
-		const keydownHandler = (e) => {
+		const keydownHandler = (e: KeyboardEvent) => {
 			if (e.key === 'F11') {
 				e.preventDefault();
 				toggleFullscreen();

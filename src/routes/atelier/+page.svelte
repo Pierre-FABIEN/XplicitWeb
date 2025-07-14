@@ -4,13 +4,14 @@
 	import { Textarea } from '$shadcn/textarea';
 	import * as Sheet from '$shadcn/sheet';
 	import * as Tooltip from '$shadcn/tooltip';
+	import { Slider } from '$lib/components/shadcn/ui/slider/index.js';
 	import { filesFieldProxy, superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { createCustomSchema } from '$lib/schema/products/customSchema';
 	import { toast } from 'svelte-sonner';
 	import { buttonVariants } from '$shadcn/button';
-	import { Box, Move3d, ShieldQuestion } from 'lucide-svelte';
-	import { textureStore } from '$lib/store/textureStore.js';
+	import { Box, Move3d, ShieldQuestion, ZoomIn, Sun } from 'lucide-svelte';
+	import { textureStore, zoomLevel, lightIntensity } from '$lib/store/scene3DStore';
 	import Tutoriel from '$lib/components/Tutoriel/Tutoriel.svelte';
 	import { addToCart } from '$lib/store/Data/cartStore.js';
 	import { fly } from 'svelte/transition';
@@ -49,6 +50,19 @@
 
 	let showTutoriel = $state(false);
 	let currentStep = $state(0);
+
+	// Variables pour les contrôles de zoom et lumière
+	let zoomLevelValue = $state(1);
+	let lightIntensityValue = $state(8);
+
+	// Synchroniser avec les stores
+	$effect(() => {
+		zoomLevel.set(zoomLevelValue);
+	});
+
+	$effect(() => {
+		lightIntensity.set(lightIntensityValue);
+	});
 
 	const openTutoriel = () => {
 		showTutoriel = true;
@@ -239,6 +253,29 @@
 				<ShieldQuestion style="width: 25px; height: 25px" />
 			</Button>
 			<Tutoriel {showTutoriel} {currentStep} {closeTutoriel} />
+		</div>
+
+		<!-- 3) Contrôles de zoom et lumière -->
+		<div transition:fly={{ y: 100, duration: 600, opacity: 0.2, delay: 200 }} class="flex flex-col gap-4 p-4 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg">
+			<!-- Contrôle du zoom -->
+			<div class="flex items-center gap-3">
+				<ZoomIn style="width: 20px; height: 20px" class="text-gray-600" />
+				<div class="flex-1">
+					<label class="text-sm font-medium text-gray-700 mb-2 block">Zoom</label>
+					<Slider type="single" bind:value={zoomLevelValue} max={3} min={0.5} step={0.1} />
+					<div class="text-xs text-gray-500 mt-1">{zoomLevelValue.toFixed(1)}x</div>
+				</div>
+			</div>
+
+			<!-- Contrôle de l'intensité lumineuse -->
+			<div class="flex items-center gap-3">
+				<Sun style="width: 20px; height: 20px" class="text-gray-600" />
+				<div class="flex-1">
+					<label class="text-sm font-medium text-gray-700 mb-2 block">Intensité lumineuse</label>
+					<Slider type="single" bind:value={lightIntensityValue} max={15} min={1} step={0.5} />
+					<div class="text-xs text-gray-500 mt-1">{lightIntensityValue.toFixed(1)}</div>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>

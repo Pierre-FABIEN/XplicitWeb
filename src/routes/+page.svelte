@@ -5,7 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { mode } from 'mode-watcher';
 	import { Power } from 'lucide-svelte';
-	import { updateCameraPosition } from '$lib/store/animationTimelineStore';
+	import { updateCameraPosition } from '$lib/store/scene3DStore';
 	import { isSmall } from '$lib/store/mediaStore';
 	import { page } from '$app/stores';
 

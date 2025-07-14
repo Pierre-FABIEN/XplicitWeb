@@ -5,13 +5,12 @@
 	import Lights from './components/Lights/index.svelte';
 	import Camera from './components/Camera.svelte';
 	import { MediaQuery } from 'svelte/reactivity';
+	import { zoomLevel, lightIntensity, modelRotation, targetRotation, isInteracting } from '$lib/store/scene3DStore';
 
 	const large = new MediaQuery('min-width: 736px');
 
 	// État réactif pour la rotation actuelle et cible
 	let rotation = $state({ x: 0, y: 0 });
-	let targetRotation = $state({ x: 0, y: 0 });
-	let isInteracting = $state(false); // Indique si l'utilisateur interagit
 	let lastPointerPosition = $state({ x: 0, y: 0 }); // Position précédente du pointeur
 
 	/**
@@ -19,7 +18,7 @@
 	 * @param {MouseEvent | TouchEvent} event
 	 */
 	function onPointerDown(event: MouseEvent | TouchEvent) {
-		isInteracting = true;
+		isInteracting.set(true);
 
 		// Gérer les événements tactiles ou souris
 		if (event instanceof TouchEvent) {
@@ -36,7 +35,7 @@
 	 * Fin de l'interaction
 	 */
 	function onPointerUp() {
-		isInteracting = false;
+		isInteracting.set(false);
 	}
 
 	/**
@@ -44,7 +43,7 @@
 	 * @param {MouseEvent | TouchEvent} event
 	 */
 	function onPointerMove(event: MouseEvent | TouchEvent) {
-		if (!isInteracting) return;
+		if (!$isInteracting) return;
 
 		let clientX, clientY;
 
@@ -63,8 +62,10 @@
 		const deltaY = (clientY - lastPointerPosition.y) * 0.01; // Sensibilité sur Y
 
 		// Mettre à jour les rotations cibles
-		targetRotation.x = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, targetRotation.x - deltaY)); // Limite X
-		targetRotation.y -= deltaX; // Pas de limite pour Y
+		const currentTarget = $targetRotation;
+		const newX = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, currentTarget.x - deltaY)); // Limite X
+		const newY = currentTarget.y - deltaX; // Pas de limite pour Y
+		targetRotation.set({ x: newX, y: newY });
 
 		// Mettre à jour la position précédente
 		lastPointerPosition.x = clientX;
@@ -75,8 +76,12 @@
 	 * Animation de l'amortissement (damping)
 	 */
 	useTask((delta) => {
-		rotation.x += (targetRotation.x - rotation.x) * 0.1; // Amortissement sur X
-		rotation.y += (targetRotation.y - rotation.y) * 0.1; // Amortissement sur Y
+		const currentRotation = rotation;
+		const currentTarget = $targetRotation;
+		const newX = currentRotation.x + (currentTarget.x - currentRotation.x) * 0.1; // Amortissement sur X
+		const newY = currentRotation.y + (currentTarget.y - currentRotation.y) * 0.1; // Amortissement sur Y
+		rotation = { x: newX, y: newY };
+		modelRotation.set(rotation);
 	});
 
 	/**
