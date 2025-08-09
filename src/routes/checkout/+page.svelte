@@ -18,7 +18,6 @@
 		ChevronsUpDown
 	} from 'lucide-svelte';
 	import Button from '$shadcn/button/button.svelte';
-	import { Input } from '$lib/components/shadcn/ui/input/index.js';
 	import { OrderSchema } from '$lib/schema/order/order.js';
 	import { toast } from 'svelte-sonner';
 	import {
@@ -28,8 +27,7 @@
 		updateCartItemQuantity
 	} from '$lib/store/Data/cartStore';
 	import { tick } from 'svelte';
-	import { cn } from 'tailwind-variants';
-
+	
 	let { data } = $props();
 
 	// Fonction pour calculer le prix des canettes personnalisées
@@ -48,6 +46,33 @@
 			default:
 				return 1.60;
 		}
+	}
+
+	// Options de quantité pour les articles non-personnalisés (comme dans Cart.svelte)
+	let quantityOptions = $state([24, 48, 72]);
+
+	// Options de quantité pour les articles personnalisés (comme dans Cart.svelte)  
+	let customQuantityOptions = $state([
+		{ label: '24 packs de 24 canettes (576 unités)', value: 576 },
+		{ label: '1/4 de palette : 30 packs (720 unités)', value: 720 },
+		{ label: '1/2 palette : 60 packs (1 440 unités)', value: 1440 },
+		{ label: '1 palette : 120 packs (2 880 unités)', value: 2880 },
+		{ label: '3 palettes : 360 packs (8 640 unités)', value: 8640 }
+	]);
+
+	// Calculer le total des quantités pour les commandes non-personnalisées
+	let totalNonCustomQuantity = $derived(
+		$cartStore.items
+			.filter(item => !item.custom || (Array.isArray(item.custom) && item.custom.length === 0))
+			.reduce((acc, item) => acc + item.quantity, 0)
+	);
+
+	// Fonction pour vérifier si on peut ajouter une quantité (comme dans Cart.svelte)
+	function canAddQuantity(newQuantity: number, currentQuantity: number, isCustom: boolean): boolean {
+		if (isCustom) return true; // Pas de limite pour les personnalisées
+		
+		const otherItemsQuantity = totalNonCustomQuantity - currentQuantity;
+		return (otherItemsQuantity + newQuantity) <= 72;
 	}
 
 	// Runes Svelte 5
@@ -322,23 +347,11 @@
 		}
 	}
 
-	function changeQuantity(productId: string, quantity: number) {
-		updateCartItemQuantity(productId, quantity);
+	function changeQuantity(productId: string, quantity: number, customId?: string) {
+		updateCartItemQuantity(productId, quantity, customId);
 	}
 
-	function validateQuantity(item, event) {
-		const inputElement = event.target as HTMLInputElement;
-		let quantity = parseInt(inputElement.value, 10);
 
-		if (isNaN(quantity) || quantity < 1) {
-			quantity = 1;
-		} else if (quantity > item.product.stock) {
-			quantity = item.product.stock;
-		}
-
-		inputElement.value = String(quantity);
-		changeQuantity(item.product.id, quantity);
-	}
 
 	function handleCheckout(event: Event) {
 		// Empêche le comportement par défaut de la soumission
@@ -624,47 +637,33 @@
 												</p>
 
 												{#if item.custom?.length > 0}
+													<!-- Custom items: Use predefined quantity options -->
 													<div class="flex gap-2 flex-wrap">
-														<button
-															class="px-3 py-1 border rounded text-sm {item.quantity === 576 ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'}"
-															onclick={() => changeQuantity(item.product.id, 576, item.custom[0]?.id)}
-														>
-															576
-														</button>
-														<button
-															class="px-3 py-1 border rounded text-sm {item.quantity === 720 ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'}"
-															onclick={() => changeQuantity(item.product.id, 720, item.custom[0]?.id)}
-														>
-															720
-														</button>
-														<button
-															class="px-3 py-1 border rounded text-sm {item.quantity === 1440 ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'}"
-															onclick={() => changeQuantity(item.product.id, 1440, item.custom[0]?.id)}
-														>
-															1440
-														</button>
-														<button
-															class="px-3 py-1 border rounded text-sm {item.quantity === 2880 ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'}"
-															onclick={() => changeQuantity(item.product.id, 2880, item.custom[0]?.id)}
-														>
-															2880
-														</button>
-														<button
-															class="px-3 py-1 border rounded text-sm {item.quantity === 8640 ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'}"
-															onclick={() => changeQuantity(item.product.id, 8640, item.custom[0]?.id)}
-														>
-															8640
-														</button>
+														{#each customQuantityOptions as option}
+															<button
+																class="px-3 py-1 border rounded text-sm {item.quantity === option.value ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'}"
+																onclick={() => changeQuantity(item.product.id, option.value, item.custom[0]?.id)}
+															>
+																{option.value}
+															</button>
+														{/each}
 													</div>
 												{:else}
-													<Input
-														type="number"
-														class="w-24"
-														value={item.quantity}
-														oninput={(e) => validateQuantity(item, e)}
-														min="1"
-														max={item.product.stock}
-													/>
+													<!-- Non-custom items: Use buttons with quantity limit -->
+													<div class="flex gap-2">
+														{#each quantityOptions as option}
+															<button
+																class="px-3 py-1 border rounded text-sm {item.quantity === option ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'} {!canAddQuantity(option, item.quantity, false) ? 'opacity-50 cursor-not-allowed' : ''}"
+																onclick={() => canAddQuantity(option, item.quantity, false) && changeQuantity(item.product.id, option)}
+																disabled={!canAddQuantity(option, item.quantity, false)}
+															>
+																{option}
+															</button>
+														{/each}
+													</div>
+													{#if totalNonCustomQuantity > 72}
+														<p class="text-xs text-red-500 mt-1">Limite de 72 unités atteinte pour les commandes non-personnalisées</p>
+													{/if}
 												{/if}
 
 												<p class="text-right font-medium">
