@@ -15,7 +15,7 @@ export const load: PageServerLoad = async () => {
 export const actions: Actions = {
 	createTag: async ({ request }) => {
 		const formData = await request.formData();
-		console.log('formData', formData);
+		// console.log('formData', formData);
 
 		const form = await superValidate(formData, zod(createBlogTagSchema));
 

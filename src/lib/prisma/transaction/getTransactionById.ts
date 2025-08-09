@@ -9,7 +9,7 @@ export const getTransactionById = async (id: string) => {
 		});
 
 		// Affiche la transaction récupérée
-		console.log(transaction);
+		// console.log(transaction);
 
 		return transaction;
 	} catch (error) {

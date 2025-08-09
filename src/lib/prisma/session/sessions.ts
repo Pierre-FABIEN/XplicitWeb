@@ -50,7 +50,7 @@ export const verifyTwoFactorForSession = async (sessionId: string) => {
 		where: { id: sessionId },
 		data: { twoFactorVerified: true }
 	});
-	console.log('[prisma/session] Session mise à jour pour 2FA:', updatedSession);
+	// console.log('[prisma/session] Session mise à jour pour 2FA:', updatedSession);
 	return updatedSession;
 };
 

@@ -57,16 +57,16 @@ export const createUserInDatabase = async (
 	totpKey: string | null,
 	googleId?: string | null
 ) => {
-	console.log('Creating user:', {
-		email,
-		username,
-		passwordHash,
-		recoveryCode,
-		role,
-		emailVerified,
-		totpKey,
-		googleId
-	});
+	// console.log('Creating user:', {
+	// 	email,
+	// 	username,
+	// 	passwordHash,
+	// 	recoveryCode,
+	// 	role,
+	// 	emailVerified,
+	// 	totpKey,
+	// 	googleId
+	// });
 
 	return await prisma.user.create({
 		data: {
@@ -182,7 +182,7 @@ export async function updateUserTOTPKey(userId: string, key: Uint8Array) {
 		select: { id: true, totpKey: true }
 	});
 
-	console.log('[updateUserTOTPKey] wrote:', result);
+	// console.log('[updateUserTOTPKey] wrote:', result);
 }
 
 export const getUserTotpKey = async (
@@ -285,7 +285,7 @@ export const updateUserRole = async (id: string, role: Role) => {
 			where: { id },
 			data: { role }
 		});
-		console.log('User role updated:', updatedUser);
+		// console.log('User role updated:', updatedUser);
 		return updatedUser;
 	} catch (error: unknown) {
 		if (error instanceof Error) {

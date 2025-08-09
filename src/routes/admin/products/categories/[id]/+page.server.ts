@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ params }) => {
 	const category = await getCategoriesById(params.id);
 
 	if (!category) {
-		console.log('Category not found');
+		// console.log('Category not found');
 		return fail(404, { message: 'Category not found' });
 	}
 
@@ -21,7 +21,7 @@ export const load: PageServerLoad = async ({ params }) => {
 	};
 
 	const IupdateCategorySchema = await superValidate(initialData, zod(updateCategorySchema));
-	console.log('Loaded category data:', IupdateCategorySchema);
+	// console.log('Loaded category data:', IupdateCategorySchema);
 
 	return {
 		IupdateCategorySchema
@@ -30,16 +30,16 @@ export const load: PageServerLoad = async ({ params }) => {
 
 export const actions: Actions = {
 	updateCategory: async ({ request }) => {
-		console.log('updateCategory action initiated.');
+		// console.log('updateCategory action initiated.');
 
 		const formData = await request.formData();
-		console.log('Received form data:', formData);
+		// console.log('Received form data:', formData);
 
 		const form = await superValidate(formData, zod(updateCategorySchema));
-		console.log('Form validation result:', form);
+		// console.log('Form validation result:', form);
 
 		if (!form.valid) {
-			console.log('Validation errors:', form.errors);
+			// console.log('Validation errors:', form.errors);
 			return fail(400, { form });
 		}
 

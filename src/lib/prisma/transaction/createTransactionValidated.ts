@@ -1,7 +1,7 @@
 import prisma from '$server';
 
 export const createTransactionValidated = async (transactionValidated, userId, orderId) => {
-	console.log(`✅ Processing transaction ${transactionValidated.id} for order ${orderId}`);
+	// console.log(`✅ Processing transaction ${transactionValidated.id} for order ${orderId}`);
 
 	// Fetch order and user details
 	const order = await prisma.order.findUnique({
@@ -57,7 +57,7 @@ export const createTransactionValidated = async (transactionValidated, userId, o
 		await prisma.$transaction(async (prisma) => {
 			// Create the transaction record
 			await prisma.transaction.create({ data: transactionData });
-			console.log(`✅ Transaction ${transactionValidated.id} recorded successfully.`);
+			// console.log(`✅ Transaction ${transactionValidated.id} recorded successfully.`);
 
 			// Deduct the quantities from the products in stock
 			for (const item of order.items) {
@@ -76,13 +76,13 @@ export const createTransactionValidated = async (transactionValidated, userId, o
 			await prisma.orderItem.deleteMany({
 				where: { orderId: orderId }
 			});
-			console.log(`✅ Order items for order ${orderId} deleted successfully.`);
+			// console.log(`✅ Order items for order ${orderId} deleted successfully.`);
 
 			// Delete the order
 			await prisma.order.delete({
 				where: { id: orderId }
 			});
-			console.log(`✅ Order ${orderId} deleted successfully.`);
+			// console.log(`✅ Order ${orderId} deleted successfully.`);
 		});
 	} catch (error) {
 		console.error(`⚠️ Failed to process transaction ${transactionValidated.id}:`, error);

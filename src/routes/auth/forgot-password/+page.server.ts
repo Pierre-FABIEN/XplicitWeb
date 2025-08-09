@@ -60,11 +60,11 @@ export const actions: Actions = {
 
 		await invalidateUserPasswordResetSessions(user.id);
 		const sessionToken = generateSessionToken();
-		console.log(sessionToken, 'sessionToken');
+		// console.log(sessionToken, 'sessionToken');
 
 		const code = await generateForgotPasswordCode();
-		console.log(code, 'code dkrjghdlsug hlg kftdjhlktjfdhk');
-		console.log(user, 'user lkjgtf tlhki jcftlohikjft clhk');
+		// console.log(code, 'code dkrjghdlsug hlg kftdjhlktjfdhk');
+		// console.log(user, 'user lkjgtf tlhki jcftlohikjft clhk');
 		const expirationDate = new Date(Date.now() + 15 * 60 * 1000);
 
 		// Suppose que user existe et contient bien user.id, user.email, etc.
@@ -78,18 +78,18 @@ export const actions: Actions = {
 			twoFactorVerified: user.isMfaEnabled ?? false
 		};
 
-		console.log('sessionData reset sessionData created:', sessionData);
+		// console.log('sessionData reset sessionData created:', sessionData);
 
 		// Crée la session
 		const session = await createPasswordResetSessionPrisma(sessionData);
 
-		console.log('Password reset session created:', session);
+		// console.log('Password reset session created:', session);
 
 		await sendPasswordResetEmail(session.email, session.code);
 
 		setPasswordResetSessionTokenCookie(event, sessionToken, session.expiresAt);
 
-		console.log('Redirecting to: /auth/reset-password/verify-email');
+		// console.log('Redirecting to: /auth/reset-password/verify-email');
 		return redirect(302, '/auth/reset-password/verify-email');
 	}
 };

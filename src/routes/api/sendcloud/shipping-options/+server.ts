@@ -117,7 +117,7 @@ export async function POST({ request }) {
 			service_area: 'domestic'
 		};
 
-		console.log('dimensions', requestBody);
+		// console.log('dimensions', requestBody);
 
 		// 6. Call the Sendcloud API
 		const response = await fetch('https://panel.sendcloud.sc/api/v3/fetch-shipping-options', {
@@ -139,7 +139,7 @@ export async function POST({ request }) {
 
 		// 8. Parse and return the data to the client
 		const data = await response.json();
-		console.log('Sendcloud shipping data:', data);
+		// console.log('Sendcloud shipping data:', data);
 
 		return json(data);
 	} catch (err) {

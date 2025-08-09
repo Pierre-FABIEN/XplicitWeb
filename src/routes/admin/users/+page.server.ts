@@ -34,7 +34,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
 	deleteUser: async ({ request }) => {
 		const formData = await request.formData();
-		console.log('Received form data:', formData);
+		// console.log('Received form data:', formData);
 
 		const id = formData.get('id') as string;
 

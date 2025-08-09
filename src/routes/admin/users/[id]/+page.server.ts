@@ -14,18 +14,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		return fail(401, { message: 'Unauthorized' });
 	}
 
-	console.log('Loading user data for ID:', params.id);
+	// console.log('Loading user data for ID:', params.id);
 
 	// 📌 Récupération des informations utilisateur et adresses associées
 	const userFetched = await getUsersById(params.id);
 	const addressesFetched = await getUserAddresses(params.id);
 
-	console.log(userFetched, 'userFetched');
-	console.log(addressesFetched, 'addressesFetched');
+	// console.log(userFetched, 'userFetched');
+	// console.log(addressesFetched, 'addressesFetched');
 
 	// ⚠️ Vérification si l'utilisateur existe
 	if (!userFetched) {
-		console.log('User not found');
+		// console.log('User not found');
 		return fail(404, { message: 'User not found' });
 	}
 
@@ -76,10 +76,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 export const actions: Actions = {
 	updateUserAndAddresses: async ({ request }) => {
-		console.log('updateUserAndAddresses action initiated.');
+		// console.log('updateUserAndAddresses action initiated.');
 
 		const formData = await request.formData();
-		console.log('Received form data:', formData);
+		// console.log('Received form data:', formData);
 
 		const jsonData = formData.get('__superform_json');
 		if (!jsonData) {
@@ -89,7 +89,7 @@ export const actions: Actions = {
 		let parsedData;
 		try {
 			parsedData = JSON.parse(jsonData.toString());
-			console.log('Parsed JSON Data:', parsedData);
+			// console.log('Parsed JSON Data:', parsedData);
 		} catch (error) {
 			console.error('Error parsing JSON data:', error);
 			return fail(400, { message: 'Invalid JSON data' });
@@ -136,18 +136,18 @@ export const actions: Actions = {
 			addresses
 		};
 
-		console.log('Structured data:', finalData);
+		// console.log('Structured data:', finalData);
 
 		// Validation avec Zod
 		const form = await superValidate(finalData, zod(updateUserAndAddressSchema));
 		if (!form.valid) {
-			console.log('Validation errors:', form.errors);
+			// console.log('Validation errors:', form.errors);
 			return fail(400, { form });
 		}
 
 		try {
 			const { id, role, isMfaEnabled, passwordHash, addresses } = form.data;
-			console.log('Updating user and addresses with ID:', id, 'and role:', role);
+			// console.log('Updating user and addresses with ID:', id, 'and role:', role);
 
 			// Vérifier si l'utilisateur existe
 			const user = await getUsersById(id);
@@ -192,7 +192,7 @@ export const actions: Actions = {
 				)
 			);
 
-			console.log('User and addresses updated successfully');
+			// console.log('User and addresses updated successfully');
 			return message(form, 'User and addresses updated successfully');
 		} catch (error) {
 			console.error('Error updating user and addresses:', error);

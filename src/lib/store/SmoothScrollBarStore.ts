@@ -21,7 +21,7 @@ function createSmoothScrollBarStore(enableLogging) {
 		subscribe,
 		set(value: ScrollState) {
 			if (enableLogging) {
-				console.log('SmoothScrollBarStore set:', value);
+				// console.log('SmoothScrollBarStore set:', value);
 			}
 			set(value);
 		},
@@ -29,7 +29,7 @@ function createSmoothScrollBarStore(enableLogging) {
 			update((state) => {
 				const newState = updater(state);
 				if (enableLogging) {
-					console.log('SmoothScrollBarStore update:', newState);
+					// console.log('SmoothScrollBarStore update:', newState);
 				}
 				return newState;
 			});

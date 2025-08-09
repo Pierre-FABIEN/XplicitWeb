@@ -41,30 +41,30 @@ export const load: PageServerLoad = async () => {
 
 export const actions: Actions = {
 	deleteBlogPost: async ({ request }) => {
-		console.log('deletePost action initiated.', request);
+		// console.log('deletePost action initiated.', request);
 
 		const formData = await request.formData();
-		console.log(formData, 'form data');
+		// console.log(formData, 'form data');
 
 		const form = await superValidate(formData, zod(deleteBlogPostSchema));
 		const id = formData.get('id') as string;
-		console.log('Received id:', id);
+		// console.log('Received id:', id);
 		if (!id) {
-			console.log('No id provided');
+			// console.log('No id provided');
 			return fail(400, { message: 'Post ID is required' });
 		}
 		try {
 			// Vérifier si la catégorie existe
 			const existingPost = await getPostById(id);
 			if (!existingPost) {
-				console.log('Post not found:', id);
+				// console.log('Post not found:', id);
 				return fail(400, { message: 'Post not found' });
 			}
-			console.log('Post found:', existingPost);
+			// console.log('Post found:', existingPost);
 
 			// Supprimer la catégorie
 			const deletedPost = await deletePost(id);
-			console.log('Deleted category:', deletedPost);
+			// console.log('Deleted category:', deletedPost);
 			return message(form, 'Post deleted successfully');
 		} catch (error) {
 			console.error('Error deleting category:', error);
@@ -72,30 +72,30 @@ export const actions: Actions = {
 		}
 	},
 	deleteBlogTag: async ({ request }) => {
-		console.log('deleteTag action initiated.', request);
+		// console.log('deleteTag action initiated.', request);
 
 		const formData = await request.formData();
-		console.log(formData, 'form data');
+		// console.log(formData, 'form data');
 
 		const form = await superValidate(formData, zod(deleteBlogTagSchema));
 		const id = formData.get('id') as string;
-		console.log('Received id:', id);
+		// console.log('Received id:', id);
 		if (!id) {
-			console.log('No id provided');
+			// console.log('No id provided');
 			return fail(400, { message: 'Tag ID is required' });
 		}
 		try {
 			// Vérifier si le tag existe
 			const existingTag = await getTagById(id);
 			if (!existingTag) {
-				console.log('Tag not found:', id);
+				// console.log('Tag not found:', id);
 				return fail(400, { message: 'Tag not found' });
 			}
-			console.log('Tag found:', existingTag);
+			// console.log('Tag found:', existingTag);
 
 			// Supprimer le tag
 			const deletedTag = await deleteTag(id);
-			console.log('Deleted tag:', deletedTag);
+			// console.log('Deleted tag:', deletedTag);
 			return message(form, 'Tag deleted successfully');
 		} catch (error) {
 			console.error('Error deleting tag:', error);
@@ -103,30 +103,30 @@ export const actions: Actions = {
 		}
 	},
 	deleteBlogCategory: async ({ request }) => {
-		console.log('deleteCategory action initiated.', request);
+		// console.log('deleteCategory action initiated.', request);
 
 		const formData = await request.formData();
-		console.log(formData, 'form data');
+		// console.log(formData, 'form data');
 
 		const form = await superValidate(formData, zod(deleteBlogCategorySchema));
 		const id = formData.get('id') as string;
-		console.log('Received id:', id);
+		// console.log('Received id:', id);
 		if (!id) {
-			console.log('No id provided');
+			// console.log('No id provided');
 			return fail(400, { message: 'Category ID is required' });
 		}
 		try {
 			// Vérifier si la catégorie existe
 			const existingCategory = await getCategoryById(id);
 			if (!existingCategory) {
-				console.log('Category not found:', id);
+				// console.log('Category not found:', id);
 				return fail(400, { message: 'Category not found' });
 			}
-			console.log('Category found:', existingCategory);
+			// console.log('Category found:', existingCategory);
 
 			// Supprimer la catégorie
 			const deletedCategory = await deleteCategory(id);
-			console.log('Deleted category:', deletedCategory);
+			// console.log('Deleted category:', deletedCategory);
 			return message(form, 'Category deleted successfully');
 		} catch (error) {
 			console.error('Error deleting category:', error);

@@ -11,8 +11,8 @@ export const POST = async ({ request }) => {
 			return json({ error: 'Order ID is missing' }, { status: 400 });
 		}
 
-		console.log('Updating order:', id);
-		console.log('New items:', items);
+		// console.log('Updating order:', id);
+		// console.log('New items:', items);
 
 		const updatedOrder = await updateOrderItems(id, items);
 

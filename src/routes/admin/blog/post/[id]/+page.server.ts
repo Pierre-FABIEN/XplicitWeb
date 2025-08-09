@@ -42,7 +42,7 @@ export const load: PageServerLoad = async ({ params }) => {
 export const actions: Actions = {
 	updatePost: async ({ request }) => {
 		const formData = await request.formData();
-		console.log('Raw Form data:', formData);
+		// console.log('Raw Form data:', formData);
 
 		// Convertir formData en objet exploitable
 		const cleanData = Object.fromEntries(formData.entries());
@@ -65,11 +65,11 @@ export const actions: Actions = {
 		// Convert the "published" field to a boolean
 		raw.published = raw.published === 'on';
 
-		console.log('Cleaned Form data:', cleanData);
+		// console.log('Cleaned Form data:', cleanData);
 
 		// Maintenant, on passe les données propres à superValidate
 		const form = await superValidate(cleanData, zod(updateBlogPostSchema));
-		console.log('Validated Form data:', form);
+		// console.log('Validated Form data:', form);
 
 		if (!form.valid) {
 			return fail(400, { form });
@@ -77,7 +77,7 @@ export const actions: Actions = {
 
 		try {
 			const result = await updatePost(form.data);
-			console.log(result);
+			// console.log(result);
 
 			return message(form, 'Post updated successfully');
 		} catch (error) {

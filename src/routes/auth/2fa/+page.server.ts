@@ -77,7 +77,7 @@ export const actions: Actions = {
 			if (!isValid) {
 				return fail(400, { message: 'Invalid TOTP code', form });
 			}
-			console.log('Vérification TOTP réussie.');
+			// console.log('Vérification TOTP réussie.');
 		} catch (error: unknown) {
 			if (error instanceof Error) {
 				console.error('Erreur lors de la vérification TOTP :', error.message);
@@ -103,7 +103,7 @@ export const actions: Actions = {
 			...newSessionCookie.attributes
 		});
 
-		console.log('locals.session.twoFactorVerified avant redirection (nouvelle session):', true); // Devrait toujours être true pour la nouvelle session
+		// console.log('locals.session.twoFactorVerified avant redirection (nouvelle session):', true); // Devrait toujours être true pour la nouvelle session
 
 		redirect(302, '/auth/');
 	}

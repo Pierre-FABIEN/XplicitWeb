@@ -33,7 +33,7 @@ export async function POST({ request }) {
 			spUrl.searchParams.set('carriers', carriers);
 		}
 
-		console.log('📌 Requête envoyée à Sendcloud:', spUrl.toString());
+		// console.log('📌 Requête envoyée à Sendcloud:', spUrl.toString());
 
 		// 4️⃣ Envoyer la requête à Sendcloud
 		const response = await fetch(spUrl.toString(), {

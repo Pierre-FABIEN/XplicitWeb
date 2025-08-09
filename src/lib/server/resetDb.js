@@ -178,7 +178,7 @@ const generateRecoveryCode = () => {
 };
 
 async function main() {
-	console.log('Début du nettoyage et du peuplement de la base de données...');
+	// console.log('Début du nettoyage et du peuplement de la base de données...');
 
 	try {
 		// Démarrage d'une transaction pour supprimer toutes les données
@@ -205,7 +205,7 @@ async function main() {
 			prisma.user.deleteMany()
 		]);
 
-		console.log('Toutes les données existantes ont été supprimées.');
+		// console.log('Toutes les données existantes ont été supprimées.');
 
 		// Génération d'une clé TOTP aléatoire et chiffrement
 		const totpKey = randomBytes(32);
@@ -217,7 +217,7 @@ async function main() {
 		const recoveryCode = generateRecoveryCode();
 		const encryptedRecoveryCode = encrypt(Buffer.from(recoveryCode, 'utf-8')).toString('base64');
 
-		console.log('Recovery Code (clair) :', recoveryCode);
+		// console.log('Recovery Code (clair) :', recoveryCode);
 
 		// Hash statique pour l'administrateur
 		const passwordHash =
@@ -239,9 +239,9 @@ async function main() {
 			}
 		});
 
-		console.log('Utilisateur administrateur créé :', adminUser);
+		// console.log('Utilisateur administrateur créé :', adminUser);
 
-		console.log('Nettoyage complet. Toutes les données existantes ont été supprimées.');
+		// console.log('Nettoyage complet. Toutes les données existantes ont été supprimées.');
 
 		// Création des catégories
 		const categories = await prisma.category.createMany({
@@ -252,7 +252,7 @@ async function main() {
 			]
 		});
 
-		console.log(`${categories.count} catégories créées.`);
+		// console.log(`${categories.count} catégories créées.`);
 
 		// Récupération des catégories pour assignation aux produits
 		const beverageCategory = await prisma.category.findFirst({ where: { name: 'Beverages' } });
@@ -350,9 +350,9 @@ async function main() {
 					updatedAt: new Date()
 				}
 			});
-			console.log(`Produit créé : ${createdProduct.name}`);
+			// console.log(`Produit créé : ${createdProduct.name}`);
 		}
-		console.log('Produits fictifs créés avec succès.');
+		// console.log('Produits fictifs créés avec succès.');
 
 		// Création d'auteurs
 		let author = await prisma.blogAuthor.findUnique({
@@ -368,7 +368,7 @@ async function main() {
 			});
 		}
 
-		console.log('Auteur créé:', author);
+		// console.log('Auteur créé:', author);
 
 		// Création d'une catégorie de blog pour les articles XPLICITDRINK
 		const xplicitCategory = await prisma.blogCategory.create({
@@ -378,10 +378,10 @@ async function main() {
 			}
 		});
 
-		console.log('Catégorie créée:', xplicitCategory);
+		// console.log('Catégorie créée:', xplicitCategory);
 
 		// Insertion des articles de blog depuis le fichier blog.ts
-		console.log('Insertion des articles de blog depuis blog.ts...');
+		// console.log('Insertion des articles de blog depuis blog.ts...');
 		
 		for (const article of blog) {
 			const createdPost = await prisma.blogPost.create({
@@ -401,10 +401,10 @@ async function main() {
 				}
 			});
 			
-			console.log(`Article créé : ${createdPost.title}`);
+			// console.log(`Article créé : ${createdPost.title}`);
 		}
 		
-		console.log(`${blog.length} articles de blog insérés avec succès.`);
+		// console.log(`${blog.length} articles de blog insérés avec succès.`);
 
 	} catch (error) {
 		console.error('Erreur lors du nettoyage et du peuplement :', error);

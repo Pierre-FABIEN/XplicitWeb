@@ -10,7 +10,7 @@ export const load = async (event: PageServerLoadEvent) => {
 		return redirect(302, '/auth/verify-email');
 	}
 
-	console.log(event.locals.user, 'slkrjghxkgujh AUTH');
+	// console.log(event.locals.user, 'slkrjghxkgujh AUTH');
 
 	if (!event.locals.user.googleId) {
 		if (!event.locals.user.isMfaEnabled) {

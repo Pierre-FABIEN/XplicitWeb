@@ -38,7 +38,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
 		user = await getUserFromEmail(email);
 
 		if (!user) {
-			console.log(googleId, email, name, picture, "Création d'un nouvel utilisateur OAuth");
+			// console.log(googleId, email, name, picture, "Création d'un nouvel utilisateur OAuth");
 			user = await createUserWithGoogleOAuth(googleId, email, name, picture);
 		}
 	}

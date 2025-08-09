@@ -13,17 +13,17 @@ const bucket = new ExpiringTokenBucket<number>(5, 60 * 30);
 
 export const load = async (event: RequestEvent) => {
 	const { session } = await validatePasswordResetSessionRequest(event);
-	console.log(
-		session,
-		'uhguy C:/Web/XplicitWeb/src/routes/auth/reset-password/verify-email/+page.server.ts'
-	);
+	// // console.log(
+	// 	session,
+	// 	'uhguy C:/Web/XplicitWeb/src/routes/auth/reset-password/verify-email/+page.server.ts'
+	// );
 	if (session === null) {
-		console.log('Session is null, redirecting to /auth/forgot-password');
+		// console.log('Session is null, redirecting to /auth/forgot-password');
 		return redirect(302, '/auth/forgot-password');
 	}
 
 	if (!session.emailVerified) {
-		console.log('Email is not verified, staying on verify email page.');
+		// console.log('Email is not verified, staying on verify email page.');
 	}
 	const verifyForm = await superValidate(event, zod(verifyCodeSchema));
 
@@ -37,10 +37,10 @@ export const actions: Actions = {
 	verify: async (event: RequestEvent) => {
 		const { session } = await validatePasswordResetSessionRequest(event);
 		const formData = await event.request.formData();
-		console.log(formData, 'form data');
+		// console.log(formData, 'form data');
 
 		const form = await superValidate(formData, zod(verifyCodeSchema));
-		console.log(form, 'oiuhoiuh');
+		// console.log(form, 'oiuhoiuh');
 
 		if (session === null) {
 			return message(form, 'Not authenticated');

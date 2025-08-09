@@ -27,11 +27,11 @@ export const actions: Actions = {
 		}
 
 		const formData = await event.request.formData();
-		console.log('Form Data:', formData);
+		// console.log('Form Data:', formData);
 
 		// Validation avec Superform + Zod
 		const form = await superValidate(formData, zod(createAddressSchema));
-		console.log('Validated Form:', form);
+		// console.log('Validated Form:', form);
 
 		if (!form.valid) {
 			return fail(400, { message: 'Validation failed', form });

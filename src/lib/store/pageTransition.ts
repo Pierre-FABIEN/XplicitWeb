@@ -21,7 +21,7 @@ function createpageTransitionStore(enableLogging: boolean) {
 
 	if (enableLogging) {
 		subscribe((value) => {
-			console.log('%c[pageTransitionStore] value changed:', 'color: purple;', value);
+			// console.log('%c[pageTransitionStore] value changed:', 'color: purple;', value);
 		});
 	}
 
@@ -29,7 +29,7 @@ function createpageTransitionStore(enableLogging: boolean) {
 		subscribe,
 		set(value: NavigationState) {
 			if (enableLogging) {
-				console.log('%c[pageTransitionStore] set:', 'color: green;', value);
+				// console.log('%c[pageTransitionStore] set:', 'color: green;', value);
 			}
 			set(value);
 		},
@@ -37,7 +37,7 @@ function createpageTransitionStore(enableLogging: boolean) {
 			update((state) => {
 				const newState = updater(state);
 				if (enableLogging) {
-					console.log('%c[pageTransitionStore] update:', 'color: blue;', newState);
+					// console.log('%c[pageTransitionStore] update:', 'color: blue;', newState);
 				}
 				return newState;
 			});

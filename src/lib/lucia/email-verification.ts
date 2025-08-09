@@ -181,9 +181,9 @@ export async function sendVerificationEmail(email: string, code: string): Promis
 		// Envoi de l'e-mail
 		const info = await transporter.sendMail(mailOptions);
 
-		console.log(`Verification email sent to ${email}: ${info.response}`);
+		// console.log(`Verification email sent to ${email}: ${info.response}`);
 	} catch (error) {
-		console.error('Failed to send email:', error);
+		/// console.error('Failed to send email:', error);
 		throw new Error('Email sending failed');
 	}
 }

@@ -123,7 +123,7 @@ export const actions: Actions = {
 
 		// Valider le formulaire avec Superform
 		const form = await superValidate(event, zod(emailSchema));
-		console.log(form);
+		// console.log(form);
 
 		if (!form.valid) {
 			return fail(400, { form });

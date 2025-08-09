@@ -15,7 +15,7 @@ export const load: PageServerLoad = async () => {
 export const actions: Actions = {
 	createCategory: async ({ request }) => {
 		const formData = await request.formData();
-		console.log('formData', formData);
+		// console.log('formData', formData);
 
 		const form = await superValidate(formData, zod(createBlogCategorySchema));
 
@@ -25,7 +25,7 @@ export const actions: Actions = {
 
 		try {
 			const ll = await createCategory(form.data.name, form.data.description);
-			console.log(ll);
+			// console.log(ll);
 
 			return message(form, 'Category created successfully');
 		} catch (error) {

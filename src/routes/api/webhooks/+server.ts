@@ -25,7 +25,7 @@ function deduceWeightBracket(order) {
 		return acc + productWeight * item.quantity + customExtra;
 	}, 0);
 
-	console.log(`⚖️ Poids total calculé : ${totalWeight.toFixed(2)} kg`);
+	// console.log(`⚖️ Poids total calculé : ${totalWeight.toFixed(2)} kg`);
 
 	// Déterminer le bracket correspondant
 	if (totalWeight <= 3) return 3;
@@ -37,8 +37,8 @@ function deduceWeightBracket(order) {
  * Récupère l'objet { id, name } à partir de la map, selon la clé shippingOption et le bracket de poids.
  */
 function getShippingMethodData(shippingOption, weightBracket) {
-	console.log(shippingOption, 'shippingOptionliughhliuhg');
-	console.log(weightBracket, 'weightBracketliughhliuhg');
+	// console.log(shippingOption, 'shippingOptionliughhliuhg');
+	// console.log(weightBracket, 'weightBracketliughhliuhg');
 
 	const methodMap = shippingMethodMap[shippingOption];
 	if (!methodMap) {
@@ -56,7 +56,7 @@ export async function POST({ request }) {
 
 	try {
 		event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-		console.log('✅ Webhook verified and received:', event);
+		// console.log('✅ Webhook verified and received:', event);
 	} catch (err) {
 		console.error('⚠️ Webhook signature verification failed.', err.message);
 		return json({ error: 'Webhook signature verification failed.' }, { status: 400 });
@@ -66,20 +66,20 @@ export async function POST({ request }) {
 	switch (event.type) {
 		case 'checkout.session.completed': {
 			const session = event.data.object;
-			console.log('✅ Checkout session completed:', session);
+			// console.log('✅ Checkout session completed:', session);
 			await handleCheckoutSession(session);
 			break;
 		}
 
 		case 'payment_intent.succeeded': {
 			const paymentIntent = event.data.object;
-			console.log('✅ Payment intent succeeded:', paymentIntent);
+			// console.log('✅ Payment intent succeeded:', paymentIntent);
 			break;
 		}
 
 		case 'charge.succeeded': {
 			const charge = event.data.object;
-			console.log('✅ Charge succeeded:', charge);
+			// console.log('✅ Charge succeeded:', charge);
 			break;
 		}
 
@@ -220,7 +220,7 @@ async function handleCheckoutSession(session: Stripe.Checkout.Session) {
 		return; // on arrête ici si l’enregistrement DB a échoué
 	}
 
-	console.log('Nouvelle transaction créée =>', createdTransaction?.id);
+	// console.log('Nouvelle transaction créée =>', createdTransaction?.id);
 
 	// (2) APPEL A SENDCLOUD en dehors de la transaction
 	try {

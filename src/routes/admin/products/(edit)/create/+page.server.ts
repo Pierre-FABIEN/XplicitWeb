@@ -83,7 +83,7 @@ export const actions: Actions = {
 			});
 
 			await connectProductToCategories(product.id, existingCategoryIds);
-			console.log(form);
+			// console.log(form);
 
 			return message(form, 'Product created successfully');
 		} catch (error) {

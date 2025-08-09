@@ -29,9 +29,9 @@ export const createPendingOrder = async (userId: string) => {
 };
 
 export async function updateOrderItems(orderId: string, incomingItems: any[]) {
-	console.log('--- Start updating order items (non-destructive) ---');
-	console.log(`Order ID: ${orderId}`);
-	console.log('New items:', JSON.stringify(incomingItems, null, 2));
+	// console.log('--- Start updating order items (non-destructive) ---');
+	// console.log(`Order ID: ${orderId}`);
+	// console.log('New items:', JSON.stringify(incomingItems, null, 2));
 
 	try {
 		// Étape 1: Vérifier si la commande existe
@@ -41,7 +41,7 @@ export async function updateOrderItems(orderId: string, incomingItems: any[]) {
 		if (!orderExists) {
 			throw new Error(`Order with ID ${orderId} not found.`);
 		}
-		console.log('Order found:', orderExists);
+		// console.log('Order found:', orderExists);
 
 		// Étape 2: Récupérer les items existants
 		const existingOrderItems = await prisma.orderItem.findMany({
@@ -119,7 +119,7 @@ export async function updateOrderItems(orderId: string, incomingItems: any[]) {
 		// Étape 4: Identifier les items à supprimer
 		const itemsToDelete = existingOrderItemIds.filter((id) => !keptOrCreatedIds.includes(id));
 		if (itemsToDelete.length > 0) {
-			console.log('Deleting items not in new list:', itemsToDelete);
+			// console.log('Deleting items not in new list:', itemsToDelete);
 
 			// 4A) Supprimer les customs de la base
 			await prisma.custom.deleteMany({
@@ -131,9 +131,9 @@ export async function updateOrderItems(orderId: string, incomingItems: any[]) {
 				where: { id: { in: itemsToDelete } }
 			});
 
-			console.log('Deleted old order items and their custom entries.');
+			// console.log('Deleted old order items and their custom entries.');
 		} else {
-			console.log('No order items to delete - everything is kept or updated.');
+			// console.log('No order items to delete - everything is kept or updated.');
 		}
 
 		// Étape 5: Recalculer les totaux
@@ -143,9 +143,9 @@ export async function updateOrderItems(orderId: string, incomingItems: any[]) {
 		const tax = parseFloat((subtotal * 0.055).toFixed(2)); // TVA de 5,5%
 		const total = parseFloat((subtotal + tax).toFixed(2));
 
-		console.log(`New subtotal calculated: ${subtotal}`);
-		console.log(`New tax calculated: ${tax}`);
-		console.log(`New total calculated: ${total}`);
+		// console.log(`New subtotal calculated: ${subtotal}`);
+		// console.log(`New tax calculated: ${tax}`);
+		// console.log(`New total calculated: ${total}`);
 
 		// Étape 6: Mettre à jour la commande
 		await prisma.order.update({
@@ -166,8 +166,8 @@ export async function updateOrderItems(orderId: string, incomingItems: any[]) {
 			}
 		});
 
-		console.log('--- Successfully updated order items ---');
-		console.log('Final updated order:', updatedOrderWithItems);
+		// console.log('--- Successfully updated order items ---');
+		// console.log('Final updated order:', updatedOrderWithItems);
 
 		return updatedOrderWithItems;
 	} catch (error) {
@@ -184,20 +184,20 @@ async function maybeDeleteImageOnCloudinary(imageUrl: string) {
 		if (!imageUrl) return;
 
 		const publicId = extractPublicId(imageUrl);
-		console.log(`Attempting to delete image with public_id: ${publicId}`);
+		// console.log(`Attempting to delete image with public_id: ${publicId}`);
 
 		// Vérifier si l'image est encore utilisée
 
 		const stillInUse = await prisma.custom.findFirst({ where: { image: imageUrl } });
 		if (stillInUse) {
-			console.log(`Image still in use: ${imageUrl}, skipping deletion.`);
+			// console.log(`Image still in use: ${imageUrl}, skipping deletion.`);
 			return;
 		}
 
 		// Supprimer l'image de Cloudinary
 		const result = await cloudinary.uploader.destroy(`client/${publicId}`);
 		if (result.result === 'ok') {
-			console.log(`Image ${publicId} deleted successfully.`);
+			// console.log(`Image ${publicId} deleted successfully.`);
 		} else {
 			console.error(`Failed to delete image ${publicId}:`, result);
 		}

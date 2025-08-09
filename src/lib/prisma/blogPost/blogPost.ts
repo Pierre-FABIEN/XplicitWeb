@@ -14,7 +14,7 @@ export const getAllPosts = async () => {
 			}
 		});
 
-		console.log('All posts:', posts);
+		// console.log('All posts:', posts);
 
 		return posts;
 	} catch (error) {
@@ -163,7 +163,7 @@ export const createPost = async (
 };
 
 export const deletePost = async (id: string) => {
-	console.log('Deleting post with id:', id);
+	// console.log('Deleting post with id:', id);
 	try {
 		// Utiliser une transaction pour supprimer d'abord les relations, puis le post
 		const deletedPost = await prisma.$transaction(async (tx) => {
@@ -179,7 +179,7 @@ export const deletePost = async (id: string) => {
 			return post;
 		});
 
-		console.log('Post deleted successfully:', deletedPost);
+		// console.log('Post deleted successfully:', deletedPost);
 		return deletedPost;
 	} catch (error) {
 		console.error('Error deleting post:', error);

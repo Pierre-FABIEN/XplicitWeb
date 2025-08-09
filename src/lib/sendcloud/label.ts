@@ -44,7 +44,7 @@ export async function createSendcloudLabel(transaction) {
 		}
 	};
 
-	console.log('📤 Payload (Label Sync) => Sendcloud:', JSON.stringify(requestBody, null, 2));
+	// console.log('📤 Payload (Label Sync) => Sendcloud:', JSON.stringify(requestBody, null, 2));
 
 	// Appel à l'API Sendcloud
 	const response = await fetch(endpoint, {
@@ -64,7 +64,7 @@ export async function createSendcloudLabel(transaction) {
 	}
 
 	const responseData = await response.json();
-	console.log('✅ Étiquette Sendcloud (sync) créée avec succès:', responseData);
+	// console.log('✅ Étiquette Sendcloud (sync) créée avec succès:', responseData);
 
 	// -- Récupération correcte : responseData.data est un tableau contenant un objet
 	const [parcel] = responseData.data;
@@ -95,5 +95,5 @@ export async function createSendcloudLabel(transaction) {
 		}
 	});
 
-	console.log(`✅ Transaction ${transaction.id} mise à jour avec l’étiquette PDF :`);
+	// console.log(`✅ Transaction ${transaction.id} mise à jour avec l’étiquette PDF :`);
 }

@@ -25,7 +25,7 @@ export const actions: Actions = {
 			return fail(400, { form, error: 'Données invalides' });
 		}
 
-		console.log('Form data:', form.data);
+		// console.log('Form data:', form.data);
 
 		const { productId, quantity, userMessage } = form.data;
 		const images = formData.getAll('image') as File[];

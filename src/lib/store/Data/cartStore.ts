@@ -103,16 +103,16 @@ export const setCart = (
 };
 
 function calcTotal(subtotal = 0, tax = 0, shippingCost = 0, shippingTax = 0) {
-	console.log(
-		'subtotal:',
-		subtotal,
-		'tax:',
-		tax,
-		'shippingCost:',
-		shippingCost,
-		'shippingTax:',
-		shippingTax
-	);
+	// console.log(
+	// 	'subtotal:',
+	// 	subtotal,
+	// 	'tax:',
+	// 	tax,
+	// 	'shippingCost:',
+	// 	shippingCost,
+	// 	'shippingTax:',
+	// 	shippingTax
+	// );
 
 	return parseFloat((subtotal + tax + shippingCost + shippingTax).toFixed(2));
 }

@@ -12,7 +12,7 @@ export const getTransactionsByUserId = async (userId: string) => {
 			}
 		});
 
-		console.log(`Transactions for user ${userId}:`, transactions);
+		// console.log(`Transactions for user ${userId}:`, transactions);
 
 		return transactions;
 	} catch (error) {

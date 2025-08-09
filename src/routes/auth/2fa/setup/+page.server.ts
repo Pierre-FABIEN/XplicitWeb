@@ -22,7 +22,7 @@ export const load = async (event: RequestEvent) => {
 		return redirect(302, '/auth/verify-email');
 	}
 
-	console.log(event.locals, 'slkrjghxkgujh SETUP');
+	//console.log(event.locals, 'slkrjghxkgujh SETUP');
 	if (!event.locals.user.googleId || !event.locals.user.isMfaEnabled) {
 		if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
 			if (event.locals.user.isMfaEnabled) {
@@ -52,7 +52,7 @@ export const load = async (event: RequestEvent) => {
 
 export const actions: Actions = {
 	setuptotp: async (event: RequestEvent) => {
-		console.log('Début de l’action setup TOTP');
+		//console.log('Début de l’action setup TOTP');
 
 		const formData = await event.request.formData();
 		const form = await superValidate(formData, zod(totpSchema));
@@ -81,7 +81,7 @@ export const actions: Actions = {
 
 		const { encodedTOTPKey, code } = form.data;
 
-		console.log('Données reçues:', { encodedTOTPKey, code });
+		//console.log('Données reçues:', { encodedTOTPKey, code });
 
 		if (encodedTOTPKey.length !== 28) {
 			console.warn('Longueur de la clé encodée invalide:', encodedTOTPKey.length);
@@ -91,7 +91,7 @@ export const actions: Actions = {
 		let key: Uint8Array;
 		try {
 			key = decodeBase64(encodedTOTPKey);
-			console.log('Clé décodée avec succès:', key);
+			//console.log('Clé décodée avec succès:', key);
 		} catch (error) {
 			console.error('Erreur lors du décodage de la clé:', error);
 			return message(form, 'Invalid encoded key format');
@@ -103,28 +103,28 @@ export const actions: Actions = {
 		}
 
 		try {
-			console.log('Validation du code TOTP...');
+			//console.log('Validation du code TOTP...');
 			const isValid = verifyTOTP(key, 30, 6, code);
 
 			if (!isValid) {
 				console.warn('Code TOTP invalide pour la clé:', key);
 				return message(form, 'Invalid TOTP code');
 			}
-			console.log('Code TOTP valide.');
+			//console.log('Code TOTP valide.');
 		} catch (error) {
 			console.error('Erreur lors de la validation du code TOTP:', error);
 			return fail(500, { message: 'Internal server error', form });
 		}
 
 		try {
-			console.log('Mise à jour de la clé TOTP dans la base de données...');
+			//console.log('Mise à jour de la clé TOTP dans la base de données...');
 			await updateUserTOTPKey(event.locals.session.userId, key);
-			console.log('Clé TOTP mise à jour avec succès.');
+			//console.log('Clé TOTP mise à jour avec succès.');
 
-			console.log('Marquage de la session comme vérifiée pour la 2FA...');
+			//console.log('Marquage de la session comme vérifiée pour la 2FA...');
 			await setSessionAs2FAVerified(event.locals.session.id);
 
-			console.log('Session marquée comme vérifiée.');
+			//console.log('Session marquée comme vérifiée.');
 			event.locals.session.twoFactorVerified = true;
 			// après avoir mis à jour la BDD et marqué la session comme vérifiée
 			event.locals.user.isMfaEnabled = true;
@@ -134,7 +134,7 @@ export const actions: Actions = {
 			return fail(500, { message: 'Internal server error', form });
 		}
 
-		console.log('Redirection vers la page des codes de récupération.');
+		//console.log('Redirection vers la page des codes de récupération.');
 		return redirect(303, '/auth/recovery-code');
 	}
 };

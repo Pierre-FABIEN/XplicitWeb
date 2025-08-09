@@ -5,7 +5,7 @@ export const createTransactionInvalidated = async (
 	userId: string,
 	orderId: string
 ) => {
-	console.log(transactionInvalidated, 'drsgdgdxrgxdr');
+	// console.log(transactionInvalidated, 'drsgdgdxrgxdr');
 	const order = await prisma.order.findUnique({
 		where: { id: orderId },
 		include: {
@@ -63,7 +63,7 @@ export const createTransactionInvalidated = async (
 
 	try {
 		await prisma.transaction.create({ data: transactionData });
-		console.log(`✅ Transaction ${transactionInvalidated.stripePaymentId} recorded successfully.`);
+		// console.log(`✅ Transaction ${transactionInvalidated.stripePaymentId} recorded successfully.`);
 	} catch (error) {
 		console.error(
 			`⚠️ Failed to record transaction ${transactionInvalidated.stripePaymentId}:`,

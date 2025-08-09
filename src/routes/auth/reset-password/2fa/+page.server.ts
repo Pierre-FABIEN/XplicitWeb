@@ -15,7 +15,7 @@ import { message, superValidate } from 'sveltekit-superforms';
 
 export const load = async (event: RequestEvent) => {
 	const { session, user } = await validatePasswordResetSessionRequest(event);
-	console.log(session, user, 'iuhfrsdluifhgdirughrdiughdrui');
+	// console.log(session, user, 'iuhfrsdluifhgdirughrdiughdrui');
 
 	if (session === null) {
 		return redirect(302, '/auth/forgot-password');

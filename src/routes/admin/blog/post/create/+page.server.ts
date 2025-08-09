@@ -20,9 +20,9 @@ export const load = async () => {
 
 export const actions: Actions = {
 	createPost: async ({ request }) => {
-		console.log('createPost action initiated.');
+		// console.log('createPost action initiated.');
 		const formData = await request.formData();
-		console.log('Received form data:', formData);
+		// console.log('Received form data:', formData);
 
 		// Convert formData into a flat object
 		const raw = Object.fromEntries(formData);
@@ -37,10 +37,10 @@ export const actions: Actions = {
 
 		// Validate the form data
 		const form = await superValidate(raw, zod(createBlogPostSchema));
-		console.log('Form validation result:', form);
+		// console.log('Form validation result:', form);
 
 		if (!form.valid) {
-			console.log('Validation errors:', form.errors);
+			// console.log('Validation errors:', form.errors);
 			return fail(400, { form });
 		}
 
@@ -59,7 +59,7 @@ export const actions: Actions = {
 
 		await createPost(title, content, authorId, uniqueSlug, published, categoryId, tagIds);
 
-		console.log('Post created successfully.', form);
+		// console.log('Post created successfully.', form);
 		return message(form, 'Post created successfully');
 	}
 };

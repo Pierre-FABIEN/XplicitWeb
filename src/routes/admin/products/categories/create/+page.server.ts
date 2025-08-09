@@ -9,7 +9,7 @@ import { createCategory } from '$lib/prisma/categories/categories';
 // Fonction de chargement
 export const load: PageServerLoad = async () => {
 	const IcreateCategorySchema = await superValidate(zod(createCategorySchema));
-	console.log('Load function executed. Schema:', IcreateCategorySchema);
+	// console.log('Load function executed. Schema:', IcreateCategorySchema);
 	return {
 		IcreateCategorySchema
 	};
@@ -17,21 +17,21 @@ export const load: PageServerLoad = async () => {
 
 export const actions: Actions = {
 	createCategory: async ({ request }) => {
-		console.log('createCategory action initiated.');
+		// console.log('createCategory action initiated.');
 
 		const formData = await request.formData();
-		console.log('Received form data:', formData);
+		// console.log('Received form data:', formData);
 
 		const form = await superValidate(formData, zod(createCategorySchema));
-		console.log('Form validation result:', form);
+		// console.log('Form validation result:', form);
 
 		if (!form.valid) {
-			console.log('Validation errors:', form.errors);
+			// console.log('Validation errors:', form.errors);
 			return fail(400, withFiles({ form }));
 		}
 
 		try {
-			console.log('Creating new category with name:', form.data.name);
+			// console.log('Creating new category with name:', form.data.name);
 			await createCategory({ name: form.data.name });
 
 			return message(form, 'Category created successfully');

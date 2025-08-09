@@ -19,13 +19,13 @@ export async function createSendcloudOrder(transaction) {
 		return;
 	}
 
-	console.log('📦 Liste des produits dans la transaction :');
+	// console.log('📦 Liste des produits dans la transaction :');
 	transaction.products.forEach((product, index) => {
-		console.log(
-			`   - Produit ${index + 1}: ${product.name}, Quantité: ${product.quantity}, Personnalisations: ${
-				product.customizations?.length ?? 0
-			}`
-		);
+		// console.log(
+		// 	`   - Produit ${index + 1}: ${product.name}, Quantité: ${product.quantity}, Personnalisations: ${
+		// 		product.customizations?.length ?? 0
+		// 	}`
+		// );
 	});
 
 	// ⚖️ Calcul du poids total
@@ -33,7 +33,7 @@ export async function createSendcloudOrder(transaction) {
 		const baseWeight = product.quantity * 0.124; // poids de base
 		const customExtra = product.customizations?.length > 0 ? 0.666 : 0;
 		const productWeight = baseWeight + customExtra;
-		console.log(`   ⚖️ Poids de ${product.name}: ${productWeight.toFixed(3)} kg`);
+		// console.log(`   ⚖️ Poids de ${product.name}: ${productWeight.toFixed(3)} kg`);
 		return acc + productWeight;
 	}, 0);
 
@@ -42,8 +42,8 @@ export async function createSendcloudOrder(transaction) {
 		return;
 	}
 
-	console.log(`✅ Poids total du colis : ${totalWeight.toFixed(2)} kg`);
-	console.log(`✅ Méthode d'expédition : ${transaction.shippingMethodName}`);
+	// console.log(`✅ Poids total du colis : ${totalWeight.toFixed(2)} kg`);
+	// console.log(`✅ Méthode d'expédition : ${transaction.shippingMethodName}`);
 
 	// ---------------------
 	// 1) Construire le payload
@@ -134,7 +134,7 @@ export async function createSendcloudOrder(transaction) {
 		}
 	];
 
-	console.log('📤 Payload envoyé à Sendcloud:', JSON.stringify(requestBody, null, 2));
+	// console.log('📤 Payload envoyé à Sendcloud:', JSON.stringify(requestBody, null, 2));
 
 	// ---------------------
 	// 2) Exécuter la requête
@@ -158,5 +158,5 @@ export async function createSendcloudOrder(transaction) {
 	}
 
 	const responseData = await response.json();
-	console.log('✅ Commande Sendcloud créée avec succès:', responseData);
+	// console.log('✅ Commande Sendcloud créée avec succès:', responseData);
 }
