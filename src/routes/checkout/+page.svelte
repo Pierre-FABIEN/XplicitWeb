@@ -15,7 +15,10 @@
 		ShoppingCart,
 		Trash,
 		Check,
-		ChevronsUpDown
+		ChevronsUpDown,
+		Home,
+		CheckCircle,
+		XCircle
 	} from 'lucide-svelte';
 	import Button from '$shadcn/button/button.svelte';
 	import { OrderSchema } from '$lib/schema/order/order.js';
@@ -86,6 +89,7 @@
 	let shippingCost = $state<number>(0);
 
 	let servicePoints = $state<any[]>([]);
+	let isLoadingServicePoints = $state(false); // ✅ Nouvel état de chargement
 
 	let zoom = $state(12);
 	let centerCoordinates = $state<[number, number]>([2.3522, 48.8566]);
@@ -183,6 +187,7 @@
 	 * instead of an event dispatcher.
 	 */
 	function handleMarkerClick(point: any) {
+		// Plus besoin de validation, l'API filtre déjà les points relais compatibles
 		selectedPoint = point;
 	}
 
@@ -267,6 +272,9 @@
 		}
 	}
 
+	// Stocker le code du transporteur de l'option sélectionnée
+	let selectedCarrierCode = '';
+
 	function chooseShippingOption(chosenOption: any) {
 		//console.log('Option choisie:', chosenOption);
 
@@ -285,14 +293,24 @@
 		// Vérifier si c'est un point relais
 		const isServicePoint = chosenOption?.functionalities?.last_mile === 'service_point';
 
+		// ✅ TOUJOURS réinitialiser le point relais sélectionné lors du changement d'option
+		selectedPoint = null;
+
 		if (isServicePoint && carrierCode) {
+			// Stocker le code du transporteur pour validation
+			selectedCarrierCode = carrierCode;
 			// On affiche la carte et on récupère les points relais
 			showMap = true;
+			// ✅ Vider la liste des points relais avant de récupérer les nouveaux
+			servicePoints = [];
 			fetchServicePoints(carrierCode);
 		} else {
 			// Si ce n'est pas un point relais, on masque la carte et on reset les données du point
 			showMap = false;
 			selectedPoint = null;
+			selectedCarrierCode = '';
+			// ✅ Vider aussi la liste des points relais
+			servicePoints = [];
 		}
 	}
 
@@ -303,6 +321,8 @@
 		}
 
 		try {
+			isLoadingServicePoints = true; // ✅ Début du chargement
+			
 			const res = await fetch('/api/sendcloud/service-points', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -329,8 +349,26 @@
 		} catch (err) {
 			console.error('❌ Erreur fetchServicePoints :', err);
 			toast.error('Impossible de récupérer les points relais.');
+		} finally {
+			isLoadingServicePoints = false; // ✅ Fin du chargement
 		}
 	}
+
+	// Validation du point relais sélectionné - PLUS NÉCESSAIRE car l'API filtre déjà
+	// function validateServicePoint(point: any) {
+	// 	if (!selectedCarrierCode) {
+	// 		toast.error('Aucune option de livraison sélectionnée.');
+	// 		return false;
+	// 	}
+
+	// 	// Vérifier que le point relais correspond au transporteur
+	// 	if (point.carrier && point.carrier.code !== selectedCarrierCode) {
+	// 		toast.error(`Ce point relais n'est pas compatible avec l'option de livraison sélectionnée (${selectedCarrierCode}).`);
+	// 		return false;
+	// 	}
+
+	// 	return true;
+	// }
 
 	function handleRemoveFromCart(productId: string) {
 		removeFromCart(productId);
@@ -373,6 +411,15 @@
 			return;
 		}
 
+		// Plus besoin de validation du transporteur car l'API filtre déjà les points relais compatibles
+		// if (showMap && selectedPoint && selectedCarrierCode && !hasCustomItems) {
+		// 	// Vérifier que le point relais correspond au transporteur
+		// 	if (selectedPoint.carrier && selectedPoint.carrier.code !== selectedCarrierCode) {
+		// 		toast.error(`Le point relais sélectionné n'est pas compatible avec l'option de livraison choisie. Veuillez sélectionner un point relais compatible avec ${selectedCarrierCode}.`);
+		// 			return;
+		// 	}
+		// }
+
 		// Mise à jour des données du superform
 		$createPaymentData.shippingCost = shippingCost.toString();
 		$createPaymentData.shippingOption = selectedShippingOption;
@@ -383,6 +430,10 @@
 		// 	'coût:',
 		// 	shippingCost
 		// );
+
+		// Si tout est OK, on peut procéder au checkout
+		// Le formulaire sera soumis automatiquement par l'action du serveur
+		console.log('✅ Validation OK, soumission du formulaire...');
 	}
 
 	$effect(() => {
@@ -391,6 +442,30 @@
 			$createPaymentData.addressId = selectedAddressId;
 		}
 	});
+
+	// Helper function to group shipping options by type (service_point or home_delivery)
+	function groupShippingOptions(options: any[]) {
+		const grouped: { type: string; options: any[] }[] = [];
+		const servicePointOptions: any[] = [];
+		const homeDeliveryOptions: any[] = [];
+
+		options.forEach(option => {
+			if (option.functionalities?.last_mile === 'service_point') {
+				servicePointOptions.push(option);
+			} else {
+				homeDeliveryOptions.push(option);
+			}
+		});
+
+		if (servicePointOptions.length > 0) {
+			grouped.push({ type: 'service_point', options: servicePointOptions });
+		}
+		if (homeDeliveryOptions.length > 0) {
+			grouped.push({ type: 'home_delivery', options: homeDeliveryOptions });
+		}
+
+		return grouped;
+	}
 </script>
 
 <div class="min-h-screen w-[100vw]">
@@ -492,30 +567,131 @@
 							</Card.Header>
 							<Card.Content>
 								<div class="space-y-4">
-									{#each shippingOptions as option (option.code)}
-										<div
-											class="flex items-center space-x-4 rounded-lg border p-4 hover:bg-accent/50 transition-colors"
-										>
-											<input
-												id={option.code}
-												type="radio"
-												name="shippingOption"
-												value={option.code}
-												checked={selectedShippingOption === option.code}
-												onchange={() => chooseShippingOption(option)}
-												class="h-4 w-4 border-primary"
-											/>
-											<label for={option.code} class="flex-1 cursor-pointer">
-												<div class="font-medium">{option.carrier.name}</div>
-												<div class="text-sm text-muted-foreground">
-													{option.product.name}
+									{#each groupShippingOptions(shippingOptions) as group}
+										<div class="space-y-3">
+											<!-- En-tête du groupe -->
+											<div class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+												{#if group.type === 'service_point'}
+													<MapPin class="w-4 h-4" />
+													Point relais
+												{:else}
+													<Home class="w-4 h-4" />
+													Livraison à domicile
+												{/if}
+											</div>
+											
+											<!-- Options du groupe -->
+											{#each group.options as option (option.code)}
+												<div
+													class="flex items-center space-x-4 rounded-lg border p-4 hover:bg-accent/50 transition-colors"
+												>
+													<input
+														id={option.code}
+														type="radio"
+														name="shippingOption"
+														value={option.code}
+														checked={selectedShippingOption === option.code}
+														onchange={() => chooseShippingOption(option)}
+														class="h-4 w-4 border-primary"
+													/>
+													<label for={option.code} class="flex-1 cursor-pointer">
+														<div class="flex items-center justify-between">
+															<div class="flex-1">
+																<div class="font-medium">{option.carrier.name}</div>
+																<div class="text-sm text-muted-foreground">
+																	{option.product.name}
+																</div>
+																
+																<!-- 🎯 INDICATEURS DE NUANCES pour UPS -->
+																{#if option.carrier.name === 'UPS'}
+																	<div class="flex items-center gap-2 mt-2">
+																		{#if option.functionalities?.signature}
+																			<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+																				<CheckCircle class="w-3 h-3 mr-1" />
+																				Avec signature
+																			</span>
+																		{:else}
+																			<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+																				<XCircle class="w-3 h-3 mr-1" />
+																				Sans signature
+																			</span>
+																		{/if}
+																		
+																		{#if option.functionalities?.last_mile === 'service_point'}
+																			<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+																				<MapPin class="w-3 h-3 mr-1" />
+																				Point relais
+																			</span>
+																		{:else}
+																			<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+																				<Home class="w-3 h-3 mr-1" />
+																				Domicile
+																			</span>
+																		{/if}
+																	</div>
+																	
+																	<!-- 📝 DESCRIPTION DÉTAILLÉE UPS -->
+																	<div class="mt-2 text-xs text-muted-foreground">
+																		{#if option.functionalities?.signature}
+																			<p>✓ Livraison avec signature obligatoire - Plus sécurisé</p>
+																		{:else}
+																			<p>✓ Livraison sans signature - Plus flexible</p>
+																		{/if}
+																		
+																		{#if option.product.name.includes('Express')}
+																			<p>✓ Service express - Livraison rapide (1-2 jours ouvrés)</p>
+																		{:else if option.product.name.includes('Standard')}
+																			<p>✓ Service standard - Livraison économique (2-3 jours ouvrés)</p>
+																		{/if}
+																	</div>
+																{/if}
+																
+																<!-- 📝 DESCRIPTION pour autres transporteurs -->
+																{#if option.carrier.name === 'Chronopost'}
+																	<div class="mt-2 text-xs text-muted-foreground">
+																		{#if option.product.name.includes('Express')}
+																			<p>✓ Service express - Livraison en 24h</p>
+																		{:else if option.product.name.includes('Relais')}
+																			<p>✓ Point relais - Retrait en point de collecte</p>
+																		{:else}
+																			<p>✓ Service standard - Livraison en 2-3 jours</p>
+																		{/if}
+																	</div>
+																{:else if option.carrier.name === 'Colissimo'}
+																	<div class="mt-2 text-xs text-muted-foreground">
+																		{#if option.functionalities?.signature}
+																			<p>✓ Livraison avec signature obligatoire</p>
+																		{:else}
+																			<p>✓ Livraison sans signature</p>
+																		{/if}
+																	</div>
+																{:else if option.carrier.name === 'Mondial Relay'}
+																	<div class="mt-2 text-xs text-muted-foreground">
+																		<p>✓ Point relais - Retrait en point de collecte</p>
+																		{#if option.product.name.includes('QR')}
+																			<p>✓ Code QR pour retrait simplifié</p>
+																		{/if}
+																	</div>
+																{/if}
+															</div>
+															
+															<!-- Prix -->
+															<div class="text-right">
+																<div class="text-lg font-bold">
+																	{option.quotes?.[0]?.price?.total?.value
+																		? option.quotes[0].price.total.value + ' €'
+																		: 'Prix indisponible'}
+																</div>
+																{#if option.quotes?.[0]?.lead_time}
+																	<div class="text-xs text-muted-foreground">
+																		{option.quotes[0].lead_time} jour(s)
+																	</div>
+																{/if}
+															</div>
+														</div>
+													</label>
 												</div>
-												<div class="text-sm font-medium mt-1">
-													{option.quotes?.[0]?.price?.total?.value
-														? option.quotes[0].price.total.value + ' €'
-														: 'Prix indisponible'}
-												</div>
-											</label>
+											{/each}
 										</div>
 									{/each}
 								</div>
@@ -553,34 +729,50 @@
 								</Card.Title>
 							</Card.Header>
 							<Card.Content>
-								<MapLibre
-									class="w-full h-[400px] rounded-lg overflow-hidden"
-									style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-									{zoom}
-									center={centerCoordinates}
-								>
-									{#each servicePoints as point}
-										<Marker lnglat={[point.longitude, point.latitude]}>
-											{#snippet content()}
-												<!-- Visuel du marker -->
-												<div class="bg-blue-600 text-white p-2 rounded cursor-pointer"></div>
-											{/snippet}
-											<!-- Popup à l'intérieur du Marker -->
-											<Popup
-												class="text-black"
-												offset={offsets}
-												open={selectedPoint?.id === point.id}
-											>
-												<div class="p-2">
-													<h3 class="font-bold mb-1">{point.name}</h3>
-													<p>Adresse : {point.street}</p>
-													<p>{point.postal_code} {point.city}</p>
-													<button onclick={() => handleMarkerClick(point)}>Valider</button>
-												</div>
-											</Popup>
-										</Marker>
-									{/each}
-								</MapLibre>
+								{#if isLoadingServicePoints}
+									<div class="flex items-center justify-center h-[400px]">
+										<div class="text-center">
+											<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+											<p class="text-sm text-muted-foreground">Chargement des points relais...</p>
+										</div>
+									</div>
+								{:else if servicePoints.length === 0}
+									<div class="flex items-center justify-center h-[400px]">
+										<div class="text-center">
+											<MapPin class="w-12 h-12 text-muted-foreground mx-auto mb-2" />
+											<p class="text-sm text-muted-foreground">Aucun point relais trouvé</p>
+										</div>
+									</div>
+								{:else}
+									<MapLibre
+										class="w-full h-[400px] rounded-lg overflow-hidden"
+										style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+										{zoom}
+										center={centerCoordinates}
+									>
+										{#each servicePoints as point}
+											<Marker lnglat={[point.longitude, point.latitude]}>
+												{#snippet content()}
+													<!-- Visuel du marker -->
+													<div class="bg-blue-600 text-white p-2 rounded cursor-pointer"></div>
+												{/snippet}
+												<!-- Popup à l'intérieur du Marker -->
+												<Popup
+													class="text-black"
+													offset={offsets}
+													open={selectedPoint?.id === point.id}
+												>
+													<div class="p-2">
+														<h3 class="font-bold mb-1">{point.name}</h3>
+														<p>Adresse : {point.street}</p>
+														<p>{point.postal_code} {point.city}</p>
+														<button onclick={() => handleMarkerClick(point)}>Valider</button>
+													</div>
+												</Popup>
+											</Marker>
+										{/each}
+									</MapLibre>
+								{/if}
 
 								{#if selectedPoint}
 									<div class="mt-4 p-4 rounded-lg border bg-accent/50">

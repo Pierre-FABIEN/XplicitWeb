@@ -19,7 +19,7 @@ import { findSessionById } from '$lib/prisma/session/sessions';
 /*  Debug & Logging                                                           */
 /* -------------------------------------------------------------------------- */
 
-const DEBUG = true; // Constante pour activer/désactiver le logging détaillé
+const DEBUG = false; // Constante pour activer/désactiver le logging détaillé
 
 type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
 
