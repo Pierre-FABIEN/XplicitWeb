@@ -18,7 +18,8 @@
 		const homeDeliveryOptions: any[] = [];
 
 		options.forEach(option => {
-			if (option.functionalities?.last_mile === 'service_point') {
+			// Nouvelle structure : option.type au lieu de option.functionalities?.last_mile
+			if (option.type === 'service_point') {
 				servicePointOptions.push(option);
 			} else {
 				homeDeliveryOptions.push(option);
@@ -37,6 +38,8 @@
 </script>
 
 {#if shippingOptions.length > 0}
+
+	
 	<Card.Root>
 		<Card.Header>
 			<Card.Title class="flex items-center gap-2">
@@ -60,31 +63,32 @@
 						</div>
 						
 						<!-- Options du groupe -->
-						{#each group.options as option (option.code)}
+						{#each group.options as option (option.id)}
+							
 							<div
 								class="flex items-center space-x-4 rounded-lg border p-4 hover:bg-accent/50 transition-colors"
 							>
 								<input
-									id={option.code}
+									id={option.id}
 									type="radio"
 									name="shippingOption"
-									value={option.code}
-									checked={selectedShippingOption === option.code}
+									value={option.id}
+									checked={selectedShippingOption === option.id}
 									onchange={() => onShippingOptionSelect(option)}
 									class="h-4 w-4 border-primary"
 								/>
-								<label for={option.code} class="flex-1 cursor-pointer">
+								<label for={option.id} class="flex-1 cursor-pointer">
 									<div class="flex items-center justify-between">
 										<div class="flex-1">
-											<div class="font-medium">{option.carrier.name}</div>
+											<div class="font-medium">{option.carrierCode?.toUpperCase() || 'TRANSPORTEUR INCONNU'}</div>
 											<div class="text-sm text-muted-foreground">
-												{option.product.name}
+												{option.productName || 'Produit inconnu'}
 											</div>
 											
 											<!-- 🎯 INDICATEURS DE NUANCES pour UPS -->
-											{#if option.carrier.name === 'UPS'}
+											{#if option.carrierCode === 'ups'}
 												<div class="flex items-center gap-2 mt-2">
-													{#if option.functionalities?.signature}
+													{#if option.productName.includes('Signature')}
 														<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
 															<CheckCircle class="w-3 h-3 mr-1" />
 															Avec signature
@@ -96,7 +100,7 @@
 														</span>
 													{/if}
 													
-													{#if option.functionalities?.last_mile === 'service_point'}
+													{#if option.type === 'service_point'}
 														<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
 															<MapPin class="w-3 h-3 mr-1" />
 															Point relais
@@ -111,43 +115,43 @@
 												
 												<!-- 📝 DESCRIPTION DÉTAILLÉE UPS -->
 												<div class="mt-2 text-xs text-muted-foreground">
-													{#if option.functionalities?.signature}
+													{#if option.productName.includes('Signature')}
 														<p>✓ Livraison avec signature obligatoire - Plus sécurisé</p>
 													{:else}
 														<p>✓ Livraison sans signature - Plus flexible</p>
 													{/if}
 													
-													{#if option.product.name.includes('Express')}
+													{#if option.productName.includes('Express')}
 														<p>✓ Service express - Livraison rapide (1-2 jours ouvrés)</p>
-													{:else if option.product.name.includes('Standard')}
+													{:else if option.productName.includes('Standard')}
 														<p>✓ Service standard - Livraison économique (2-3 jours ouvrés)</p>
 													{/if}
 												</div>
 											{/if}
 											
 											<!-- 📝 DESCRIPTION pour autres transporteurs -->
-											{#if option.carrier.name === 'Chronopost'}
+											{#if option.carrierCode === 'chronopost'}
 												<div class="mt-2 text-xs text-muted-foreground">
-													{#if option.product.name.includes('Express')}
+													{#if option.productName.includes('Express')}
 														<p>✓ Service express - Livraison en 24h</p>
-													{:else if option.product.name.includes('Relais')}
+													{:else if option.productName.includes('Relais')}
 														<p>✓ Point relais - Retrait en point de collecte</p>
 													{:else}
 														<p>✓ Service standard - Livraison en 2-3 jours</p>
 													{/if}
 												</div>
-											{:else if option.carrier.name === 'Colissimo'}
+											{:else if option.carrierCode === 'colissimo'}
 												<div class="mt-2 text-xs text-muted-foreground">
-													{#if option.functionalities?.signature}
+													{#if option.productName.includes('Signature')}
 														<p>✓ Livraison avec signature obligatoire</p>
 													{:else}
 														<p>✓ Livraison sans signature</p>
 													{/if}
 												</div>
-											{:else if option.carrier.name === 'Mondial Relay'}
+											{:else if option.carrierCode === 'mondial_relay'}
 												<div class="mt-2 text-xs text-muted-foreground">
 													<p>✓ Point relais - Retrait en point de collecte</p>
-													{#if option.product.name.includes('QR')}
+													{#if option.productName.includes('QR')}
 														<p>✓ Code QR pour retrait simplifié</p>
 													{/if}
 												</div>
@@ -157,13 +161,16 @@
 										<!-- Prix -->
 										<div class="text-right">
 											<div class="text-lg font-bold">
-												{option.quotes?.[0]?.price?.total?.value
-													? option.quotes[0].price.total.value + ' €'
-													: 'Prix indisponible'}
+												{option.price ? option.price.toFixed(2) + ' €' : 'Prix indisponible'}
 											</div>
-											{#if option.quotes?.[0]?.lead_time}
+											{#if option.eta}
 												<div class="text-xs text-muted-foreground">
-													{option.quotes[0].lead_time} jour(s)
+													{new Date(option.eta).toLocaleDateString('fr-FR', { 
+														weekday: 'long', 
+														year: 'numeric', 
+														month: 'long', 
+														day: 'numeric' 
+													})}
 												</div>
 											{/if}
 										</div>

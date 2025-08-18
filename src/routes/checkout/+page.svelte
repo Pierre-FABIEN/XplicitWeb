@@ -22,7 +22,6 @@
 		setShippingCostHT,
 		updateCartItemQuantity
 	} from '$lib/store/Data/cartStore';
-	import { tick } from 'svelte';
 	
 	let { data } = $props();
 
@@ -251,7 +250,7 @@
 				max_options: 10                                  // Nombre max d'options
 			};
 
-			console.log('📤 Requête Sendcloud:', requestBody);
+	
 
 			const res = await fetch('/api/sendcloud/shipping-options', {
 				method: 'POST',
@@ -264,17 +263,6 @@
 			}
 
 			const result = await res.json();
-			
-			console.log('📥 Réponse Sendcloud reçue:', {
-				status: res.status,
-				optionsCount: result.data?.length || 0,
-				filtering: result.filtering,
-				firstOption: result.data?.[0] ? {
-					carrier: result.data[0].carrier?.name,
-					product: result.data[0].product?.name,
-					price: result.data[0].quotes?.[0]?.price?.total?.value
-				} : null
-			});
 			
 			shippingOptions = result.data || [];
 
@@ -291,22 +279,21 @@
 	let selectedCarrierCode = '';
 
 	function chooseShippingOption(chosenOption: any) {
-		//console.log('Option choisie:', chosenOption);
 
-		selectedShippingOption = chosenOption.code;
+		selectedShippingOption = chosenOption.id; // Nouvelle structure : option.id au lieu de option.code
 
-		const costHT = parseFloat(chosenOption.quotes?.[0]?.price?.total?.value || 0);
+		const costHT = parseFloat(chosenOption.price || 0);
 		setShippingCostHT(costHT);
 
-		if (chosenOption?.quotes?.[0]?.price?.total?.value) {
-			shippingCost = parseFloat(chosenOption.quotes[0].price.total.value);
+		if (chosenOption?.price) {
+			shippingCost = parseFloat(chosenOption.price);
 		} else {
 			shippingCost = 0;
 		}
 
-		const carrierCode = chosenOption?.carrier?.code;
+		const carrierCode = chosenOption?.carrierCode; // Nouvelle structure : option.carrierCode
 		// Vérifier si c'est un point relais
-		const isServicePoint = chosenOption?.functionalities?.last_mile === 'service_point';
+		const isServicePoint = chosenOption?.type === 'service_point'; // Nouvelle structure : option.type
 
 		// ✅ TOUJOURS réinitialiser le point relais sélectionné lors du changement d'option
 		selectedPoint = null;
@@ -453,6 +440,7 @@
 						onAddressSelect={selectAddress}
 					/>
 
+					
 					<ShippingOptions
 						shippingOptions={shippingOptions}
 						selectedShippingOption={selectedShippingOption}

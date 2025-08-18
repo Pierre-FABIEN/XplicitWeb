@@ -275,15 +275,7 @@ export async function createSendcloudLabel(transaction: any) {
 						const maxWeight = parseFloat(method.max_weight || '999999');
 						const isCompatible = currentWeight >= minWeight && currentWeight <= maxWeight;
 						
-						console.log(`📋 Méthode ${method.id} (${method.name}):`, {
-							carrier: method.carrier,
-							min_weight: method.min_weight,
-							max_weight: method.max_weight,
-							service_point_input: method.service_point_input,
-							compatible_poids: isCompatible,
-							prix: method.countries?.[0]?.price
-						});
-						
+
 						return isCompatible;
 					});
 					
@@ -365,17 +357,7 @@ export async function createSendcloudLabel(transaction: any) {
 				const minWeight = parseFloat(method.min_weight || '0');
 				const maxWeight = parseFloat(method.max_weight || '999999');
 				const isCompatible = currentWeight >= minWeight && currentWeight <= maxWeight;
-				
-				console.log(`📋 Méthode ${method.id} (${method.name}):`, {
-					carrier: method.carrier,
-					min_weight: method.min_weight,
-					max_weight: method.max_weight,
-					service_point_input: method.service_point_input,
-					compatible_poids: isCompatible,
-					prix: method.countries?.[0]?.price,
-					est_notre_methode: method.id === currentMethodId
-				});
-				
+
 				return isCompatible;
 			}) || [];
 			
