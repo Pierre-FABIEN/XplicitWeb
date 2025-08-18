@@ -1,6 +1,5 @@
 <script lang="ts">
 	import maplibregl from 'maplibre-gl';
-	import { MapLibre, Marker, Popup } from 'svelte-maplibre-gl';
 
 	import * as Card from '$shadcn/card/index.js';
 	import { loadStripe } from '@stripe/stripe-js';
@@ -9,8 +8,8 @@
 	import SmoothScrollBar from '$lib/components/smoothScrollBar/SmoothScrollBar.svelte';
 	import AddressSelector from '$lib/components/checkout/AddressSelector.svelte';
 	import ShippingOptions from '$lib/components/checkout/ShippingOptions.svelte';
+	import ServicePointMap from '$lib/components/checkout/ServicePointMap.svelte';
 	import {
-		MapPin,
 		CreditCard,
 		ShoppingCart,
 		Trash,
@@ -474,73 +473,16 @@
 
 				<!-- Colonne de droite - Panier et Paiement -->
 				<div class="space-y-6">
-					{#if showMap}
-						<Card.Root>
-							<Card.Header>
-								<Card.Title class="flex items-center gap-2">
-									<MapPin class="w-5 h-5" />
-									Points relais disponibles
-								</Card.Title>
-							</Card.Header>
-							<Card.Content>
-								{#if isLoadingServicePoints}
-									<div class="flex items-center justify-center h-[400px]">
-										<div class="text-center">
-											<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-											<p class="text-sm text-muted-foreground">Chargement des points relais...</p>
-										</div>
-									</div>
-								{:else if servicePoints.length === 0}
-									<div class="flex items-center justify-center h-[400px]">
-										<div class="text-center">
-											<MapPin class="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-											<p class="text-sm text-muted-foreground">Aucun point relais trouvé</p>
-										</div>
-									</div>
-								{:else}
-									<MapLibre
-										class="w-full h-[400px] rounded-lg overflow-hidden"
-										style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-										{zoom}
-										center={centerCoordinates}
-									>
-										{#each servicePoints as point}
-											<Marker lnglat={[point.longitude, point.latitude]}>
-												{#snippet content()}
-													<!-- Visuel du marker -->
-													<div class="bg-blue-600 text-white p-2 rounded cursor-pointer"></div>
-												{/snippet}
-												<!-- Popup à l'intérieur du Marker -->
-												<Popup
-													class="text-black"
-													offset={offsets}
-													open={selectedPoint?.id === point.id}
-												>
-													<div class="p-2">
-														<h3 class="font-bold mb-1">{point.name}</h3>
-														<p>Adresse : {point.street}</p>
-														<p>{point.postal_code} {point.city}</p>
-														<button onclick={() => handleMarkerClick(point)}>Valider</button>
-													</div>
-												</Popup>
-											</Marker>
-										{/each}
-									</MapLibre>
-								{/if}
-
-								{#if selectedPoint}
-									<div class="mt-4 p-4 rounded-lg border bg-accent/50">
-										<h3 class="font-semibold mb-2">Point relais sélectionné</h3>
-										<p class="text-sm">{selectedPoint.name}</p>
-										<p class="text-sm text-muted-foreground">
-											{selectedPoint.street}, {selectedPoint.postal_code}
-											{selectedPoint.city}
-										</p>
-									</div>
-								{/if}
-							</Card.Content>
-						</Card.Root>
-					{/if}
+					<ServicePointMap
+						{showMap}
+						{isLoadingServicePoints}
+						{servicePoints}
+						{selectedPoint}
+						{zoom}
+						{centerCoordinates}
+						{offsets}
+						onMarkerClick={handleMarkerClick}
+					/>
 					<Card.Root>
 						<div class="p-6 flex flex-col space-y-1.5">
 							<h3
