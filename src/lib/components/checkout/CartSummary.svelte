@@ -47,7 +47,6 @@
 		localItems = [...items]; // Créer une nouvelle référence
 		localSubtotal = subtotal;
 		localTax = tax;
-		console.log('CartSummary: items updated', items);
 	});
 
 	// Fonction pour forcer la mise à jour
@@ -132,7 +131,7 @@
 											onclick={() => canAddQuantity(option, item.quantity, false) && onChangeQuantity(item.product.id, option)}
 											disabled={!canAddQuantity(option, item.quantity, false)}
 										>
-											{option} {item.quantity === option ? '✓' : ''}
+											{option}
 										</button>
 									{/each}
 								</div>

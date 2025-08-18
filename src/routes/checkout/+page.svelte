@@ -11,8 +11,7 @@
 	import ServicePointMap from '$lib/components/checkout/ServicePointMap.svelte';
 	import CartSummary from '$lib/components/checkout/CartSummary.svelte';
 	import {
-		CreditCard,
-		Check
+		CreditCard
 	} from 'lucide-svelte';
 	import Button from '$shadcn/button/button.svelte';
 	import { OrderSchema } from '$lib/schema/order/order.js';
@@ -234,23 +233,30 @@
 		}
 
 		try {
-			//console.log(selectedAddressObj, 'selectedAddressObj');
+			// Calculer le poids et la quantité totaux
+			const totalWeight = computeTotalWeight();
+			const totalQuantity = computeTotalQuantity();
 
-			const totalWeight = computeTotalWeight(); // Fonction locale qui calcule le poids total du panier
-			const totalQuantity = computeTotalQuantity(); // Fonction locale qui calcule le nombre d'articles total
+			// Préparer la requête pour Sendcloud
+			const requestBody = {
+				from_country_code: 'FR',                        // Expéditeur (toujours France)
+				to_country_code: selectedAddress.stateLetter,    // ex: 'FR'
+				from_postal_code: '31620',                      // Code postal expéditeur
+				to_postal_code: selectedAddress.zip,             // ex: '31500'
+				weight: {
+					value: totalWeight,                          // Poids en kg (ex: 9.0)
+					unit: 'kilogram'                             // Unité attendue par Sendcloud
+				},
+				prefer_service_point: false,                     // Préférence point relais
+				max_options: 10                                  // Nombre max d'options
+			};
+
+			console.log('📤 Requête Sendcloud:', requestBody);
 
 			const res = await fetch('/api/sendcloud/shipping-options', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					to_country_code: selectedAddress.stateLetter, // ex : 'FR'
-					to_postal_code: selectedAddress.zip, // Code postal
-					weight: {
-						value: totalWeight.toFixed(3), // On suppose que totalWeight est en kg
-						unit: 'kg'
-					},
-					quantity: totalQuantity
-				})
+				body: JSON.stringify(requestBody)
 			});
 
 			if (!res.ok) {
@@ -258,12 +264,22 @@
 			}
 
 			const result = await res.json();
+			
+			console.log('📥 Réponse Sendcloud reçue:', {
+				status: res.status,
+				optionsCount: result.data?.length || 0,
+				filtering: result.filtering,
+				firstOption: result.data?.[0] ? {
+					carrier: result.data[0].carrier?.name,
+					product: result.data[0].product?.name,
+					price: result.data[0].quotes?.[0]?.price?.total?.value
+				} : null
+			});
+			
 			shippingOptions = result.data || [];
 
 			if (!shippingOptions.length) {
 				toast.error("Aucune option de livraison n'a été trouvée.");
-			} else {
-				//console.log('Options de livraison reçues:', shippingOptions);
 			}
 		} catch (err) {
 			console.error('❌ Erreur API Sendcloud:', err);
@@ -354,22 +370,6 @@
 		}
 	}
 
-	// Validation du point relais sélectionné - PLUS NÉCESSAIRE car l'API filtre déjà
-	// function validateServicePoint(point: any) {
-	// 	if (!selectedCarrierCode) {
-	// 		toast.error('Aucune option de livraison sélectionnée.');
-	// 		return false;
-	// 	}
-
-	// 	// Vérifier que le point relais correspond au transporteur
-	// 	if (point.carrier && point.carrier.code !== selectedCarrierCode) {
-	// 		toast.error(`Ce point relais n'est pas compatible avec l'option de livraison sélectionnée (${selectedCarrierCode}).`);
-	// 		return false;
-	// 	}
-
-	// 	return true;
-	// }
-
 	function handleRemoveFromCart(productId: string) {
 		removeFromCart(productId);
 
@@ -422,25 +422,9 @@
 			return;
 		}
 
-		// Plus besoin de validation du transporteur car l'API filtre déjà les points relais compatibles
-		// if (showMap && selectedPoint && selectedCarrierCode && !hasCustomItems) {
-		// 	// Vérifier que le point relais correspond au transporteur
-		// 	if (selectedPoint.carrier && selectedPoint.carrier.code !== selectedCarrierCode) {
-		// 		toast.error(`Le point relais sélectionné n'est pas compatible avec l'option de livraison choisie. Veuillez sélectionner un point relais compatible avec ${selectedCarrierCode}.`);
-		// 			return;
-		// 	}
-		// }
-
 		// Mise à jour des données du superform
 		$createPaymentData.shippingCost = shippingCost.toString();
 		$createPaymentData.shippingOption = selectedShippingOption;
-
-		// console.log(
-		// 	'Checkout avec option de livraison:',
-		// 	selectedShippingOption,
-		// 	'coût:',
-		// 	shippingCost
-		// );
 
 		// Si tout est OK, on peut procéder au checkout
 		// Le formulaire sera soumis automatiquement par l'action du serveur
