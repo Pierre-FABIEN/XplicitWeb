@@ -8,6 +8,7 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import SmoothScrollBar from '$lib/components/smoothScrollBar/SmoothScrollBar.svelte';
+	import AddressSelector from '$lib/components/checkout/AddressSelector.svelte';
 	import {
 		Package,
 		MapPin,
@@ -97,8 +98,6 @@
 	let showMap = $state(false);
 
 	let totalTTC = $derived($cartStore.subtotal + $cartStore.tax + shippingCost);
-	let addressOpen = $state(false);
-	let addressTriggerRef = $state<HTMLButtonElement>(null!);
 
 	// Détecter si la commande contient des canettes personnalisées
 	let hasCustomItems = $derived($cartStore.items.some(item => item.custom?.length > 0));
@@ -113,19 +112,6 @@
 			selectedPoint = null;
 		}
 	});
-
-	/* Selected address prettified for the trigger button */
-	const addressLabel = $derived(
-		selectedAddressObj
-			? `${selectedAddressObj.first_name} ${selectedAddressObj.last_name} — ${selectedAddressObj.street}, ${selectedAddressObj.city}`
-			: 'Sélectionnez une adresse…'
-	);
-
-	/** Closes the popover and restores focus (a11y) */
-	function closeAddressPopover() {
-		addressOpen = false;
-		tick().then(() => addressTriggerRef?.focus());
-	}
 
 	// Offset pour la popup (optionnel, reprenant l'exemple maplibre)
 	let offset = $state(24);
@@ -474,88 +460,11 @@
 			<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-[100px]">
 				<!-- Section Adresse -->
 				<div class="space-y-6">
-					<div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-						<div class="p-6 flex flex-col space-y-1.5">
-							<h3
-								class="text-2xl font-semibold leading-none tracking-tight flex items-center gap-2"
-							>
-								<MapPin class="w-5 h-5" />
-								Adresse de livraison
-							</h3>
-						</div>
-						<div class="p-6 pt-0">
-							<div class="space-y-4">
-								{#if data?.addresses?.length > 0}
-									<Popover.Root bind:open={addressOpen}>
-										<Popover.Trigger bind:ref={addressTriggerRef}>
-											{#snippet child({ props })}
-												<Button
-													variant="outline"
-													class="w-full justify-between"
-													{...props}
-													role="combobox"
-													aria-expanded={addressOpen}
-													aria-controls="address-combobox"
-												>
-													{addressLabel}
-													<ChevronsUpDown class="opacity-50" />
-												</Button>
-											{/snippet}
-										</Popover.Trigger>
-
-										<Popover.Content class="w-[340px] p-0" id="address-combobox">
-											<Command.Root>
-												<Command.Input placeholder="Rechercher…" />
-
-												<Command.List>
-													<Command.Empty>Aucun résultat.</Command.Empty>
-
-													<Command.Group value="addresses">
-														{#each data.addresses as address (address.id)}
-															<Command.Item
-																value={`${address.first_name} ${address.last_name} ${address.street} ${address.city} ${address.country}`}
-																onSelect={() => {
-																	selectAddress(address.id);
-																	closeAddressPopover();
-																}}
-																class="flex flex-col items-start px-2 py-1.5 gap-0.5"
-															>
-																<Check
-																	class={`address-${selectedAddressId === address.id ? 'selected' : 'unselected'} ${true ? 'shrink-0' : ''}`}
-																/>
-
-																<span class="text-sm">
-																	{address.first_name}
-																	{address.last_name}
-																</span>
-																<span class="text-xs text-muted-foreground">
-																	{address.street}, {address.city}
-																	{address.zip}, {address.country}
-																</span>
-															</Command.Item>
-														{/each}
-													</Command.Group>
-												</Command.List>
-											</Command.Root>
-										</Popover.Content>
-									</Popover.Root>
-								{:else}
-									<p class="text-muted-foreground">Aucune adresse renseignée.</p>
-								{/if}
-
-								<Button variant="outline" class="w-full">
-									<a
-										data-sveltekit-preload-data
-										href="/auth/settings/address"
-										class="flex items-center gap-2"
-									>
-										<MapPin class="w-4 h-4" />
-										Créer une adresse
-									</a>
-								</Button>
-							</div>
-						</div>
-					</div>
+					<AddressSelector
+						addresses={data?.addresses || []}
+						selectedAddressId={selectedAddressId}
+						onAddressSelect={selectAddress}
+					/>
 
 					{#if shippingOptions.length > 0}
 						<Card.Root>
