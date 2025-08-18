@@ -9,10 +9,9 @@
 	import AddressSelector from '$lib/components/checkout/AddressSelector.svelte';
 	import ShippingOptions from '$lib/components/checkout/ShippingOptions.svelte';
 	import ServicePointMap from '$lib/components/checkout/ServicePointMap.svelte';
+	import CartSummary from '$lib/components/checkout/CartSummary.svelte';
 	import {
 		CreditCard,
-		ShoppingCart,
-		Trash,
 		Check
 	} from 'lucide-svelte';
 	import Button from '$shadcn/button/button.svelte';
@@ -385,7 +384,14 @@
 	}
 
 	function changeQuantity(productId: string, quantity: number, customId?: string) {
+		console.log('🔄 changeQuantity appelée:', { productId, quantity, customId });
+		console.log('📦 Avant mise à jour - Store:', $cartStore.items);
+		
 		updateCartItemQuantity(productId, quantity, customId);
+		
+		console.log('📦 Après mise à jour - Store:', $cartStore.items);
+		console.log('💰 Nouveau sous-total:', $cartStore.subtotal);
+		console.log('🧾 Nouvelle TVA:', $cartStore.tax);
 		
 		// Recharger les options de livraison après changement de quantité
 		if (selectedAddressId && !hasCustomItems) {
@@ -478,127 +484,35 @@
 						{isLoadingServicePoints}
 						{servicePoints}
 						{selectedPoint}
-						{zoom}
+										{zoom}
 						{centerCoordinates}
 						{offsets}
 						onMarkerClick={handleMarkerClick}
 					/>
-					<Card.Root>
-						<div class="p-6 flex flex-col space-y-1.5">
-							<h3
-								class="text-2xl font-semibold leading-none tracking-tight flex items-center gap-2"
-							>
-								<ShoppingCart class="w-5 h-5" />
-								Votre panier
-							</h3>
-						</div>
-						<div class="p-6 pt-0">
-							{#if $cartStore.items.length > 0}
-								<div class="space-y-4">
-									{#each $cartStore.items as item (item.id)}
-										<div class="flex gap-4 p-4 rounded-lg border bg-background">
-											<img
-												src={(item.custom?.length > 0 && item.custom[0].image) ||
-													(Array.isArray(item.product.images)
-														? item.product.images[0]
-														: item.product.images) ||
-													''}
-												alt={item.product.name}
-												class="w-24 h-24 object-cover rounded-md"
-											/>
-											<div class="flex-1 space-y-2">
-												<div class="flex justify-between">
-													<h3 class="font-medium">{item.product.name}</h3>
-													<button
-														onclick={() => handleRemoveFromCart(item.product.id)}
-														class="text-destructive hover:text-destructive/80"
-													>
-														<Trash class="w-4 h-4" />
-													</button>
-												</div>
-												<p class="text-sm text-muted-foreground">
-													{#if item.custom?.length > 0}
-														{getCustomCanPrice(item.quantity).toFixed(2)}€ l'unité
-													{:else}
-														{item.product.price.toFixed(2)}€ l'unité
-													{/if}
-												</p>
-
-												{#if item.custom?.length > 0}
-													<!-- Custom items: Use predefined quantity options -->
-													<div class="flex gap-2 flex-wrap">
-														{#each customQuantityOptions as option}
-															<button
-																class="px-3 py-1 border rounded text-sm {item.quantity === option.value ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'}"
-																onclick={() => changeQuantity(item.product.id, option.value, item.custom[0]?.id)}
-															>
-																{option.value}
-															</button>
-														{/each}
-													</div>
-												{:else}
-													<!-- Non-custom items: Use buttons with quantity limit -->
-													<div class="flex gap-2">
-														{#each quantityOptions as option}
-															<button
-																class="px-3 py-1 border rounded text-sm {item.quantity === option ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'} {!canAddQuantity(option, item.quantity, false) ? 'opacity-50 cursor-not-allowed' : ''}"
-																onclick={() => canAddQuantity(option, item.quantity, false) && changeQuantity(item.product.id, option)}
-																disabled={!canAddQuantity(option, item.quantity, false)}
-															>
-																{option}
-															</button>
-														{/each}
-													</div>
-													{#if totalNonCustomQuantity > 72}
-														<p class="text-xs text-red-500 mt-1">Limite de 72 unités atteinte pour les commandes non-personnalisées</p>
-													{/if}
-												{/if}
-
-												<p class="text-right font-medium">
-													{#if item.custom?.length > 0}
-														{(getCustomCanPrice(item.quantity) * item.quantity).toFixed(2)}€
-													{:else}
-														{(item.price * item.quantity).toFixed(2)}€
-													{/if}
-												</p>
-											</div>
-										</div>
-									{/each}
-								</div>
-
-								<div class="mt-6 space-y-4 rounded-lg border p-4 bg-muted/50">
-									<div class="flex justify-between text-sm">
-										<span>Sous-total (HT)</span>
-										<span>{$cartStore.subtotal.toFixed(2)}€</span>
-									</div>
-									<div class="flex justify-between text-sm">
-										<span>Livraison</span>
-										<span>
-											{hasCustomItems 
-												? 'Gratuit (commande personnalisée)'
-												: shippingCost > 0
-													? shippingCost.toFixed(2) + '€'
-													: selectedShippingOption
-														? 'En cours...'
-														: 'Non sélectionné'}
-										</span>
-									</div>
-									<div class="flex justify-between text-sm">
-										<span>TVA (5,5%)</span>
-										<span>{$cartStore.tax.toFixed(2)}€</span>
-									</div>
-									<div class="flex justify-between text-lg font-semibold pt-2 border-t">
-										<span>Total TTC</span>
-										<span>{totalTTC.toFixed(2)}€</span>
-									</div>
-								</div>
-
+					<CartSummary
+						items={$cartStore.items}
+						subtotal={$cartStore.subtotal}
+						tax={$cartStore.tax}
+						{hasCustomItems}
+						{shippingCost}
+						{selectedShippingOption}
+						{quantityOptions}
+						{customQuantityOptions}
+						{totalNonCustomQuantity}
+						{canAddQuantity}
+						{getCustomCanPrice}
+						onRemoveFromCart={handleRemoveFromCart}
+						onChangeQuantity={changeQuantity}
+					/>
+					<!-- Formulaire de paiement -->
+					{#if $cartStore.items.length > 0}
+						<Card.Root>
+							<div class="p-6">
 								<form
 									method="POST"
 									action="?/checkout"
 									use:createPaymentEnhance
 									onsubmit={handleCheckout}
-									class="mt-6"
 								>
 									<input type="hidden" name="orderId" bind:value={$createPaymentData.orderId} />
 									<input type="hidden" name="addressId" bind:value={$createPaymentData.addressId} />
@@ -654,14 +568,9 @@
 										Payer {totalTTC.toFixed(2)}€
 									</Button>
 								</form>
-							{:else}
-								<div class="text-center py-8">
-									<ShoppingCart class="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-									<p class="text-muted-foreground">Votre panier est vide.</p>
-								</div>
-							{/if}
-						</div>
-					</Card.Root>
+							</div>
+						</Card.Root>
+					{/if}
 				</div>
 			</div>
 		</div>
