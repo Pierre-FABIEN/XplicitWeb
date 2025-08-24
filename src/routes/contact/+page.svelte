@@ -10,6 +10,7 @@
 	import { Textarea } from '$shadcn/textarea';
 	import { toast } from 'svelte-sonner';
 	import { mode } from 'mode-watcher';
+	import SEO from '$lib/components/SEO.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -32,6 +33,9 @@
 		}
 	});
 </script>
+
+<!-- SEO pour la page contact -->
+<SEO pageKey="contact" />
 
 <div class="w-[100vw] h-[100%] mx-auto px-4 py-6 space-y-6 my-10">
 	<div class="max-w-xl border mx-auto rounded-md p-6 bg-background">

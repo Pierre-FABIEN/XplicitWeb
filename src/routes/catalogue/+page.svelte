@@ -9,6 +9,7 @@
 	import { textureStore } from '$lib/store/scene3DStore';
 	import { addToCart } from '$lib/store/Data/cartStore';
 	import gsap from 'gsap'; // <-- Import GSAP
+	import SEO from '$lib/components/SEO.svelte';
 
 	// --- Svelte 5 Runes ---
 	// Access props from the parent
@@ -76,6 +77,9 @@
 		});
 	});
 </script>
+
+<!-- SEO pour la page catalogue -->
+<SEO pageKey="catalogue" />
 
 <!-- 
   The carousel is wrapped in a parent div that uses the "fly" transition.

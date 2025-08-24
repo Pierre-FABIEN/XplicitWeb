@@ -50,6 +50,36 @@ export const seoConfig = {
 			description: 'Contactez l\'équipe XPLICITDRINK® pour discuter de vos projets de boissons énergisantes, personnalisation ou partenariats. Basés à Toulouse depuis 2007.',
 			keywords: 'contact XPLICITDRINK, projet boisson énergisante, partenariat, Toulouse, équipe',
 			image: '/og-contact.jpg'
+		},
+		checkout: {
+			title: 'Commande - Finalisez votre commande XPLICITDRINK®',
+			description: 'Finalisez votre commande de boissons énergisantes XPLICITDRINK®. Paiement sécurisé et options de livraison disponibles.',
+			keywords: 'commande XPLICITDRINK, paiement sécurisé, livraison, boissons énergisantes, finalisation',
+			image: '/og-checkout.jpg'
+		},
+		checkoutSuccess: {
+			title: 'Commande confirmée - XPLICITDRINK®',
+			description: 'Votre commande XPLICITDRINK® a été confirmée avec succès. Merci pour votre confiance.',
+			keywords: 'commande confirmée, succès, XPLICITDRINK, confirmation commande',
+			image: '/og-checkout-success.jpg'
+		},
+		error: {
+			title: 'Page non trouvée - XPLICITDRINK®',
+			description: 'La page que vous recherchez n\'existe pas. Retournez à l\'accueil pour découvrir nos boissons énergisantes premium.',
+			keywords: 'page non trouvée, erreur 404, XPLICITDRINK, boissons énergisantes',
+			image: '/og-error.jpg'
+		},
+		auth: {
+			title: 'Authentification - XPLICITDRINK®',
+			description: 'Connectez-vous à votre compte XPLICITDRINK® pour accéder à vos commandes et personnalisations.',
+			keywords: 'connexion, authentification, compte, XPLICITDRINK, profil utilisateur',
+			image: '/og-auth.jpg'
+		},
+		admin: {
+			title: 'Administration - XPLICITDRINK®',
+			description: 'Panneau d\'administration XPLICITDRINK®. Gérez vos produits, commandes et utilisateurs.',
+			keywords: 'administration, gestion, produits, commandes, utilisateurs, XPLICITDRINK',
+			image: '/og-admin.jpg'
 		}
 	},
 	

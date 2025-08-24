@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resetCart } from '$lib/store/Data/cartStore';
+	import SEO from '$lib/components/SEO.svelte';
 
 	// On reset le panier dès que la page est consultée
 	$effect(() => {
@@ -7,10 +8,9 @@
 	});
 </script>
 
-<svelte:head>
-	<title>Commande confirmée</title>
-	<meta name="description" content="Merci pour votre commande. Votre panier a été réinitialisé." />
-</svelte:head>
+<!-- SEO pour la page de succès -->
+<SEO pageKey="checkoutSuccess" />
+
 <div class="min-h-screen w-[100vw]">
 	<div class="min-h-screen flex flex-col justify-center items-center text-center p-8">
 		<h1 class="text-3xl font-bold mb-4">Merci pour votre commande !</h1>

@@ -2,6 +2,7 @@
 	import Chart from '$lib/components/Chart.svelte';
 	import ChartMonthly from '$lib/components/ChartMonthly.svelte';
 	import LastInscriptions from '$lib/components/LastInscriptions.svelte';
+	import SEO from '$lib/components/SEO.svelte';
 
 	/**
 	 * Les props reçues : `data` doit contenir { transactions: [...] }
@@ -74,8 +75,8 @@
 		for (const tx of transactions) {
 			if (tx.products && Array.isArray(tx.products)) {
 				for (const product of tx.products) {
-					const productName = product.name;
-					const productQuantity = product.quantity || 0;
+					const productName = product?.name as string;
+					const productQuantity = product?.quantity || 0;
 
 					// Ajouter au total dans le Map
 					if (productSalesMap.has(productName)) {
@@ -94,6 +95,9 @@
 		}));
 	}
 </script>
+
+<!-- SEO pour la page d'administration -->
+<SEO pageKey="admin" />
 
 <div class="csc m-5">
 	<h1 class="text-2xl font-bold mb-4">Accueil</h1>

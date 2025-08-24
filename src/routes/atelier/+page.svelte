@@ -15,6 +15,7 @@
 	import Tutoriel from '$lib/components/Tutoriel/Tutoriel.svelte';
 	import { addToCart } from '$lib/store/Data/cartStore.js';
 	import { fly } from 'svelte/transition';
+	import SEO from '$lib/components/SEO.svelte';
 
 	let { data } = $props();
 
@@ -125,6 +126,9 @@
 		}
 	});
 </script>
+
+<!-- SEO pour la page atelier -->
+<SEO pageKey="atelier" />
 
 <!-- Conteneur global -->
 <div class="ccc w-[100vw] absolute z-50 bottom-[-88vh] left-0">

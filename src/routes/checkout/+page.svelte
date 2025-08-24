@@ -22,6 +22,7 @@
 		setShippingCostHT,
 		updateCartItemQuantity
 	} from '$lib/store/Data/cartStore';
+	import SEO from '$lib/components/SEO.svelte';
 	
 	let { data } = $props();
 
@@ -427,6 +428,9 @@
 
 
 </script>
+
+<!-- SEO pour la page checkout -->
+<SEO pageKey="checkout" />
 
 <div class="min-h-screen w-[100vw]">
 	<SmoothScrollBar>

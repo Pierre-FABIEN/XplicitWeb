@@ -1,6 +1,11 @@
-<script>
+<script lang="ts">
+	import SEO from '$lib/components/SEO.svelte';
+	
 	export let error; // Message d'erreur passé par SvelteKit
 </script>
+
+<!-- SEO pour la page d'erreur -->
+<SEO pageKey="error" />
 
 <div class="flex items-center justify-center min-h-screen">
 	<div class="text-center">
