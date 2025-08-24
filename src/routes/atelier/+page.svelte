@@ -98,9 +98,7 @@
 
 	$effect(() => {
 		if ($fileValues && $fileValues.length > 0) {
-			console.log('Nouvelle image sélectionnée:', $fileValues[0].name);
 			const url = URL.createObjectURL($fileValues[0]);
-			console.log('URL de la texture créée:', url);
 			textureStore.set(url);
 		}
 	});

@@ -26,14 +26,11 @@
 	// Gérer les changements de texture
 	$effect(() => {
 		const unsubscribe = textureStore.subscribe((texturePng) => {
-			if (texturePng && texturePng !== '/BAT/Xplicitdrink Original - 2026-min.png') {
-				console.log('Chargement de la nouvelle texture:', texturePng);
-				
+			if (texturePng && texturePng !== '/BAT/Xplicitdrink Original - 2026-min.png') {				
 				const textureLoader = new THREE.TextureLoader();
 				textureLoader.load(
 					texturePng,
 					(texture) => {
-						console.log('Texture chargée avec succès');
 						texture.flipY = false;
 						texture.encoding = THREE.sRGBEncoding;
 						
