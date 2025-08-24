@@ -3,11 +3,12 @@
 	import * as Sidebar from '$shadcn/sidebar/index.js';
 	import { Search } from 'lucide-svelte';
 	import SmoothScrollBar from '$lib/components/smoothScrollBar/SmoothScrollBar.svelte';
+	import { page } from '$app/stores';
 
 	let { children } = $props();
 
-	// Données de navigation
-	const data = {
+	// Données de navigation avec détection de la page active
+	const data = $derived({
 		versions: ['1.0.1', '1.1.0-alpha', '2.0.0-beta1'],
 		navMain: [
 			{
@@ -22,7 +23,12 @@
 				]
 			}
 		]
-	};
+	});
+
+	// Fonction pour vérifier si un lien est actif
+	function isActive(url: string): boolean {
+		return $page.url.pathname === url;
+	}
 </script>
 
 <div class="w-screen h-screen">
@@ -36,9 +42,11 @@
 						<Sidebar.Menu>
 							{#each group.items as item}
 								<Sidebar.MenuItem>
-									<Sidebar.MenuButton isActive={item.isActive}>
-										<a href={item.url}>{item.title}</a>
-									</Sidebar.MenuButton>
+									<a href={item.url} class="block w-full">
+										<Sidebar.MenuButton class="cursor-pointer" isActive={isActive(item.url)}>
+											{item.title}
+										</Sidebar.MenuButton>
+									</a>
 								</Sidebar.MenuItem>
 							{/each}
 						</Sidebar.Menu>
