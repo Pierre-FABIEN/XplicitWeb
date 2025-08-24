@@ -155,3 +155,6 @@ export async function createSendcloudOrderV3(tx: TxForV3) {
   console.log('[sendcloud.v3.orders] created=', Array.isArray(data?.data) ? data.data.length : 0);
   return data;
 }
+
+// Alias pour maintenir la compatibilité avec le webhook
+export const createSendcloudOrder = createSendcloudOrderV3;
