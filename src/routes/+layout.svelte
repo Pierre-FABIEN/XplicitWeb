@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Navigation from './../lib/components/Navigation.svelte';
+	import Navigation from '../lib/components/navigation/Navigation.svelte';
 	import '@fontsource-variable/open-sans';
 	import '@fontsource-variable/raleway';
 	import '../app.css';

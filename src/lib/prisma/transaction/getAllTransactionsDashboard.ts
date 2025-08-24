@@ -53,7 +53,6 @@ export const getAllTransactionsDashboard = async () => {
 			user: undefined // Supprimer l'objet user original
 		}));
 
-		log('DEBUG', 'Transaction', 'Transactions récupérées:', formattedTransactions);
 		return formattedTransactions;
 	} catch (error) {
 		log('ERROR', 'Transaction', 'Erreur lors de la récupération des transactions:', error);
