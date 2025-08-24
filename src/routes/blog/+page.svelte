@@ -6,6 +6,7 @@
 	import { gsap } from 'gsap';
 	import { Button } from '$shadcn/button';
 	import { mode } from 'mode-watcher';
+	import SEO from '$lib/components/SEO.svelte';
 
 	// -----------------------------
 	// ✅ TYPES
@@ -128,6 +129,9 @@
 		};
 	});
 </script>
+
+<!-- SEO pour la page blog -->
+<SEO pageKey="blog" />
 
 <!-- =============================
 ✅ TEMPLATE

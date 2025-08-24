@@ -2,7 +2,7 @@
 	import * as THREE from 'three';
 	import { T, useTask } from '@threlte/core';
 	import { useDraco, useGltf, Align } from '@threlte/extras';
-	import { textureStore } from '$lib/store/textureStore';
+	import { textureStore } from '$lib/store/scene3DStore';
 	import { writable } from 'svelte/store';
 
 	export const ref = new THREE.Group();
@@ -23,21 +23,56 @@
 		envMapIntensity: 1.5 // Accentuer les reflets
 	});
 
+	// Gérer les changements de texture
 	$effect(() => {
-		textureStore.subscribe((texturePng) => {
-			const textureLoader = new THREE.TextureLoader();
-			const loadedTexture = textureLoader.load(texturePng, (texture) => {
-				texture.flipY = false;
-			});
-
-			// Mettre à jour le matériau
-			customMaterial = new THREE.MeshStandardMaterial({
-				map: loadedTexture,
-				roughness: 0.4, // Surface légèrement brillante
-				metalness: 1.0, // 100% métallique
-				envMapIntensity: 1.5 // Accentuer les reflets
-			});
+		const unsubscribe = textureStore.subscribe((texturePng) => {
+			if (texturePng && texturePng !== '/BAT/Xplicitdrink Original - 2026-min.png') {
+				console.log('Chargement de la nouvelle texture:', texturePng);
+				
+				const textureLoader = new THREE.TextureLoader();
+				textureLoader.load(
+					texturePng,
+					(texture) => {
+						console.log('Texture chargée avec succès');
+						texture.flipY = false;
+						texture.encoding = THREE.sRGBEncoding;
+						
+						// Mettre à jour le matériau avec la nouvelle texture
+						customMaterial = new THREE.MeshStandardMaterial({
+							map: texture,
+							roughness: 0.4,
+							metalness: 1.0,
+							envMapIntensity: 1.5
+						});
+					},
+					(progress) => {
+						console.log('Progression du chargement:', progress);
+					},
+					(error) => {
+						console.error('Erreur lors du chargement de la texture:', error);
+					}
+				);
+			} else {
+				// Utiliser la texture par défaut
+				const textureLoader = new THREE.TextureLoader();
+				textureLoader.load(
+					texturePng,
+					(texture) => {
+						texture.flipY = false;
+						texture.encoding = THREE.sRGBEncoding;
+						
+						customMaterial = new THREE.MeshStandardMaterial({
+							map: texture,
+							roughness: 0.4,
+							metalness: 1.0,
+							envMapIntensity: 1.5
+						});
+					}
+				);
+			}
 		});
+
+		return unsubscribe;
 	});
 
 	// useTask est appelé à chaque frame, delta est le temps écoulé depuis la dernière frame

@@ -1,220 +1,157 @@
+// $lib/sendcloud/order-v3.ts
 import dotenv from 'dotenv';
 dotenv.config();
 
-/**
- * Crée une commande dans Sendcloud en utilisant les données de la transaction.
- * @param {Object} transaction - Les données de la transaction.
- */
-export async function createSendcloudOrder(transaction: any) {
-	console.log('\n📦 === CRÉATION COMMANDE SENDCLOUD ===');
-	console.log('📋 Transaction reçue:', {
-		id: transaction.id,
-		amount: transaction.amount,
-		shippingOption: transaction.shippingOption,
-		shippingCost: transaction.shippingCost,
-		shippingMethodName: transaction.shippingMethodName
-	});
+type TxForV3 = {
+  id: string;
+  amount: number;
+  currency: string;               // "eur" ou "EUR"
+  status: string;                 // "paid" etc.
+  products: any;                  // array [{ name, price, quantity, ... }]
 
-	const authString = `${process.env.SENDCLOUD_PUBLIC_KEY}:${process.env.SENDCLOUD_SECRET_KEY}`;
-	const base64Auth = Buffer.from(authString).toString('base64');
+  // adresse
+  address_first_name: string;
+  address_last_name: string;
+  address_phone: string;
+  address_company?: string | null;
+  address_street_number: string;
+  address_street: string;
+  address_city: string;
+  address_zip: string;
+  address_country_code: string;   // "FR"
+  customer_details_email?: string;
 
-	console.log('🔑 Authentification Sendcloud configurée');
+  // indicatif
+  shippingMethodName: string;
 
-	// Récupérer le transporteur réel du point relais si il y en a un
-	let servicePointCarrier = null;
-	if (transaction.servicePointId) {
-		try {
-			console.log('🔍 Récupération du transporteur du point relais...');
-			// Utiliser l'endpoint de recherche avec l'ID du point relais
-			const spResponse = await fetch(`https://servicepoints.sendcloud.sc/api/v2/service-points/?id=${transaction.servicePointId}`, {
-				method: 'GET',
-				headers: {
-					Authorization: `Basic ${base64Auth}`,
-					Accept: 'application/json'
-				}
-			});
+  // colis
+  package_length: number;
+  package_width: number;
+  package_height: number;
+  package_dimension_unit: string; // "cm"
+  package_weight: number;
+  package_weight_unit: string;    // "kg"
+  package_volume: number;
+  package_volume_unit: string;    // "cm3"
 
-			if (spResponse.ok) {
-				const spData = await spResponse.json();
-				console.log('📥 Données du point relais reçues:', spData);
-				
-				// Chercher le point relais dans la réponse
-				if (spData.service_points && spData.service_points.length > 0) {
-					const servicePoint = spData.service_points[0];
-					servicePointCarrier = servicePoint.carrier?.code || servicePoint.carrier;
-					console.log('✅ Transporteur du point relais récupéré:', servicePointCarrier);
-					console.log('📋 Détails du point relais:', {
-						id: servicePoint.id,
-						name: servicePoint.name,
-						carrier: servicePoint.carrier
-					});
-				} else {
-					console.warn('⚠️ Aucun point relais trouvé avec cet ID');
-				}
-			} else {
-				console.warn('⚠️ Impossible de récupérer le transporteur du point relais, utilisation de l\'option de livraison');
-			}
-		} catch (error) {
-			console.warn('⚠️ Erreur lors de la récupération du transporteur du point relais:', error);
-		}
-	}
+  // relais (optionnel)
+  servicePointId?: string | null;
+  servicePointPostNumber?: string | null;
+  servicePointLatitude?: string | null;
+  servicePointLongitude?: string | null;
+  servicePointType?: string | null;
+  servicePointExtraRefCab?: string | null;
+  servicePointExtraShopRef?: string | null;
 
-	// Fallback : utiliser le transporteur de l'option de livraison si on n'a pas pu récupérer celui du point relais
-	if (!servicePointCarrier && transaction.shippingOption) {
-		servicePointCarrier = transaction.shippingOption.split(':')[0];
-		console.log('🔄 Utilisation du transporteur de l\'option de livraison comme fallback:', servicePointCarrier);
-	}
+  createdAt?: Date;
+};
 
-	// Vérification finale
-	if (!servicePointCarrier) {
-		console.error('❌ Impossible de déterminer le transporteur du point relais');
-		return;
-	}
+function authHeader() {
+  const pub = process.env.SENDCLOUD_PUBLIC_KEY;
+  const sec = process.env.SENDCLOUD_SECRET_KEY;
+  if (!pub || !sec) throw new Error('Sendcloud credentials missing');
+  return 'Basic ' + Buffer.from(`${pub}:${sec}`).toString('base64');
+}
 
-	// ---------------------
-	// 1) Construire le payload
-	// ---------------------
-	console.log('🔨 Construction du payload...');
+function requireIntegrationId(): number {
+  const raw = process.env.SENDCLOUD_INTEGRATION_ID;
+  if (!raw) throw new Error('SENDCLOUD_INTEGRATION_ID missing (V3 Orders)');
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) throw new Error('SENDCLOUD_INTEGRATION_ID invalid');
+  return n;
+}
 
-	const requestBody = [
-		{
-			order_id: `ORDER-${transaction.id}`,
-			order_number: `ORDER-${transaction.id}`, // ✅ Ajout du champ manquant
-			order_details: {
-				integration: {
-					id: parseInt(process.env.SENDCLOUD_INTEGRATION_ID || '0')
-				},
-				status: { code: 'fulfilled', message: 'Paid in full' },
-				order_created_at: new Date().toISOString(),
-				order_updated_at: new Date().toISOString(),
-				order_items: transaction.products.map((product: any) => ({
-					name: product.name,
-					quantity: product.quantity,
-					total_price: {
-						value: (product.price * product.quantity).toFixed(2),
-						currency: 'EUR'
-					},
-					measurement: {
-						weight: {
-							value: 0.124, // poids unitaire par produit
-							unit: 'kg'
-						}
-					}
-				}))
-			},
-			payment_details: {
-				total_price: {
-					value: transaction.amount.toFixed(2),
-					currency: 'EUR'
-				},
-				status: { code: 'paid', message: 'Paid' }
-			},
-			shipping_address: {
-				name: `${transaction.address_first_name} ${transaction.address_last_name}`,
-				address_line_1: transaction.address_street,
-				house_number: transaction.address_street_number?.toString() ?? '',
-				postal_code: transaction.address_zip,
-				city: transaction.address_city,
-				country_code: transaction.address_country_code,
-				phone_number: transaction.address_phone ?? '',
-				email: transaction.customer_details_email,
-				company_name: transaction.address_company
-			},
-			shipping_details: {
-				is_local_pickup: false,
-				delivery_indicator: transaction.shippingMethodName,
-				measurement: {
-					dimension: {
-						length: transaction.package_length,
-						width: transaction.package_width,
-						height: transaction.package_height,
-						unit: transaction.package_dimension_unit
-					},
-					weight: {
-						value: transaction.package_weight,
-						unit: transaction.package_weight_unit
-					},
-					volume: {
-						value: transaction.package_volume,
-						unit: transaction.package_volume_unit
-					}
-				}
-			},
-			// ✅ Déplacement de service_point_details au bon endroit
-			...(transaction.servicePointId
-				? {
-						service_point_details: {
-							id: transaction.servicePointId.toString(),
-							post_number: transaction.servicePointPostNumber || '',
-							latitude: transaction.servicePointLatitude || '',
-							longitude: transaction.servicePointLongitude || '',
-							type: transaction.servicePointType || '',
-							// Le champ carrier n'est pas accepté par l'API Sendcloud
-							extra_data: {
-								ref_cab: transaction.servicePointExtraRefCab || '',
-								shop_ref: transaction.servicePointExtraShopRef || ''
-							}
-						}
-					}
-				: {})
-		}
-	];
+function cur3(x?: string | null) { return String(x || 'EUR').toUpperCase(); }
+function iso2(x?: string | null) { return String(x || '').toUpperCase(); }
+function arr(a: any) { return Array.isArray(a) ? a : []; }
 
-	console.log('📤 Payload construit:', {
-		order_id: requestBody[0].order_id,
-		amount: requestBody[0].payment_details.total_price.value,
-		currency: requestBody[0].payment_details.total_price.currency,
-		shipping_address: {
-			name: requestBody[0].shipping_address.name,
-			address_line_1: requestBody[0].shipping_address.address_line_1,
-			country_code: requestBody[0].shipping_address.country_code
-		},
-		measurements: {
-			dimensions: `${requestBody[0].shipping_details.measurement.dimension.length}x${requestBody[0].shipping_details.measurement.dimension.width}x${requestBody[0].shipping_details.measurement.dimension.height}${requestBody[0].shipping_details.measurement.dimension.unit}`,
-			weight: `${requestBody[0].shipping_details.measurement.weight.value}${requestBody[0].shipping_details.measurement.weight.unit}`,
-			volume: `${requestBody[0].shipping_details.measurement.volume.value}${requestBody[0].shipping_details.measurement.volume.unit}`
-		},
-		has_service_point: !!transaction.servicePointId,
-		service_point_carrier: transaction.servicePointId ? servicePointCarrier : 'N/A',
-		integration_id: requestBody[0].order_details.integration.id
-	});
+export async function createSendcloudOrderV3(tx: TxForV3) {
+  const integrationId = requireIntegrationId();
 
-	// ---------------------
-	// 2) Exécuter la requête
-	// ---------------------
-	console.log('🚀 Envoi de la requête à Sendcloud...');
-	
-	const response = await fetch('https://panel.sendcloud.sc/api/v3/orders/', {
-		method: 'POST',
-		headers: {
-			Authorization: `Basic ${base64Auth}`,
-			'Content-Type': 'application/json',
-			Accept: 'application/json'
-			// Optionnel : Pour Tech Partners
-			// 'Sendcloud-Partner-Id': '<YOUR_PARTNER_UUID>'
-		},
-		body: JSON.stringify(requestBody)
-	});
+  const body = [
+    {
+      order_id: `ORDER-${tx.id}`,
+      order_number: `ORDER-${tx.id}`,
 
-	console.log('📥 Réponse reçue:', {
-		status: response.status,
-		statusText: response.statusText,
-		ok: response.ok
-	});
+      order_details: {
+        integration: { id: integrationId },                   // <= IMPORTANT
+        status: { code: 'fulfilled', message: 'Paid in full' },
+        order_created_at: (tx.createdAt ?? new Date()).toISOString(),
+        order_updated_at: new Date().toISOString(),
+        order_items: arr(tx.products).map((p: any) => ({
+          name: String(p?.name ?? 'Item'),
+          quantity: Number(p?.quantity ?? 1),
+          total_price: {
+            value: Number((Number(p?.price ?? 0) * Number(p?.quantity ?? 1)).toFixed(2)),
+            currency: cur3(tx.currency)
+          },
+          measurement: { weight: { value: 0.124, unit: 'kg' } } // ajuste si tu as mieux
+        }))
+      },
 
-	if (!response.ok) {
-		const txt = await response.text();
-		console.error('❌ Erreur lors de la création de la commande Sendcloud:', txt);
-		console.error('📋 Status:', response.status, response.statusText);
-		console.error('📤 Payload envoyé:', JSON.stringify(requestBody, null, 2));
-		return;
-	}
+      payment_details: {
+        total_price: { value: Number(tx.amount.toFixed(2)), currency: cur3(tx.currency) },
+        status: { code: tx.status || 'paid', message: 'Paid' }
+      },
 
-	const responseData = await response.json();
-	console.log('✅ Commande Sendcloud créée avec succès:', {
-		status: responseData.status || 'unknown',
-		data_count: responseData.data?.length || 0
-	});
-	
-	console.log('🏁 === FIN CRÉATION COMMANDE SENDCLOUD ===\n');
+      shipping_address: {
+        name: `${tx.address_first_name} ${tx.address_last_name}`.trim(),
+        address_line_1: tx.address_street,
+        house_number: String(tx.address_street_number ?? ''),
+        postal_code: tx.address_zip,
+        city: tx.address_city,
+        country_code: iso2(tx.address_country_code),
+        phone_number: tx.address_phone || '',
+        email: tx.customer_details_email || '',
+        company_name: tx.address_company || undefined
+      },
+
+      shipping_details: {
+        is_local_pickup: false,
+        delivery_indicator: tx.shippingMethodName,            // juste indicatif
+        measurement: {
+          dimension: {
+            length: tx.package_length,
+            width: tx.package_width,
+            height: tx.package_height,
+            unit: tx.package_dimension_unit
+          },
+          weight: { value: tx.package_weight, unit: tx.package_weight_unit },
+          volume: { value: tx.package_volume, unit: tx.package_volume_unit }
+        }
+      },
+
+      ...(tx.servicePointId
+        ? {
+            service_point_details: {
+              id: String(tx.servicePointId),
+              post_number: tx.servicePointPostNumber || '',
+              latitude: tx.servicePointLatitude || '',
+              longitude: tx.servicePointLongitude || '',
+              type: tx.servicePointType || '',
+              extra_data: {
+                ref_cab: tx.servicePointExtraRefCab || '',
+                shop_ref: tx.servicePointExtraShopRef || ''
+              }
+            }
+          }
+        : {})
+    }
+  ];
+
+  const res = await fetch('https://panel.sendcloud.sc/api/v3/orders', {
+    method: 'POST',
+    headers: { Authorization: authHeader(), 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  console.log('[sendcloud.v3.orders] status=', res.status);
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`Sendcloud V3 Orders failed (${res.status}): ${txt}`);
+  }
+
+  const data = await res.json().catch(() => ({}));
+  console.log('[sendcloud.v3.orders] created=', Array.isArray(data?.data) ? data.data.length : 0);
+  return data;
 }

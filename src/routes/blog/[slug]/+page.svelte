@@ -2,9 +2,27 @@
 	import { Button } from '$shadcn/button';
 	import { ArrowLeft, Calendar, User, Tag, Folder } from 'lucide-svelte';
 	import type { PageData } from './$types';
+	import SEO from '$lib/components/SEO.svelte';
 
 	let { data }: { data: PageData } = $props();
+	
+	// Préparer les tags pour le SEO
+	const seoTags = $derived(data.post?.tags?.map(tag => tag.tag.name) || []);
 </script>
+
+<!-- SEO pour l'article individuel -->
+<SEO 
+	title={data.post?.title || 'Article'}
+			description={data.post?.content?.substring(0, 160) || 'Découvrez cet article sur XPLICITDRINK®'}
+	keywords={`${data.post?.category?.name || ''}, ${seoTags.join(', ')}`}
+	image="/og-article.jpg"
+	type="article"
+	publishedTime={data.post?.createdAt ? new Date(data.post.createdAt).toISOString() : undefined}
+	modifiedTime={data.post?.updatedAt ? new Date(data.post.updatedAt).toISOString() : undefined}
+	author={data.post?.author?.name || 'XplicitWeb'}
+	section={data.post?.category?.name || 'Blog'}
+	tags={seoTags}
+/>
 
 <!-- Header avec navigation -->
 <div class="w-[100vw]  absolute left-0 top-0 ccc pb-[120px]">

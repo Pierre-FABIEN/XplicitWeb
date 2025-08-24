@@ -6,7 +6,7 @@
 	import Button from '$lib/components/shadcn/ui/button/button.svelte';
 	import { toast } from 'svelte-sonner';
 	import { fly } from 'svelte/transition';
-	import { textureStore } from '$lib/store/textureStore';
+	import { textureStore } from '$lib/store/scene3DStore';
 	import { addToCart } from '$lib/store/Data/cartStore';
 	import gsap from 'gsap'; // <-- Import GSAP
 

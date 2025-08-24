@@ -8,6 +8,7 @@
 	import { updateCameraPosition } from '$lib/store/scene3DStore';
 	import { isSmall } from '$lib/store/mediaStore';
 	import { page } from '$app/stores';
+	import SEO from '$lib/components/SEO.svelte';
 
 	let animateLines = $state(false); // Contrôle de l'animation des lignes
 
@@ -28,13 +29,16 @@
 
 	$effect(() => {
 		// Les deux lectures ci-dessous sont les dépendances ;
-		// le $effect se relancera si l’une change.
+		// le $effect se relancera si l'une change.
 		const path = $page.url.pathname;
 		const small = $isSmall;
 
 		updateCameraPosition(path);
 	});
 </script>
+
+<!-- SEO pour la page d'accueil -->
+<SEO pageKey="home" />
 
 <div class="containerHome ccc absolute z-30 top-[25vh] left-[10vw]">
 	<h1 class="titleHome" style={`-webkit-text-stroke-color: ${strokeColor};`}>
