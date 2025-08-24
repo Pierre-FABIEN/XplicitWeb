@@ -276,7 +276,7 @@
 									</Button>
 								{/if}
 
-								<Button class="w-full m-2" variant="destructive" onclick={handleSignOut}>
+								<Button class="w-full m-2 cursor-pointer" variant="destructive" onclick={handleSignOut}>
 									Se déconnecter
 								</Button>
 							</div>
