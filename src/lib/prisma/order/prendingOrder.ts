@@ -82,7 +82,7 @@ export async function updateOrderItems(orderId: string, incomingItems: any[]) {
 
 				if (newCustomArray.length > 0) {
 					await prisma.custom.createMany({
-						data: newCustomArray.map((c) => ({
+						data: newCustomArray.map((c: any) => ({
 							image: c.image,
 							userMessage: c.userMessage,
 							orderItemId: matchingExisting.id
@@ -104,7 +104,7 @@ export async function updateOrderItems(orderId: string, incomingItems: any[]) {
 
 				if (newCustomArray.length > 0) {
 					await prisma.custom.createMany({
-						data: newCustomArray.map((c) => ({
+						data: newCustomArray.map((c: any) => ({
 							image: c.image,
 							userMessage: c.userMessage,
 							orderItemId: createdOrderItem.id
@@ -209,11 +209,17 @@ async function maybeDeleteImageOnCloudinary(imageUrl: string) {
 /**
  * Extrait le public_id d'une URL Cloudinary.
  */
+function extractPublicId(imageUrl: string): string {
+	const parts = imageUrl.split('/');
+	const filename = parts[parts.length - 1];
+	return filename.split('.')[0];
+}
 
 export async function updateOrder(
 	orderId: string,
 	addressId: string,
 	shippingOption: string,
+	shippingCarrier: string,
 	shippingCost: string,
 	servicePointId?: string,
 	servicePointPostNumber?: string,
@@ -221,7 +227,10 @@ export async function updateOrder(
 	servicePointLongitude?: string,
 	servicePointType?: string | null,
 	servicePointExtraRefCab?: string,
-	servicePointExtraShopRef?: string
+	servicePointExtraShopRef?: string,
+	subtotal?: number,
+	tax?: number,
+	status?: 'PENDING' | 'PAID' | 'SHIPPED' | 'CANCELLED'
 ) {
 	// 1. Convert shippingCost to float
 	const shippingCostFloat = parseFloat(shippingCost);
@@ -244,22 +253,28 @@ export async function updateOrder(
 	const finalTotal = orderTotalHTWithoutShipping + shippingCostFloat;
 
 	// 4. Met à jour la commande
+	const updateData: any = {
+		address: { connect: { id: addressId } },
+		shippingOption,
+		shippingCarrier,
+		shippingCost: shippingCostFloat,
+		total: parseFloat(finalTotal.toFixed(2)), // on arrondit
+		updatedAt: new Date(),
+		servicePointId,
+		servicePointPostNumber,
+		servicePointLatitude,
+		servicePointLongitude,
+		servicePointType,
+		servicePointExtraRefCab,
+		servicePointExtraShopRef,
+		...(subtotal !== undefined && { subtotal }),
+		...(tax !== undefined && { tax }),
+		...(status !== undefined && { status })
+	};
+
 	return await prisma.order.update({
 		where: { id: orderId },
-		data: {
-			addressId,
-			shippingOption,
-			shippingCost: shippingCostFloat,
-			total: parseFloat(finalTotal.toFixed(2)), // on arrondit
-			updatedAt: new Date(),
-			servicePointId,
-			servicePointPostNumber,
-			servicePointLatitude,
-			servicePointLongitude,
-			servicePointType,
-			servicePointExtraRefCab,
-			servicePointExtraShopRef
-		}
+		data: updateData
 	});
 }
 

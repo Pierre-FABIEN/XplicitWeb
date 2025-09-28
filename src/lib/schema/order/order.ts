@@ -4,6 +4,7 @@ export const OrderSchema = z.object({
   orderId: z.string().min(1, "L'ID de commande est requis"),
   addressId: z.string().min(1, "L'adresse est requise"),
   shippingOption: z.string().optional(),
+  shippingCarrier: z.string().optional(),
   shippingCost: z.string().optional(),
 
   // Champs plats pour les informations du point relais

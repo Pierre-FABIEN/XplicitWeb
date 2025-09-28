@@ -33,16 +33,20 @@ export const load = (async ({ locals }) => {
 
 export const actions: Actions = {
 	checkout: async ({ request }) => {
+		console.log('🚀 [SERVER CHECKOUT] Action checkout déclenchée');
+		
 		const formData = await request.formData();
+		console.log('📥 [SERVER CHECKOUT] FormData reçu:', Object.fromEntries(formData.entries()));
+		
 		const form = await superValidate(formData, zod(OrderSchema));
-
-		// console.log('Form data validated =>', form);
+		console.log('✅ [SERVER CHECKOUT] Form data validated =>', form);
 
 		// 1) Extract fields
 		const {
 			orderId,
 			addressId,
 			shippingOption,
+			shippingCarrier,
 			shippingCost,
 			servicePointId,
 			servicePointPostNumber,
@@ -82,6 +86,7 @@ export const actions: Actions = {
 			orderId,
 			addressId,
 			finalShippingOption,
+			shippingCarrier, // Carrier depuis l'option sélectionnée
 			finalShippingCost, // ex: "16.76"
 			servicePointId,
 			servicePointPostNumber,
@@ -132,6 +137,7 @@ export const actions: Actions = {
 			metadata: {
 				order_id: orderId,
 				shipping_option: finalShippingOption,
+				shipping_carrier: shippingCarrier || 'colissimo',
 				shipping_cost: (updatedOrder.shippingCost || 0).toString()
 			},
 			payment_intent_data: {

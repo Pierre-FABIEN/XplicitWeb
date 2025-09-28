@@ -132,6 +132,7 @@ model Order {
   items                   OrderItem[]
 
   shippingOption          String?
+  shippingCarrier         String?
   shippingCost            Float?
 
   // Champs plats pour les informations du point relais
@@ -219,18 +220,24 @@ model Transaction {
   updatedAt              DateTime @default(now())
 
   shippingOption         String
+  shippingCarrier        String?
   shippingCost           Float
 
   // Informations sur le mode d'expédition
   shippingMethodId       Int
   shippingMethodName     String
 
-  // Informations supplémentaires Sendcloud
-  sendcloudParcelId      Int?
+  // Informations supplémentaires Shippo
+  shippoTransactionId    String?
+  shippoParcelId         String?
+  shippoShipmentId       String?
+  labelUrl               String?
   trackingNumber         String? 
   trackingUrl            String? 
+  carrier                String?
+  service                String?
 
-  // 📦 Dimensions et poids du colis selon l'API Sendcloud
+  // 📦 Dimensions et poids du colis selon l'API Shippo
   package_length         Float    // Longueur du colis en cm
   package_width          Float    // Largeur du colis en cm
   package_height         Float    // Hauteur du colis en cm
