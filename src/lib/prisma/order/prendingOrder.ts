@@ -253,6 +253,29 @@ export async function updateOrder(
 	const finalTotal = orderTotalHTWithoutShipping + shippingCostFloat;
 
 	// 4. Met à jour la commande
+	// Normaliser les champs de point de retrait : si vides ou undefined, mettre null pour les effacer
+	const normalizedServicePointId = servicePointId && servicePointId !== '' && servicePointId !== 'null' 
+		? servicePointId 
+		: null;
+	const normalizedServicePointPostNumber = servicePointPostNumber && servicePointPostNumber !== '' && servicePointPostNumber !== 'null'
+		? servicePointPostNumber
+		: null;
+	const normalizedServicePointLatitude = servicePointLatitude && servicePointLatitude !== '' && servicePointLatitude !== 'null'
+		? servicePointLatitude
+		: null;
+	const normalizedServicePointLongitude = servicePointLongitude && servicePointLongitude !== '' && servicePointLongitude !== 'null'
+		? servicePointLongitude
+		: null;
+	const normalizedServicePointType = servicePointType && servicePointType !== '' && servicePointType !== 'null'
+		? servicePointType
+		: null;
+	const normalizedServicePointExtraRefCab = servicePointExtraRefCab && servicePointExtraRefCab !== '' && servicePointExtraRefCab !== 'null'
+		? servicePointExtraRefCab
+		: null;
+	const normalizedServicePointExtraShopRef = servicePointExtraShopRef && servicePointExtraShopRef !== '' && servicePointExtraShopRef !== 'null'
+		? servicePointExtraShopRef
+		: null;
+
 	const updateData: any = {
 		address: { connect: { id: addressId } },
 		shippingOption,
@@ -260,13 +283,13 @@ export async function updateOrder(
 		shippingCost: shippingCostFloat,
 		total: parseFloat(finalTotal.toFixed(2)), // on arrondit
 		updatedAt: new Date(),
-		servicePointId,
-		servicePointPostNumber,
-		servicePointLatitude,
-		servicePointLongitude,
-		servicePointType,
-		servicePointExtraRefCab,
-		servicePointExtraShopRef,
+		servicePointId: normalizedServicePointId,
+		servicePointPostNumber: normalizedServicePointPostNumber,
+		servicePointLatitude: normalizedServicePointLatitude,
+		servicePointLongitude: normalizedServicePointLongitude,
+		servicePointType: normalizedServicePointType,
+		servicePointExtraRefCab: normalizedServicePointExtraRefCab,
+		servicePointExtraShopRef: normalizedServicePointExtraShopRef,
 		...(subtotal !== undefined && { subtotal }),
 		...(tax !== undefined && { tax }),
 		...(status !== undefined && { status })

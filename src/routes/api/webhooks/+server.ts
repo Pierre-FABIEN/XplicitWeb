@@ -2,8 +2,7 @@ import { json } from '@sveltejs/kit';
 import Stripe from 'stripe';
 import { prisma } from '$lib/server/index';
 import dotenv from 'dotenv';
-import { createShippoOrder } from '$lib/shippo/order';
-import { createShippoLabel } from '$lib/shippo/label';
+import { createShippoLabel } from '$lib/shippo/order';
 import { resetCart } from '$lib/store/Data/cartStore';
 
 dotenv.config();
@@ -159,12 +158,32 @@ async function handleCheckoutSession(session: Stripe.Checkout.Session) {
 		return;
 	}
 
-	console.log('📋 Commande trouvée:', {
-				id: order.id,
-				itemsCount: order.items.length,
+	// Récupérer les champs supplémentaires avec une requête brute pour MongoDB
+	const orderWithShipping = await prisma.$runCommandRaw({
+		find: 'orders',
+		filter: { _id: { $oid: orderId } },
+		projection: { shippingOption: 1, shippingCarrier: 1, shippingCost: 1 }
+	}) as any;
+
+	const shippingData = orderWithShipping.cursor?.firstBatch?.[0] || {};
+
+		console.log('📋 Commande trouvée:', {
+		id: order.id,
+		itemsCount: order.items.length,
 		total: order.total,
-		shippingOption: order.shippingOption,
-		shippingCarrier: order.shippingCarrier
+		shippingOption: shippingData.shippingOption,
+		shippingCarrier: shippingData.shippingCarrier
+	});
+	
+	// Logs détaillés pour le point de retrait
+	console.log('📍 [WEBHOOK] Données point de retrait de la commande:', {
+		servicePointId: order.servicePointId || '(vide/null)',
+		servicePointPostNumber: order.servicePointPostNumber || '(vide/null)',
+		servicePointType: order.servicePointType || '(vide/null)',
+		servicePointExtraRefCab: order.servicePointExtraRefCab || '(vide/null)',
+		servicePointExtraShopRef: order.servicePointExtraShopRef || '(vide/null)',
+		hasServicePoint: !!(order.servicePointId && order.servicePointId !== '' && order.servicePointId !== 'null'),
+		isHomeDelivery: !order.servicePointId || order.servicePointId === '' || order.servicePointId === 'null'
 	});
 
 	// Calculer le poids et générer les données de méthode d'expédition
@@ -173,7 +192,7 @@ async function handleCheckoutSession(session: Stripe.Checkout.Session) {
 
 	// Utiliser le carrier depuis les métadonnées Stripe ou depuis la commande
 	const carrierFromStripe = session.metadata?.shipping_carrier;
-	const carrierFromOrder = order.shippingCarrier;
+	const carrierFromOrder = shippingData.shippingCarrier;
 	const finalCarrier = carrierFromStripe || carrierFromOrder || 'colissimo';
 	
 	console.log('🚚 Carrier final:', {
@@ -196,8 +215,9 @@ async function handleCheckoutSession(session: Stripe.Checkout.Session) {
 				customer_details_name: session.customer_details?.name || '',
 				customer_details_phone: session.customer_details?.phone || '',
 		status: session.payment_status === 'paid' ? 'paid' : 'pending',
-		shippingOption: order.shippingOption || '',
-		shippingCost: order.shippingCost || 0,
+		shippingOption: shippingData.shippingOption || '',
+		shippingCarrier: shippingData.shippingCarrier || finalCarrier,
+		shippingCost: shippingData.shippingCost || 0,
 		shippingMethodId: shippingMethodData.id,
 		shippingMethodName: shippingMethodData.name,
 		package_length: shippingMethodData.length,
@@ -252,6 +272,15 @@ async function handleCheckoutSession(session: Stripe.Checkout.Session) {
 		package_weight: `${transactionData.package_weight}kg`,
 				products_count: transactionData.products.length
 			});
+		
+		console.log('📍 [WEBHOOK] Données point de retrait dans transaction:', {
+			servicePointId: transactionData.servicePointId || '(vide/null)',
+			servicePointPostNumber: transactionData.servicePointPostNumber || '(vide/null)',
+			servicePointType: transactionData.servicePointType || '(vide/null)',
+			hasServicePoint: !!(transactionData.servicePointId && transactionData.servicePointId !== '' && transactionData.servicePointId !== 'null'),
+			isHomeDelivery: !transactionData.servicePointId || transactionData.servicePointId === '' || transactionData.servicePointId === 'null',
+			willUsePickupPoint: !!(transactionData.servicePointId && transactionData.servicePointId !== '' && transactionData.servicePointId !== 'null')
+		});
 
 	// Créer la transaction en base
 			console.log('💾 Création de la transaction en base...');
@@ -272,15 +301,10 @@ async function handleCheckoutSession(session: Stripe.Checkout.Session) {
 		console.log('📦 Début des appels Shippo...');
 		
 		try {
-			// Créer la commande Shippo
-			console.log('🔄 Création de la commande Shippo...');
-			const shippoOrderResult = await createShippoOrder(createdTransaction);
-			console.log('✅ Commande Shippo créée avec succès:', shippoOrderResult);
-
-			// Créer l'étiquette Shippo
-			console.log('🏷️ Création de l\'étiquette Shippo...');
-			const shippoLabelResult = await createShippoLabel(createdTransaction);
-			console.log('✅ Étiquette Shippo créée avec succès:', shippoLabelResult);
+			// Créer directement l'étiquette Shippo avec les données de la transaction
+			console.log('🔄 Création de l\'étiquette Shippo...');
+			const shippoOrderResult = await createShippoLabel(createdTransaction);
+			console.log('✅ Étiquette Shippo créée avec succès:', shippoOrderResult);
 
 		} catch (error) {
 			console.error('❌ Erreur lors de la création Shippo:', error);

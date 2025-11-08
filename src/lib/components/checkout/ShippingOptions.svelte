@@ -9,7 +9,12 @@
 		hasCustomItems: boolean;
 	}
 
-	let { shippingOptions, selectedShippingOption, onShippingOptionSelect, hasCustomItems } = $props();
+	let { 
+		shippingOptions, 
+		selectedShippingOption = $bindable(), 
+		onShippingOptionSelect, 
+		hasCustomItems 
+	} = $props();
 
 	// Helper function to group shipping options by type
 	function groupShippingOptions(options: any[]) {
@@ -73,9 +78,12 @@
 									type="radio"
 									name="shippingOption"
 									value={option.id}
-									checked={selectedShippingOption === option.id}
-									onchange={() => onShippingOptionSelect(option)}
-									class="h-4 w-4 border-primary"
+									bind:group={selectedShippingOption}
+									onchange={() => {
+										// Appeler le callback après la mise à jour du binding
+										onShippingOptionSelect(option);
+									}}
+									class="h-4 w-4 border-primary cursor-pointer"
 								/>
 								<label for={option.id} class="flex-1 cursor-pointer">
 									<div class="flex items-center justify-between">

@@ -57,6 +57,19 @@ export const actions: Actions = {
 			servicePointExtraShopRef
 		} = form.data;
 
+		// Logs détaillés pour le debug
+		console.log('📦 [SERVER CHECKOUT] Données de livraison extraites:', {
+			shippingOption,
+			shippingCarrier,
+			shippingCost,
+			hasServicePointId: !!servicePointId,
+			servicePointId: servicePointId || '(vide)',
+			servicePointPostNumber: servicePointPostNumber || '(vide)',
+			servicePointType: servicePointType || '(vide)',
+			isServicePoint: !!servicePointId && servicePointId !== '' && servicePointId !== 'null',
+			isHomeDelivery: !servicePointId || servicePointId === '' || servicePointId === 'null'
+		});
+
 		// Basic checks
 		if (!orderId || !addressId) {
 			return json({ error: 'Veuillez sélectionner une option de livraison.' }, { status: 400 });
@@ -82,11 +95,21 @@ export const actions: Actions = {
 		const userId = order.userId;
 
 		// 3) Update the order in DB with shipping info
+		console.log('💾 [SERVER CHECKOUT] Mise à jour de la commande avec:', {
+			orderId,
+			shippingOption: finalShippingOption,
+			shippingCarrier,
+			shippingCost: finalShippingCost,
+			servicePointId: servicePointId || '(vide/null)',
+			servicePointPostNumber: servicePointPostNumber || '(vide/null)',
+			willSaveServicePoint: !!(servicePointId && servicePointId !== '' && servicePointId !== 'null')
+		});
+		
 		const updatedOrder = await updateOrder(
 			orderId,
 			addressId,
 			finalShippingOption,
-			shippingCarrier, // Carrier depuis l'option sélectionnée
+			shippingCarrier || 'colissimo', // Carrier depuis l'option sélectionnée
 			finalShippingCost, // ex: "16.76"
 			servicePointId,
 			servicePointPostNumber,
@@ -96,6 +119,14 @@ export const actions: Actions = {
 			servicePointExtraRefCab,
 			servicePointExtraShopRef
 		);
+		
+		console.log('✅ [SERVER CHECKOUT] Commande mise à jour:', {
+			orderId: updatedOrder.id,
+			shippingOption: updatedOrder.shippingOption,
+			shippingCarrier: updatedOrder.shippingCarrier,
+			shippingCost: updatedOrder.shippingCost,
+			servicePointId: (updatedOrder as any).servicePointId || '(non défini)'
+		});
 
 		const lineItems = order.items.map((item) => {
 			// item.price = 10 => c'est du HT

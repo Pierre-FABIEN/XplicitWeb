@@ -105,10 +105,38 @@
 		}
 	});
 
-	// Surveiller les changements du panier pour recharger les options de livraison
+	// Surveiller les changements du panier et de l'adresse pour recharger les options de livraison
+	// Ne pas recharger quand on sélectionne une option de livraison
+	let previousCartItemsCount = $state(0);
+	let previousAddressId = $state<string | undefined>(undefined);
+	
 	$effect(() => {
-		if (selectedAddressId && !hasCustomItems && $cartStore.items.length > 0) {
-			// Recharger les options de livraison quand le panier change
+		const currentCartItemsCount = $cartStore.items.length;
+		const currentAddressId = selectedAddressId;
+		
+		// Vérifier si le panier ou l'adresse a changé
+		const cartChanged = currentCartItemsCount !== previousCartItemsCount;
+		const addressChanged = currentAddressId !== previousAddressId;
+		
+		// Mettre à jour les valeurs précédentes
+		previousCartItemsCount = currentCartItemsCount;
+		previousAddressId = currentAddressId;
+		
+		// Ne recharger que si le panier ou l'adresse a vraiment changé
+		if ((cartChanged || addressChanged) && currentAddressId && !hasCustomItems && currentCartItemsCount > 0) {
+			console.log('🔄 [EFFECT] Rechargement des options de livraison:', {
+				timestamp: new Date().toISOString(),
+				reason: cartChanged ? 'Changement du panier' : 'Changement d\'adresse',
+				previousCartItemsCount,
+				currentCartItemsCount,
+				previousAddressId,
+				currentAddressId
+			});
+			// Recharger les options de livraison quand le panier ou l'adresse change
+			fetchShippoShippingOptions();
+		} else if (currentAddressId && !hasCustomItems && currentCartItemsCount > 0 && previousCartItemsCount === 0) {
+			// Cas initial : première fois qu'on a une adresse et des items
+			console.log('🔄 [EFFECT] Chargement initial des options de livraison');
 			fetchShippoShippingOptions();
 		}
 	});
