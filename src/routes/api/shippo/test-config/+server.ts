@@ -4,13 +4,13 @@
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { validateShippoConfig } from '$lib/shippo/config';
+import { validateShippoConfiguration } from '$lib/shippo/config';
 
 export const GET: RequestHandler = async () => {
 
 	try {
 		// Vérifier la configuration
-		const configValid = validateShippoConfig();
+		const configValid = validateShippoConfiguration();
 
 		// Vérifier les variables d'environnement
 		const envCheck = {

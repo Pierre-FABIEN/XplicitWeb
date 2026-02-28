@@ -47,7 +47,7 @@ export const isInteracting = writable(false);
 // ============================================================================
 
 // Texture principale du modèle
-export const textureStore = writable('/BAT/CustomYourCan Original - 2026-min.png');
+export const textureStore = writable('/BAT/Xplicitdrink Original - 2026-min.png');
 
 // ============================================================================
 // 4. STORES POUR LES LUMIÈRES
