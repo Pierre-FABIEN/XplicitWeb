@@ -4,7 +4,7 @@
  */
 
 import { createShippoClientFromEnv } from './client';
-import { prisma } from '$lib/server/prisma';
+import { prisma } from '$lib/server';
 
 /**
  * Vérifie toutes les transactions avec des étiquettes Shippo en attente
@@ -24,9 +24,6 @@ export async function checkPendingShippoLabels() {
 					{ trackingNumber: null },
 					{ trackingNumber: '' }
 				]
-			},
-			include: {
-				order: true
 			}
 		});
 

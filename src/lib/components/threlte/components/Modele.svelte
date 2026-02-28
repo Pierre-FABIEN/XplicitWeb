@@ -4,8 +4,16 @@
 	import { useDraco, useGltf, Align } from '@threlte/extras';
 	import { textureStore } from '$lib/store/scene3DStore';
 	import { writable } from 'svelte/store';
+	import type { Snippet } from 'svelte';
 
 	export const ref = new THREE.Group();
+
+	interface Props {
+		fallback?: Snippet;
+		error?: Snippet<[error: unknown]>;
+		children?: Snippet<[ref: THREE.Group]>;
+	}
+	let { fallback, error, children }: Props = $props();
 	const dracoLoader = useDraco('/draco/');
 
 	export const texturePngStore = writable<string>('/BAT/CustomYourCan Original - 2026-min.png');
@@ -78,7 +86,9 @@
 
 <T is={ref}>
 	{#await gltf}
-		<slot name="fallback" />
+		{#if fallback}
+			{@render fallback()}
+		{/if}
 	{:then gltf}
 		<Align auto>
 			<!-- CAN_ALU avec matériau métallique et rotation sur l'axe Y -->
@@ -104,9 +114,13 @@
 				/>
 			{/if}
 		</Align>
-	{:catch error}
-		<slot name="error" {error} />
+	{:catch err}
+		{#if error}
+			{@render error(err)}
+		{/if}
 	{/await}
 
-	<slot {ref} />
+	{#if children}
+		{@render children(ref)}
+	{/if}
 </T>
