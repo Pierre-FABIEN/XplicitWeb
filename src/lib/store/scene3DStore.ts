@@ -97,33 +97,34 @@ export const color2Tweened = tweened('#ffffff', {
 // 5. STORES POUR LES COULEURS D'ARRIÈRE-PLAN
 // ============================================================================
 
-import gsap from 'gsap';
-
-// Store pour la couleur d'arrière-plan avec animation GSAP
+// Store pour la couleur d'arrière-plan avec animation GSAP (chargé uniquement côté client)
 export const BackgroundColorStore = (() => {
 	const { subscribe, set: originalSet } = writable('#00021a');
 
 	function animateColor(newColor: string) {
+		if (!browser) {
+			originalSet(newColor);
+			return;
+		}
 		let currentColor: string = '#00021a';
-
-		// Abonnement temporaire pour obtenir la couleur actuelle
 		const unsubscribe = subscribe((value) => {
 			currentColor = value;
 		});
 		unsubscribe();
 
-		// Animation avec GSAP
-		gsap.to(
-			{ color: currentColor },
-			{
-				color: newColor,
-				duration: 1.2,
-				ease: "power2.out",
-				onUpdate: function () {
-					originalSet(this.targets()[0].color);
+		import('gsap').then(({ default: gsap }) => {
+			gsap.to(
+				{ color: currentColor },
+				{
+					color: newColor,
+					duration: 1.2,
+					ease: "power2.out",
+					onUpdate: function (this: { targets: () => { color: string }[] }) {
+						originalSet(this.targets()[0].color);
+					}
 				}
-			}
-		);
+			);
+		}).catch(() => originalSet(newColor));
 	}
 
 	return {
@@ -132,31 +133,34 @@ export const BackgroundColorStore = (() => {
 	};
 })();
 
-// Store pour la couleur de lumière avec animation GSAP
+// Store pour la couleur de lumière avec animation GSAP (chargé uniquement côté client)
 export const LightColorStore = (() => {
 	const { subscribe, set: originalSet } = writable('#75deff');
 
 	function animateColor(newColor: string) {
+		if (!browser) {
+			originalSet(newColor);
+			return;
+		}
 		let currentColor: string = '#75deff';
-
-		// Abonnement temporaire pour obtenir la couleur actuelle
 		const unsubscribe = subscribe((value) => {
 			currentColor = value;
 		});
 		unsubscribe();
 
-		// Animation avec GSAP
-		gsap.to(
-			{ color: currentColor },
-			{
-				color: newColor,
-				duration: 1.2,
-				ease: "power2.out",
-				onUpdate: function () {
-					originalSet(this.targets()[0].color);
+		import('gsap').then(({ default: gsap }) => {
+			gsap.to(
+				{ color: currentColor },
+				{
+					color: newColor,
+					duration: 1.2,
+					ease: "power2.out",
+					onUpdate: function (this: { targets: () => { color: string }[] }) {
+						originalSet(this.targets()[0].color);
+					}
 				}
-			}
-		);
+			);
+		}).catch(() => originalSet(newColor));
 	}
 
 	return {

@@ -1,73 +1,78 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import SmoothScrollBarStore from '$lib/store/SmoothScrollBarStore';
-	import gsap from 'gsap';
-	import ScrollTrigger from 'gsap/dist/ScrollTrigger';
 	import Scrollbar from 'smooth-scrollbar';
 
 	let { children } = $props();
 
 	let scrollX = $state(0);
 	let scrollY = $state(0);
-	let smoothScoller = $state.raw<HTMLElement | null>(null); // Utilisation de $state.raw
-	let smoothScroll: Scrollbar | null = null; // Retrait de $state
+	let smoothScoller = $state.raw<HTMLElement | null>(null);
+	let smoothScroll: Scrollbar | null = null;
 
 	$effect(() => {
-		gsap.registerPlugin(ScrollTrigger);
+		if (!browser || !smoothScoller) return;
 
-		if (!smoothScoller) {
-			throw new Error('Element #smoothScoller not found');
-		}
+		async function init() {
+			const [gsapModule, scrollTriggerModule] = await Promise.all([
+				import('gsap'),
+				import('gsap/dist/ScrollTrigger')
+			]);
+			const gsap = gsapModule.default;
+			const ScrollTrigger = scrollTriggerModule.default;
+			gsap.registerPlugin(ScrollTrigger);
 
-		// Initialisation de smoothScroll
-		smoothScroll = Scrollbar.init(smoothScoller, {
-			damping: 0.1,
-			delegateTo: document,
-			alwaysShowTracks: true
-		});
-
-		// Mise à jour du store sans déclencher de réactivité dans $effect
-		SmoothScrollBarStore.update((state) => ({
-			...state,
-			smoothScroll
-		}));
-
-		const updateScroll = (status: any) => {
-			scrollX = status.offset.x;
-			scrollY = status.offset.y;
+			smoothScroll = Scrollbar.init(smoothScoller!, {
+				damping: 0.1,
+				delegateTo: document,
+				alwaysShowTracks: true
+			});
 
 			SmoothScrollBarStore.update((state) => ({
 				...state,
-				scrollX,
-				scrollY
+				smoothScroll
 			}));
-		};
 
-		smoothScroll.addListener(updateScroll);
+			const updateScroll = (status: any) => {
+				scrollX = status.offset.x;
+				scrollY = status.offset.y;
+				SmoothScrollBarStore.update((state) => ({
+					...state,
+					scrollX,
+					scrollY
+				}));
+			};
 
-		ScrollTrigger.scrollerProxy(smoothScoller, {
-			scrollTop(value) {
-				if (arguments.length && smoothScroll) {
-					smoothScroll.scrollTop = value ?? 0;
+			smoothScroll.addListener(updateScroll);
+
+			ScrollTrigger.scrollerProxy(smoothScoller, {
+				scrollTop(value) {
+					if (arguments.length && smoothScroll) {
+						smoothScroll.scrollTop = value ?? 0;
+					}
+					return smoothScroll ? smoothScroll.scrollTop : 0;
 				}
-				return smoothScroll ? smoothScroll.scrollTop : 0;
-			}
-		});
+			});
 
-		smoothScroll.addListener(ScrollTrigger.update);
+			smoothScroll.addListener(ScrollTrigger.update);
 
-		ScrollTrigger.defaults({
-			scroller: smoothScoller,
-			pinType: 'transform'
-		});
+			ScrollTrigger.defaults({
+				scroller: smoothScoller,
+				pinType: 'transform'
+			});
 
-		// Fonction de nettoyage pour remplacer onDestroy
-		return () => {
-			if (smoothScroll) {
-				smoothScroll.removeListener(ScrollTrigger.update);
-				smoothScroll.removeListener(updateScroll);
-				smoothScroll.destroy();
-			}
-		};
+			return () => {
+				if (smoothScroll) {
+					smoothScroll.removeListener(ScrollTrigger.update);
+					smoothScroll.removeListener(updateScroll);
+					smoothScroll.destroy();
+				}
+			};
+		}
+
+		let cleanup: (() => void) | void;
+		init().then((cb) => { cleanup = cb; });
+		return () => { cleanup?.(); };
 	});
 </script>
 

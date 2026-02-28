@@ -1,5 +1,4 @@
 <script lang="ts">
-	import gsap from 'gsap';
 	import { tick } from 'svelte';
 	import { get } from 'svelte/store';
 	import { setDomLoaded, setFirstLoadComplete, loadingStates } from '$store/initialLoaderStore';
@@ -34,8 +33,9 @@
 		observer.observe(initalLoader);
 	}
 
-	function animateIn() {
+	async function animateIn() {
 		if (!initalLoader) return;
+		const { default: gsap } = await import('gsap');
 		gsap.fromTo(
 			initalLoader.querySelectorAll('.letter'),
 			{ opacity: 0, y: 20 },
@@ -55,13 +55,13 @@
 		if (Object.values(currentLoadingStates).every((state) => state === true)) {
 			animateOut();
 		} else {
-			// Réessaye dans 500 ms
 			setTimeout(checkLoadingComplete, 200);
 		}
 	}
 
-	function animateOut() {
+	async function animateOut() {
 		if (!initalLoader) return;
+		const { default: gsap } = await import('gsap');
 		gsap.to(initalLoader.querySelectorAll('.letter'), {
 			opacity: 0,
 			y: -20,
