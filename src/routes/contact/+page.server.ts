@@ -30,7 +30,6 @@ export const actions: Actions = {
 			await createContactSubmission(form.data);
 			return message(form, 'Votre message a bien été envoyé !');
 		} catch (error) {
-			console.error('Error saving contact message:', error);
 			return fail(500, { form, message: 'La sauvegarde de votre message a échoué.' });
 		}
 	}

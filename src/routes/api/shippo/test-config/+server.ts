@@ -7,12 +7,10 @@ import type { RequestHandler } from './$types';
 import { validateShippoConfig } from '$lib/shippo/config';
 
 export const GET: RequestHandler = async () => {
-	console.log('🧪 [TEST SHIPPO] Test de la configuration...');
 
 	try {
 		// Vérifier la configuration
 		const configValid = validateShippoConfig();
-		console.log('✅ [TEST SHIPPO] Configuration validée:', configValid);
 
 		// Vérifier les variables d'environnement
 		const envCheck = {
@@ -22,7 +20,6 @@ export const GET: RequestHandler = async () => {
 			hasSenderPostal: !!process.env.SHIPPO_SENDER_POSTAL_CODE,
 			apiTokenPrefix: process.env.SHIPPO_API_TOKEN?.substring(0, 10) + '...'
 		};
-		console.log('🔧 [TEST SHIPPO] Variables d\'environnement:', envCheck);
 
 		return json({
 			success: true,
@@ -33,7 +30,6 @@ export const GET: RequestHandler = async () => {
 		});
 
 	} catch (error) {
-		console.error('❌ [TEST SHIPPO] Erreur:', error);
 		
 		return json({
 			success: false,

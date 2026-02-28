@@ -53,11 +53,9 @@ export const actions: Actions = {
 						const result = await cloudinary.uploader.destroy(`products/${publicId}`);
 
 						if (result.result !== 'ok' && result.result !== 'not found') {
-							console.error('Error deleting image from Cloudinary:', result);
 							return fail(500, { message: 'Failed to delete image from Cloudinary' });
 						}
 					} catch (error) {
-						console.error('Error deleting image from Cloudinary:', error);
 						return fail(500, { message: 'Failed to delete image from Cloudinary' });
 					}
 				}
@@ -69,7 +67,6 @@ export const actions: Actions = {
 
 			return message(form, 'Product deleted successfully');
 		} catch (error) {
-			console.error('Error deleting product:', error);
 			return fail(500, { message: 'Product deletion failed' });
 		}
 	},
@@ -93,7 +90,6 @@ export const actions: Actions = {
 
 			return message(form, 'Category deleted successfully');
 		} catch (error) {
-			console.error('Error deleting category:', error);
 			return fail(500, { message: 'Category deletion failed' });
 		}
 	}

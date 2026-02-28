@@ -7,7 +7,6 @@ export const POST = async ({ request }) => {
 
 		// Validation de l'ID
 		if (!id) {
-			console.error('Error updating order: Order ID is missing');
 			return json({ error: 'Order ID is missing' }, { status: 400 });
 		}
 
@@ -20,7 +19,6 @@ export const POST = async ({ request }) => {
 			status: 200
 		});
 	} catch (error) {
-		console.error('Error updating order:', error);
 		return new Response(JSON.stringify({ error: 'Failed to update order items' }), { status: 500 });
 	}
 };

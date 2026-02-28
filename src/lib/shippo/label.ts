@@ -20,7 +20,6 @@ export async function createShippoLabel(transaction: any) {
 
 		// Si on a déjà une étiquette Shippo, ne pas en créer une nouvelle
 		if (transaction.shippoTransactionId) {
-			console.log('ℹ️ [SHIPPO LABEL] Étiquette déjà créée:', transaction.shippoTransactionId);
 			return {
 				success: true,
 				alreadyExists: true,
@@ -42,7 +41,6 @@ export async function createShippoLabel(transaction: any) {
 		return orderResult;
 
 	} catch (error) {
-		console.error('❌ [SHIPPO LABEL] Erreur lors de la création:', error);
 		throw error;
 	}
 }
@@ -51,7 +49,6 @@ export async function createShippoLabel(transaction: any) {
  * Récupère le statut d'une étiquette Shippo
  */
 export async function getShippoLabelStatus(shippoTransactionId: string) {
-	console.log('📊 [SHIPPO LABEL] Vérification du statut:', shippoTransactionId);
 
 	try {
 		const shippoClient = createShippoClientFromEnv();
@@ -72,7 +69,6 @@ export async function getShippoLabelStatus(shippoTransactionId: string) {
 		};
 
 	} catch (error) {
-		console.error('❌ [SHIPPO LABEL] Erreur lors de la récupération du statut:', error);
 		throw error;
 	}
 }
@@ -81,14 +77,12 @@ export async function getShippoLabelStatus(shippoTransactionId: string) {
  * Annule une étiquette Shippo
  */
 export async function cancelShippoLabel(shippoTransactionId: string) {
-	console.log('🚫 [SHIPPO LABEL] Annulation de l\'étiquette:', shippoTransactionId);
 
 	try {
 		const shippoClient = createShippoClientFromEnv();
 		
 		// Note: Shippo ne permet pas l'annulation des étiquettes déjà créées
 		// On peut seulement marquer la transaction comme annulée côté base
-		console.log('⚠️ [SHIPPO LABEL] Annulation non supportée par Shippo');
 		
 		return {
 			success: false,
@@ -96,7 +90,6 @@ export async function cancelShippoLabel(shippoTransactionId: string) {
 		};
 
 	} catch (error) {
-		console.error('❌ [SHIPPO LABEL] Erreur lors de l\'annulation:', error);
 		throw error;
 	}
 }

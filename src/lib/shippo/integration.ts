@@ -89,19 +89,16 @@ export async function executeCompleteShippingFlow(
   transactionData: any, // Vos données de transaction Prisma
   options: ShippingFlowOptions
 ): Promise<CompleteShippingFlowResult> {
-  console.log('🚀 Début du flux complet de livraison Shippo');
   
   // Initialiser le client Shippo
   const client = createShippoClientFromEnv();
   
   try {
     // 1. Créer les adresses
-    console.log('📍 Étape 1: Création des adresses');
     const addressData = convertAddressFromPrisma(transactionData);
     const addresses = await createShipmentAddresses(client, addressData);
     
     // 2. Créer le shipment et obtenir les rates
-    console.log('📦 Étape 2: Création du shipment et récupération des rates');
     const shipmentData = convertShipmentFromPrisma(transactionData);
     shipmentData.senderAddressId = addresses.senderAddressId;
     shipmentData.recipientAddressId = addresses.recipientAddressId;
@@ -117,7 +114,6 @@ export async function executeCompleteShippingFlow(
     }
     
     // 3. Acheter l'étiquette
-    console.log('🏷️ Étape 3: Achat de l\'étiquette');
     const transactionDataForLabel = convertTransactionFromPrisma(transactionData);
     transactionDataForLabel.rateId = bestRate.object_id;
     transactionDataForLabel.labelOptions = options.labelOptions;
@@ -148,15 +144,10 @@ export async function executeCompleteShippingFlow(
       }
     };
     
-    console.log('✅ Flux complet terminé avec succès');
-    console.log(`💰 Coût total: ${result.metadata.totalCost} ${result.metadata.currency}`);
-    console.log(`🚚 Transporteur: ${result.metadata.carrier}`);
-    console.log(`📅 Délai estimé: ${result.metadata.estimatedDays} jours`);
     
     return result;
     
   } catch (error) {
-    console.error('❌ Erreur dans le flux complet:', error);
     throw error;
   }
 }
@@ -230,7 +221,6 @@ export async function createAndPurchaseLabelWithValidation(
   
   // Valider les adresses avant de continuer
   if (options.validateAddresses) {
-    console.log('🔍 Validation des adresses...');
     
     const addressData = convertAddressFromPrisma(transactionData);
     
@@ -239,14 +229,12 @@ export async function createAndPurchaseLabelWithValidation(
     const recipientValidation = await validateAddress(client, addressData.recipientAddress);
     
     if (!recipientValidation.isValid) {
-      console.warn('⚠️ Adresse destinataire invalide:', recipientValidation.messages);
     }
     
     // Valider l'adresse expéditeur si disponible
     if (addressData.senderAddress) {
       const senderValidation = await validateAddress(client, addressData.senderAddress);
       if (!senderValidation.isValid) {
-        console.warn('⚠️ Adresse expéditeur invalide:', senderValidation.messages);
       }
     }
   }
@@ -270,22 +258,18 @@ export async function executeShippingFlowWithRetry(
   
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      console.log(`🔄 Tentative ${attempt + 1}/${maxRetries}`);
       return await executeCompleteShippingFlow(transactionData, options);
     } catch (error) {
       lastError = error as Error;
-      console.error(`❌ Tentative ${attempt + 1} échouée:`, error);
       
       // Si c'est une erreur non récupérable, arrêter
       if (isNonRetryableError(error as Error)) {
-        console.log('🚫 Erreur non récupérable, arrêt des tentatives');
         break;
       }
       
       // Attendre avant de réessayer
       if (attempt < maxRetries - 1) {
         const waitTime = Math.pow(2, attempt) * 1000; // Backoff exponentiel
-        console.log(`⏳ Attente de ${waitTime}ms avant la prochaine tentative...`);
         await new Promise(resolve => setTimeout(resolve, waitTime));
       }
     }
@@ -358,21 +342,11 @@ export function generateFlowReport(result: CompleteShippingFlowResult): {
  * Logger les détails du flux
  */
 export function logFlowDetails(result: CompleteShippingFlowResult): void {
-  console.log('📊 === RAPPORT DE FLUX SHIPPO ===');
-  console.log(`✅ Succès: ${result.labelResult.status === 'SUCCESS' ? 'Oui' : 'Non'}`);
-  console.log(`💰 Coût: ${result.metadata.totalCost} ${result.metadata.currency}`);
-  console.log(`🚚 Transporteur: ${result.metadata.carrier}`);
-  console.log(`📦 Service: ${result.metadata.service}`);
-  console.log(`📅 Délai: ${result.metadata.estimatedDays} jours`);
-  console.log(`📋 Numéro de suivi: ${result.labelResult.trackingNumber || 'N/A'}`);
-  console.log(`🏷️ Étiquette: ${result.labelResult.labelUrl ? 'Générée' : 'Non générée'}`);
   
   if (result.labelResult.messages && result.labelResult.messages.length > 0) {
-    console.log('⚠️ Messages:');
     result.labelResult.messages.forEach(msg => console.log(`  - ${msg}`));
   }
   
-  console.log('🏁 === FIN RAPPORT ===');
 }
 
 // ============================================================================
@@ -389,7 +363,6 @@ export async function integrateResultIntoDatabase(
   // Cette fonction nécessiterait d'accéder à votre instance Prisma
   // Adaptez selon votre modèle de données
   
-  console.log(`💾 Intégration du résultat pour la transaction ${transactionId}`);
   
   /*
   await prisma.transaction.update({

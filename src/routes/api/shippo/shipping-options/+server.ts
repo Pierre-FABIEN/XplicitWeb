@@ -9,7 +9,6 @@ import { createShippoClientForProject } from '$lib/shippo';
 import { validateShippoConfig } from '$lib/shippo';
 
 export const POST: RequestHandler = async ({ request }) => {
-	console.log('🚀 [API SHIPPO] Demande d\'options de livraison reçue');
 
 	let requestBody;
 	try {
@@ -22,7 +21,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			weight: requestBody?.weight
 		});
 	} catch (parseError) {
-		console.error('❌ [API SHIPPO] Erreur de parsing JSON:', parseError);
 		return json({ error: 'Invalid JSON' }, { status: 400 });
 	}
 	
@@ -42,43 +40,34 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		// Validation des données requises
 		if (!to_country_code || !to_postal_code || !weight) {
-			console.error('❌ [API SHIPPO] Données manquantes:', { to_country_code, to_postal_code, weight });
 			return json({ 
 				error: 'Données manquantes: to_country_code, to_postal_code et weight sont requis' 
 			}, { status: 400 });
 		}
 
 		// Vérifier la configuration Shippo
-		console.log('🔧 [API SHIPPO] Vérification de la configuration...');
 		const config = validateShippoConfig();
 		if (!config.isValid) {
-			console.error('❌ [API SHIPPO] Configuration Shippo invalide:', config.errors);
 			return json({ 
 				error: 'Configuration Shippo invalide',
 				details: config.errors
 			}, { status: 500 });
 		}
-		console.log('✅ [API SHIPPO] Configuration OK');
 
 		// Créer le client Shippo
-		console.log('🔧 [API SHIPPO] Création du client...');
 		let client;
 		try {
 			client = createShippoClientForProject();
-			console.log('✅ [API SHIPPO] Client créé');
 		} catch (clientError) {
-			console.error('❌ [API SHIPPO] Erreur création client:', clientError);
 			throw new Error(`Erreur création client: ${clientError instanceof Error ? clientError.message : 'Erreur inconnue'}`);
 		}
 
 		// Créer les adresses Shippo
-		console.log('📍 [API SHIPPO] Création des adresses...');
 		
 		let senderAddress, recipientAddress;
 		
 		try {
 		// Adresse expéditeur (votre entreprise) - depuis .env
-		console.log('📍 [API SHIPPO] Création adresse expéditeur...');
 		senderAddress = await client.createAddress({
 			name: process.env.SHIPPO_SENDER_NAME || 'Votre Entreprise',
 			company: process.env.SHIPPO_SENDER_COMPANY || 'Mon E-commerce',
@@ -90,10 +79,8 @@ export const POST: RequestHandler = async ({ request }) => {
 			email: process.env.SHIPPO_SENDER_EMAIL || 'expedition@votre-entreprise.com',
 			is_residential: false
 		});
-			console.log('✅ [API SHIPPO] Adresse expéditeur créée:', senderAddress.object_id);
 
 			// Adresse destinataire (utiliser les vraies données du client)
-			console.log('📍 [API SHIPPO] Création adresse destinataire...');
 			recipientAddress = await client.createAddress({
 				name: client_address.name || 'Client',
 				company: client_address.company || '',
@@ -105,9 +92,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				email: client_address.email || '',
 				is_residential: true
 			});
-			console.log('✅ [API SHIPPO] Adresse destinataire créée:', recipientAddress.object_id);
 		} catch (addressError) {
-			console.error('❌ [API SHIPPO] Erreur création adresses:', addressError);
 			throw new Error(`Erreur création adresses: ${addressError instanceof Error ? addressError.message : 'Erreur inconnue'}`);
 		}
 
@@ -117,7 +102,6 @@ export const POST: RequestHandler = async ({ request }) => {
 		});
 
 		// Créer le colis avec dimensions simples
-		console.log('📦 [API SHIPPO] Création du colis...');
 		
 		// Dimensions simples selon le poids
 		const weightValue = parseFloat(requestBody.weight?.value || '6');
@@ -144,10 +128,8 @@ export const POST: RequestHandler = async ({ request }) => {
 			mass_unit: 'kg' as const
 		});
 
-		console.log('✅ [API SHIPPO] Colis créé:', parcel.object_id);
 
 		// Créer le shipment
-		console.log('🚢 [API SHIPPO] Création du shipment...');
 		const shipment = await client.createShipment({
 			address_from: senderAddress.object_id,
 			address_to: recipientAddress.object_id,
@@ -156,13 +138,10 @@ export const POST: RequestHandler = async ({ request }) => {
 			metadata: `Checkout ${Date.now()}`
 		});
 
-		console.log('✅ [API SHIPPO] Shipment créé:', shipment.object_id);
 
 		// Récupérer les rates
-		console.log('💰 [API SHIPPO] Récupération des rates...');
 		const rates = await client.getShipmentRates(shipment.object_id);
 
-		console.log('📊 [API SHIPPO] Rates reçus:', rates.length);
 
 		// Log détaillé des rates pour debug
 		console.log('🔍 [API SHIPPO] Détail des rates reçus:', rates.map(rate => ({
@@ -206,7 +185,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			// Détection basée sur le nom du service si carrier est inconnu
 			if (carrierCode === 'unknown') {
 				const serviceName = (rate.servicelevel?.name || '').toLowerCase();
-				console.log('🔍 [API SHIPPO] Détection par service:', { serviceName });
 				
 				if (serviceName.includes('chrono')) {
 					carrierCode = 'chronopost';
@@ -222,7 +200,6 @@ export const POST: RequestHandler = async ({ request }) => {
 					carrierCode = 'dpd'; // Services DPD typiques
 				}
 				
-				console.log('🔍 [API SHIPPO] Carrier final après détection:', carrierCode);
 			}
 
 			const option = {
@@ -301,10 +278,8 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json(response);
 
 	} catch (error) {
-		console.error('❌ [API SHIPPO] Erreur Shippo, utilisation du fallback:', error);
 		
 		// Fallback : utiliser des données simulées
-		console.log('🔄 [API SHIPPO] Activation du fallback simulé');
 		
 		const simulatedOptions = [
 			{

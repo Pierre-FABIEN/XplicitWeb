@@ -204,7 +204,6 @@ export const transactionCreatedHandler: WebhookHandler = {
   handler: async (payload: WebhookPayload) => {
     const transaction = payload.data;
     
-    console.log(`Nouvelle transaction créée: ${transaction.object_id}`);
     
     // Logique pour traiter une nouvelle transaction
     // Par exemple, envoyer un email de confirmation
@@ -240,7 +239,6 @@ export const shipmentCreatedHandler: WebhookHandler = {
   handler: async (payload: WebhookPayload) => {
     const shipment = payload.data;
     
-    console.log(`Nouveau shipment créé: ${shipment.object_id}`);
     
     // Logique pour traiter un nouveau shipment
   }
@@ -255,7 +253,6 @@ export const shipmentUpdateHandler: WebhookHandler = {
   handler: async (payload: WebhookPayload) => {
     const shipment = payload.data;
     
-    console.log(`Shipment mis à jour: ${shipment.object_id}`);
     
     // Logique pour traiter les mises à jour de shipment
   }
@@ -290,7 +287,6 @@ export const rateUpdateHandler: WebhookHandler = {
   handler: async (payload: WebhookPayload) => {
     const rate = payload.data;
     
-    console.log(`Rate mis à jour: ${rate.object_id}`);
     
     // Logique pour traiter les mises à jour de rate
   }
@@ -333,14 +329,12 @@ export class WebhookManager {
     const handlers = this.handlers.get(payload.event);
     
     if (!handlers || handlers.length === 0) {
-      console.warn(`Aucun handler enregistré pour l'événement: ${payload.event}`);
       return;
     }
 
     // Exécuter tous les handlers pour cet événement
     const promises = handlers.map(handler => 
       handler.handler(payload).catch(error => {
-        console.error(`Erreur dans le handler pour ${payload.event}:`, error);
       })
     );
 
@@ -426,7 +420,6 @@ export async function cleanupWebhooks(
     );
     
     if (!shouldKeep) {
-      console.log(`Suppression du webhook obsolète: ${webhook.object_id}`);
       await deleteWebhook(client, webhook.object_id);
     }
   }

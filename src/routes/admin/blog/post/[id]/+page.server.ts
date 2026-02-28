@@ -81,7 +81,6 @@ export const actions: Actions = {
 
 			return message(form, 'Post updated successfully');
 		} catch (error) {
-			console.error('Error updating blog post:', error);
 			return fail(500, { message: 'Failed to update post' });
 		}
 	}

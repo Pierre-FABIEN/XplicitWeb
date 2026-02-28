@@ -8,7 +8,7 @@
 	export const ref = new THREE.Group();
 	const dracoLoader = useDraco('/draco/');
 
-	export const texturePngStore = writable<string>('/BAT/Xplicitdrink Original - 2026-min.png');
+	export const texturePngStore = writable<string>('/BAT/CustomYourCan Original - 2026-min.png');
 	let rotation = $state(0);
 	let customMaterial = $state<THREE.MeshStandardMaterial | null>(null);
 
@@ -26,7 +26,7 @@
 	// Gérer les changements de texture
 	$effect(() => {
 		const unsubscribe = textureStore.subscribe((texturePng) => {
-			if (texturePng && texturePng !== '/BAT/Xplicitdrink Original - 2026-min.png') {				
+			if (texturePng && texturePng !== '/BAT/CustomYourCan Original - 2026-min.png') {				
 				const textureLoader = new THREE.TextureLoader();
 				textureLoader.load(
 					texturePng,
@@ -43,10 +43,8 @@
 						});
 					},
 					(progress) => {
-						console.log('Progression du chargement:', progress);
 					},
 					(error) => {
-						console.error('Erreur lors du chargement de la texture:', error);
 					}
 				);
 			} else {

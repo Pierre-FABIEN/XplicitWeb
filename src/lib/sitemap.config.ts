@@ -1,7 +1,7 @@
 // Configuration du sitemap
 export const sitemapConfig = {
 	// URL de base du site
-	site: 'https://xplicitdrink.com', // Domaine XPLICITDRINK®
+	site: 'https://customyourcan.com', // Domaine CustomYourCan®
 	
 	// Routes à exclure du sitemap (routes privées, admin, auth)
 	excludedRoutes: [

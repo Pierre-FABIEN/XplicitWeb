@@ -16,7 +16,6 @@ export const load = async (event: PageServerLoadEvent) => {
 			return redirect(302, '/auth/verify-email');
 		}
 
-		console.log(event.locals.user, 'slkrjghxkgujh');
 
 		if (!event.locals.user.googleId || !event.locals.user?.isMfaEnabled) {
 			if (!event.locals.user.registered2FA) {
@@ -62,7 +61,6 @@ export const actions: Actions = {
 		}
 
 		const user = await getUserFromEmail(email);
-		console.log(user);
 
 		if (user === null) {
 			return message(form, 'Le compte nexiste pas');

@@ -9,11 +9,9 @@ import { createShippoClientForProject } from '$lib/shippo';
 import { quickLabelPurchase } from '$lib/shippo';
 
 export const POST: RequestHandler = async ({ request }) => {
-	console.log('🏷️ [API SHIPPO] Demande de création d\'étiquette reçue');
 
 	try {
 		const body = await request.json();
-		console.log('📥 [API SHIPPO] Données reçues:', body);
 
 		const {
 			transactionId,
@@ -134,15 +132,12 @@ export const POST: RequestHandler = async ({ request }) => {
 		};
 
 		if (result.labelResult.status === 'SUCCESS') {
-			console.log('🎉 [API SHIPPO] Étiquette créée avec succès');
 			return json(response);
 		} else {
-			console.error('❌ [API SHIPPO] Échec de création d\'étiquette:', result.labelResult.messages);
 			return json(response, { status: 400 });
 		}
 
 	} catch (error) {
-		console.error('❌ [API SHIPPO] Erreur lors de la création d\'étiquette:', error);
 		
 		return json({ 
 			success: false,

@@ -48,7 +48,6 @@ export const actions: Actions = {
 
 					uploadedImageUrls.push(uploadResponse.secure_url);
 				} catch (error) {
-					console.error('Error uploading image:', error);
 					return fail(500, { message: 'Image upload failed' });
 				}
 			}
@@ -87,7 +86,6 @@ export const actions: Actions = {
 
 			return message(form, 'Product created successfully');
 		} catch (error) {
-			console.error('Error creating product:', error);
 			return fail(500, { message: 'Product creation failed' });
 		}
 	}

@@ -16,7 +16,6 @@ import {
 // ============================================================================
 
 export async function exempleUtilisationSimple() {
-  console.log('📦 Exemple d\'utilisation simple de Shippo');
   
   try {
     // 1. Vérifier la configuration
@@ -31,7 +30,6 @@ export async function exempleUtilisationSimple() {
       throw new Error(`Connexion échouée: ${connectionTest.message}`);
     }
     
-    console.log('✅ Connexion Shippo réussie');
     
     // 3. Données d'exemple (adaptez selon votre modèle Prisma)
     const transactionData = {
@@ -88,16 +86,10 @@ export async function exempleUtilisationSimple() {
       preferCheapest: true
     });
     
-    console.log('🎉 Étiquette achetée avec succès !');
-    console.log(`💰 Coût: ${result.metadata.totalCost} ${result.metadata.currency}`);
-    console.log(`🚚 Transporteur: ${result.metadata.carrier}`);
-    console.log(`📋 Numéro de suivi: ${result.labelResult.trackingNumber}`);
-    console.log(`🏷️ URL de l'étiquette: ${result.labelResult.labelUrl}`);
     
     return result;
     
   } catch (error) {
-    console.error('❌ Erreur:', error);
     throw error;
   }
 }
@@ -107,7 +99,6 @@ export async function exempleUtilisationSimple() {
 // ============================================================================
 
 export async function exempleAvecPointRelais() {
-  console.log('📍 Exemple avec point relais');
   
   const transactionData = {
     id: 'TXN-456',
@@ -178,15 +169,10 @@ export async function exempleAvecPointRelais() {
       }
     );
     
-    console.log('🎉 Étiquette point relais achetée avec succès !');
-    console.log(`📍 Point relais: ${servicePointData.name}`);
-    console.log(`💰 Coût: ${result.metadata.totalCost} ${result.metadata.currency}`);
-    console.log(`📋 Numéro de suivi: ${result.labelResult.trackingNumber}`);
     
     return result;
     
   } catch (error) {
-    console.error('❌ Erreur avec point relais:', error);
     throw error;
   }
 }
@@ -196,7 +182,6 @@ export async function exempleAvecPointRelais() {
 // ============================================================================
 
 export async function exempleAvanceAvecValidation() {
-  console.log('🔍 Exemple avancé avec validation');
   
   const transactionData = {
     id: 'TXN-789',
@@ -263,17 +248,10 @@ export async function exempleAvanceAvecValidation() {
       maxRetries: 3
     });
     
-    console.log('🎉 Étiquette avancée achetée avec succès !');
-    console.log(`💰 Coût: ${result.metadata.totalCost} ${result.metadata.currency}`);
-    console.log(`🚚 Transporteur: ${result.metadata.carrier}`);
-    console.log(`📦 Service: ${result.metadata.service}`);
-    console.log(`📅 Délai estimé: ${result.metadata.estimatedDays} jours`);
-    console.log(`📋 Numéro de suivi: ${result.labelResult.trackingNumber}`);
     
     return result;
     
   } catch (error) {
-    console.error('❌ Erreur avancée:', error);
     throw error;
   }
 }
@@ -283,7 +261,6 @@ export async function exempleAvanceAvecValidation() {
 // ============================================================================
 
 export async function exempleGestionWebhooks() {
-  console.log('🔗 Exemple de gestion des webhooks');
   
   try {
     const client = createShippoClientForProject();
@@ -300,7 +277,6 @@ export async function exempleGestionWebhooks() {
       ]
     );
     
-    console.log('✅ Webhook configuré:', webhook.object_id);
     
     // 2. Configurer le gestionnaire de webhooks
     const webhookManager = new WebhookManager();
@@ -324,7 +300,6 @@ export async function exempleGestionWebhooks() {
     
     await webhookManager.processWebhook(exempleWebhookPayload);
     
-    console.log('✅ Webhook traité avec succès');
     
     return {
       webhook,
@@ -332,7 +307,6 @@ export async function exempleGestionWebhooks() {
     };
     
   } catch (error) {
-    console.error('❌ Erreur webhook:', error);
     throw error;
   }
 }
@@ -342,7 +316,6 @@ export async function exempleGestionWebhooks() {
 // ============================================================================
 
 export async function exempleGestionManifestes() {
-  console.log('📋 Exemple de gestion des manifestes');
   
   try {
     const client = createShippoClientForProject();
@@ -370,14 +343,10 @@ export async function exempleGestionManifestes() {
       }
     );
     
-    console.log('✅ Manifeste créé:', manifestResult.manifest.object_id);
-    console.log(`📦 Transactions regroupées: ${manifestResult.transactionCount}`);
-    console.log(`📄 URL du manifeste: ${manifestResult.manifestUrl}`);
     
     return manifestResult;
     
   } catch (error) {
-    console.error('❌ Erreur manifeste:', error);
     throw error;
   }
 }
@@ -387,33 +356,25 @@ export async function exempleGestionManifestes() {
 // ============================================================================
 
 export async function executerTousLesExemples() {
-  console.log('🚀 Exécution de tous les exemples Shippo');
   
   try {
     // Exemple 1 : Utilisation simple
-    console.log('\n=== EXEMPLE 1 : UTILISATION SIMPLE ===');
     await exempleUtilisationSimple();
     
     // Exemple 2 : Point relais
-    console.log('\n=== EXEMPLE 2 : POINT RELAIS ===');
     await exempleAvecPointRelais();
     
     // Exemple 3 : Avancé avec validation
-    console.log('\n=== EXEMPLE 3 : AVANCÉ AVEC VALIDATION ===');
     await exempleAvanceAvecValidation();
     
     // Exemple 4 : Webhooks
-    console.log('\n=== EXEMPLE 4 : WEBHOOKS ===');
     await exempleGestionWebhooks();
     
     // Exemple 5 : Manifestes
-    console.log('\n=== EXEMPLE 5 : MANIFESTES ===');
     await exempleGestionManifestes();
     
-    console.log('\n🎉 Tous les exemples ont été exécutés avec succès !');
     
   } catch (error) {
-    console.error('❌ Erreur lors de l\'exécution des exemples:', error);
     throw error;
   }
 }

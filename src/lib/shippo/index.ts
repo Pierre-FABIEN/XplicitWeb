@@ -222,7 +222,6 @@ export function initializeShippo(): {
   }
 
   if (config.warnings.length > 0) {
-    console.warn('Avertissements de configuration Shippo:', config.warnings);
   }
 
   const client = createShippoClientForProject();

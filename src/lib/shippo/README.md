@@ -47,15 +47,15 @@ La migration de Sendcloud vers Shippo a été **entièrement terminée** avec su
 SHIPPO_API_TOKEN=shippo_test_...
 
 # Configuration expéditeur
-SHIPPO_SENDER_NAME=XplicitWeb
-SHIPPO_SENDER_COMPANY=XplicitWeb
+SHIPPO_SENDER_NAME=CustomYourCanWeb
+SHIPPO_SENDER_COMPANY=CustomYourCanWeb
 SHIPPO_SENDER_STREET=123 Rue de la Paix
 SHIPPO_SENDER_CITY=Montauban
 SHIPPO_SENDER_STATE=Occitanie
 SHIPPO_SENDER_POSTAL_CODE=82000
 SHIPPO_SENDER_COUNTRY=FR
 SHIPPO_SENDER_PHONE=+33123456789
-SHIPPO_SENDER_EMAIL=contact@xplicitweb.com
+SHIPPO_SENDER_EMAIL=contact@customyourcan.com
 
 # Configuration colis par défaut
 SHIPPO_DEFAULT_LENGTH=50

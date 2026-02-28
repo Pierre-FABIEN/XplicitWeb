@@ -168,7 +168,6 @@ export async function createAutomaticManifests(
   // Cette fonction nécessiterait d'accéder à votre base de données
   // pour récupérer les transactions en attente de manifeste
   
-  console.log('Création automatique de manifestes...');
   
   // Exemple d'implémentation - adaptez selon votre modèle Prisma
   /*

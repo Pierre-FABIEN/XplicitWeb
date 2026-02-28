@@ -51,7 +51,6 @@ export const actions: Actions = {
 
 					uploadedImageUrls.push(uploadResponse.secure_url);
 				} catch (error) {
-					console.error('Erreur lors du téléchargement de l’image sur Cloudinary :', error);
 					return fail(500, { message: 'Image upload failed' });
 				}
 			}

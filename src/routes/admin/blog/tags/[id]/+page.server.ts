@@ -46,7 +46,6 @@ export const actions: Actions = {
 			});
 			return message(form, 'Tag updated successfully');
 		} catch (error) {
-			console.error('Error updating tag:', error);
 			return fail(500, { message: 'Tag update failed' });
 		}
 	}

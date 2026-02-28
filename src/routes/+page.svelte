@@ -81,9 +81,6 @@
 			</span>
 		</a>
 	</button>
-	<a class="buttonCatalogue" href="/catalogue" transition:fly={{ x: -88, duration: 600 }}>
-		Notre catalogue
-	</a>
 </div>
 
 <style lang="scss">
@@ -242,18 +239,6 @@
 			&::before {
 				width: 200px;
 			}
-		}
-	}
-
-	.buttonCatalogue {
-		margin-top: 15px;
-		font-family: 'Open Sans Variable', sans-serif;
-		font-size: 14px;
-		letter-spacing: 0px;
-		transition: all 0.25s ease-in-out;
-
-		&:hover {
-			letter-spacing: 1px;
 		}
 	}
 </style>

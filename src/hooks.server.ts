@@ -35,16 +35,12 @@ function log(level: LogLevel, context: string, ...args: unknown[]) {
 	
 	switch (level) {
 		case 'ERROR':
-			console.error(prefix, ...args);
 			break;
 		case 'WARN':
-			console.warn(prefix, ...args);
 			break;
 		case 'INFO':
-			console.info(prefix, ...args);
 			break;
 		case 'DEBUG':
-			console.debug(prefix, ...args);
 			break;
 	}
 }

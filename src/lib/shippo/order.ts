@@ -19,13 +19,11 @@ async function getCarrierAccountId(shippoClient: any, carrier: string): Promise<
 	if (carrierAccountsCache && (now - carrierAccountsCacheTime) < CACHE_DURATION) {
 		const cached = carrierAccountsCache.get(carrier.toLowerCase());
 		if (cached) {
-			console.log(`✅ [SHIPPO] Utilisation du carrier account ${carrier} en cache:`, cached);
 			return cached;
 		}
 	}
 
 	try {
-		console.log(`🔍 [SHIPPO] Récupération des carrier accounts ${carrier}...`);
 		const accounts = await shippoClient.getCarrierAccounts();
 		
 		// Logger tous les carrier accounts disponibles pour debug
@@ -87,13 +85,11 @@ async function getCarrierAccountId(shippoClient: any, carrier: string): Promise<
 			return carrierAccount.object_id;
 		}
 
-		console.warn(`⚠️ [SHIPPO] Aucun carrier account ${carrier} actif trouvé parmi ${accounts.length} comptes disponibles`);
 		console.warn(`⚠️ [SHIPPO] Comptes actifs disponibles:`, 
 			accounts.filter((acc: any) => acc.active).map((acc: any) => acc.carrier)
 		);
 		return null;
 	} catch (error) {
-		console.error(`❌ [SHIPPO] Erreur lors de la récupération des carrier accounts ${carrier}:`, error);
 		return null;
 	}
 }
@@ -133,7 +129,6 @@ export async function createShippoLabel(transaction: any) {
 			email: SHIPPO_CONFIG.SENDER.email
 		});
 
-		console.log('✅ [SHIPPO LABEL] Adresse expéditeur créée:', senderAddress.object_id);
 
 		// Créer l'adresse destinataire avec les données de la transaction
 		const recipientAddress = await shippoClient.createAddress({
@@ -148,7 +143,6 @@ export async function createShippoLabel(transaction: any) {
 			email: ''
 		});
 
-		console.log('✅ [SHIPPO LABEL] Adresse destinataire créée:', recipientAddress.object_id);
 
 		// Créer le colis avec les dimensions de la transaction
 		const parcel = await shippoClient.createParcel({
@@ -160,18 +154,13 @@ export async function createShippoLabel(transaction: any) {
 			mass_unit: 'kg' as const
 		});
 
-		console.log('✅ [SHIPPO LABEL] Colis créé:', parcel.object_id);
 
 		// Récupérer le carrier account si nécessaire
 		let carrierAccountId: string | null = null;
 		if (transaction.shippingCarrier === 'colissimo' || transaction.shippingCarrier === 'chronopost') {
 			carrierAccountId = await getCarrierAccountId(shippoClient, transaction.shippingCarrier);
 			if (carrierAccountId) {
-				console.log(`✅ [SHIPPO LABEL] Utilisation du carrier account ${transaction.shippingCarrier}:`, carrierAccountId);
 			} else {
-				console.warn(`⚠️ [SHIPPO LABEL] Carrier account ${transaction.shippingCarrier} non trouvé`);
-				console.warn(`⚠️ [SHIPPO LABEL] ATTENTION: Pour utiliser ${transaction.shippingCarrier}, vous devez configurer un carrier account dans votre dashboard Shippo.`);
-				console.warn(`⚠️ [SHIPPO LABEL] Tentative sans carrier account spécifique (Shippo utilisera ses comptes par défaut si disponibles)`);
 			}
 		}
 
@@ -189,7 +178,6 @@ export async function createShippoLabel(transaction: any) {
 
 		const shipment = await shippoClient.createShipment(shipmentParams);
 
-		console.log('✅ [SHIPPO LABEL] Expédition créée:', shipment.object_id);
 
 		// Utiliser directement le tarif sélectionné par l'utilisateur
 		console.log('✅ [SHIPPO LABEL] Utilisation du tarif sélectionné:', {
@@ -247,7 +235,6 @@ export async function createShippoLabel(transaction: any) {
 		// Essayer d'abord avec l'object_id du checkout
 		let transactionResult;
 		try {
-			console.log('🔄 [SHIPPO LABEL] Tentative avec l\'object_id du checkout:', selectedRate.object_id);
 			
 			// Préparer les paramètres de la transaction
 			const transactionParams: any = {
@@ -275,7 +262,6 @@ export async function createShippoLabel(transaction: any) {
 					// Pour Colissimo, utiliser le préfixe RC (Relais Colis)
 					const prefix = 'RC';
 					pickupPointId = `${prefix}${pickupPointInfo.servicePointId}`;
-					console.log('🔧 [SHIPPO LABEL] Préfixe Colissimo ajouté:', { original: pickupPointInfo.servicePointId, prefixed: pickupPointId });
 				}
 				// Pour Chronopost, l'ID est utilisé tel quel (pas de préfixe nécessaire)
 
@@ -297,7 +283,6 @@ export async function createShippoLabel(transaction: any) {
 						extra_shop_ref: pickupPointInfo.servicePointExtraShopRef
 					};
 				}
-				console.log('📍 [SHIPPO LABEL] Point de retrait ajouté pour', transaction.shippingCarrier, ':', transactionParams.pickup_point);
 			}
 
 			transactionResult = await shippoClient.createTransaction(transactionParams);
@@ -306,19 +291,14 @@ export async function createShippoLabel(transaction: any) {
 			// Les rates peuvent expirer, donc même si le statut est ERROR, on essaie le fallback
 			// pour obtenir un nouveau rate frais
 			if (transactionResult.status === 'ERROR') {
-				console.warn('⚠️ [SHIPPO LABEL] Transaction échouée avec l\'object_id du checkout, probablement rate expiré, fallback vers les tarifs actuels');
 				// Déclencher le fallback pour obtenir un nouveau rate
 				throw new Error(`Rate expiré ou invalide: ${transactionResult.messages?.[0]?.text || 'Erreur inconnue'}`);
 			}
 			
-			console.log('✅ [SHIPPO LABEL] Étiquette créée avec l\'object_id du checkout');
 		} catch (error) {
-			console.warn('⚠️ [SHIPPO LABEL] Object_id du checkout invalide ou expiré, fallback vers les tarifs actuels:', error instanceof Error ? error.message : 'Erreur inconnue');
 			
 			// Fallback : récupérer les tarifs actuels du shipment et trouver le bon
-			console.log('📊 [SHIPPO LABEL] Récupération des tarifs du shipment...');
 			const rates = await shippoClient.getShipmentRates(shipment.object_id);
-			console.log('📊 [SHIPPO LABEL] Tarifs disponibles pour fallback:', rates.length);
 			
 			if (rates.length === 0) {
 				throw new Error('Aucun tarif disponible pour ce shipment. Vérifiez que les carrier accounts sont correctement configurés dans Shippo.');
@@ -386,7 +366,6 @@ export async function createShippoLabel(transaction: any) {
 			});
 
 			if (!fallbackRate) {
-				console.warn('⚠️ [SHIPPO LABEL] Aucun tarif correspondant trouvé, recherche par transporteur et type uniquement');
 				fallbackRate = rates.find((rate: any) => {
 					const rateCarrier = detectCarrier(rate);
 					const rateDeliveryType = detectDeliveryType(rate);
@@ -395,7 +374,6 @@ export async function createShippoLabel(transaction: any) {
 			}
 
 			if (!fallbackRate) {
-				console.warn('⚠️ [SHIPPO LABEL] Aucun tarif du transporteur et type trouvé, recherche par transporteur uniquement (sans type)');
 				// Essayer de trouver un rate du même carrier, même si le type ne correspond pas exactement
 				fallbackRate = rates.find((rate: any) => {
 					const rateCarrier = detectCarrier(rate);
@@ -404,7 +382,6 @@ export async function createShippoLabel(transaction: any) {
 			}
 
 			if (!fallbackRate) {
-				console.warn('⚠️ [SHIPPO LABEL] Aucun tarif du transporteur trouvé, recherche par type uniquement');
 				// Dernier recours : chercher par type uniquement
 				fallbackRate = rates.find((rate: any) => {
 					const rateDeliveryType = detectDeliveryType(rate);
@@ -413,7 +390,6 @@ export async function createShippoLabel(transaction: any) {
 			}
 
 			if (!fallbackRate) {
-				console.warn('⚠️ [SHIPPO LABEL] Aucun tarif du type trouvé, utilisation du moins cher du transporteur et type');
 				// Filtrer d'abord par carrier ET type, puis prendre le moins cher
 				const ratesOfCarrierAndType = rates.filter((rate: any) => {
 					const rateCarrier = detectCarrier(rate);
@@ -433,13 +409,11 @@ export async function createShippoLabel(transaction: any) {
 					});
 					
 					if (ratesOfCarrier.length > 0) {
-						console.warn('⚠️ [SHIPPO LABEL] Utilisation du moins cher du transporteur (type différent)');
 						fallbackRate = ratesOfCarrier.reduce((cheapest: any, current: any) => 
 							parseFloat(current.amount) < parseFloat(cheapest.amount) ? current : cheapest
 						);
 					} else {
 						// Dernier recours : prendre le moins cher du type attendu
-						console.warn('⚠️ [SHIPPO LABEL] Utilisation du moins cher du type attendu');
 						const ratesOfExpectedType = rates.filter((rate: any) => {
 							const rateDeliveryType = detectDeliveryType(rate);
 							return rateDeliveryType === expectedDeliveryType;
@@ -451,7 +425,6 @@ export async function createShippoLabel(transaction: any) {
 							);
 						} else {
 							// Dernier recours absolu : prendre le moins cher de tous
-							console.warn('⚠️ [SHIPPO LABEL] Utilisation du moins cher de tous');
 							fallbackRate = rates.reduce((cheapest: any, current: any) => 
 								parseFloat(current.amount) < parseFloat(cheapest.amount) ? current : cheapest
 							);
@@ -501,7 +474,6 @@ export async function createShippoLabel(transaction: any) {
 				if (fallbackCarrier === 'colissimo') {
 					const prefix = 'RC';
 					pickupPointId = `${prefix}${pickupPointInfo.servicePointId}`;
-					console.log('🔧 [SHIPPO LABEL] Préfixe Colissimo ajouté (fallback):', { original: pickupPointInfo.servicePointId, prefixed: pickupPointId });
 				}
 				// Pour Chronopost, l'ID est utilisé tel quel (pas de préfixe nécessaire)
 
@@ -523,7 +495,6 @@ export async function createShippoLabel(transaction: any) {
 						extra_shop_ref: pickupPointInfo.servicePointExtraShopRef
 					};
 				}
-				console.log('📍 [SHIPPO LABEL] Point de retrait ajouté pour fallback:', fallbackTransactionParams.pickup_point);
 			} else if (pickupPointInfo.servicePointId) {
 				console.warn('⚠️ [SHIPPO LABEL] Point de retrait disponible mais carrier du rate ne le supporte pas:', {
 					fallbackCarrier,
@@ -567,13 +538,11 @@ export async function createShippoLabel(transaction: any) {
 
 				if (hasCredentialError) {
 					const errorMessage = `Erreur de configuration du carrier account ${transaction.shippingCarrier}: Les credentials (identifiant/mot de passe ou apiKey) ne sont pas configurés dans votre compte Shippo. Veuillez configurer le carrier account ${transaction.shippingCarrier} dans le dashboard Shippo avec les bonnes credentials.`;
-					console.error('❌ [SHIPPO LABEL]', errorMessage);
 					throw new Error(errorMessage);
 				}
 
 				if (hasPickupPointError && pickupPointInfo.servicePointId) {
 					const errorMessage = `Erreur avec le point de retrait ${transaction.shippingCarrier}: Le format du point de retrait n'est pas valide. Vérifiez que les informations du point de retrait sont correctes.`;
-					console.error('❌ [SHIPPO LABEL]', errorMessage);
 					throw new Error(errorMessage);
 				}
 
@@ -582,12 +551,10 @@ export async function createShippoLabel(transaction: any) {
 					const carrierAccountId = await getCarrierAccountId(shippoClient, transaction.shippingCarrier);
 					if (!carrierAccountId) {
 						const errorMessage = `Erreur avec le service ${transaction.shippingCarrier}: Aucun carrier account ${transaction.shippingCarrier} n'est configuré dans votre compte Shippo. Veuillez configurer un carrier account ${transaction.shippingCarrier} dans le dashboard Shippo avec vos credentials (identifiant/mot de passe ou API key). Sans carrier account configuré, Shippo ne peut pas créer d'étiquettes pour ${transaction.shippingCarrier}.`;
-						console.error('❌ [SHIPPO LABEL]', errorMessage);
 						throw new Error(errorMessage);
 					}
 					
 					const errorMessage = `Erreur avec le service ${transaction.shippingCarrier}: Le service de livraison a échoué. Cela peut être dû à un rate expiré, des credentials invalides ou manquants dans le carrier account, ou un problème de configuration. Vérifiez votre compte Shippo et les credentials du carrier account ${transaction.shippingCarrier}.`;
-					console.error('❌ [SHIPPO LABEL]', errorMessage);
 					throw new Error(errorMessage);
 				}
 
@@ -626,7 +593,6 @@ export async function createShippoLabel(transaction: any) {
 
 			if (hasCredentialError) {
 				const errorMessage = `Erreur de configuration du carrier account ${transaction.shippingCarrier}: Les credentials (identifiant/mot de passe ou apiKey) ne sont pas configurés dans votre compte Shippo. Veuillez configurer le carrier account ${transaction.shippingCarrier} dans le dashboard Shippo avec les bonnes credentials.`;
-				console.error('❌ [SHIPPO LABEL]', errorMessage);
 				throw new Error(errorMessage);
 			}
 		}
@@ -643,7 +609,6 @@ export async function createShippoLabel(transaction: any) {
 		};
 
 	} catch (error) {
-		console.error('❌ [SHIPPO LABEL] Erreur lors de la création:', error);
 		throw error;
 	}
 }
@@ -681,7 +646,6 @@ export async function createShippoOrder(transaction: any) {
 			email: SHIPPO_CONFIG.SENDER.email
 		});
 
-		console.log('✅ [SHIPPO ORDER] Adresse expéditeur créée:', senderAddress.object_id);
 
 		// Créer l'adresse destinataire
 		const recipientAddress = await shippoClient.createAddress({
@@ -696,7 +660,6 @@ export async function createShippoOrder(transaction: any) {
 			email: order.address.email || ''
 		});
 
-		console.log('✅ [SHIPPO ORDER] Adresse destinataire créée:', recipientAddress.object_id);
 
 		// Calculer le poids de la commande
 		const calculatedWeight = order.items.reduce((total: number, item: any) => {
@@ -739,7 +702,6 @@ export async function createShippoOrder(transaction: any) {
 			mass_unit: 'kg' as const
 		});
 
-		console.log('✅ [SHIPPO ORDER] Colis créé:', parcel.object_id);
 
 		// Créer l'expédition
 		const shipment = await shippoClient.createShipment({
@@ -748,11 +710,9 @@ export async function createShippoOrder(transaction: any) {
 			parcels: [parcel.object_id]
 		});
 
-		console.log('✅ [SHIPPO ORDER] Expédition créée:', shipment.object_id);
 
 		// Récupérer les tarifs disponibles
 		const rates = shipment.rates || [];
-		console.log('📊 [SHIPPO ORDER] Tarifs disponibles:', rates.length);
 		
 		// Log détaillé de tous les tarifs pour debug
 		console.log('🔍 [SHIPPO ORDER] Détail des tarifs:', rates.map((rate: any) => ({
@@ -795,7 +755,6 @@ export async function createShippoOrder(transaction: any) {
 		});
 
 		if (!selectedRate) {
-			console.warn('⚠️ [SHIPPO ORDER] Tarif exact non trouvé, recherche par transporteur uniquement');
 			// Fallback : chercher par transporteur uniquement
 			selectedRate = rates.find((rate: any) => {
 				const carrierMatch = rate.carrier === order.shippingCarrier || 
@@ -814,7 +773,6 @@ export async function createShippoOrder(transaction: any) {
 		}
 
 		if (!selectedRate) {
-			console.warn('⚠️ [SHIPPO ORDER] Aucun tarif trouvé, utilisation du moins cher');
 			selectedRate = rates.reduce((cheapest: any, current: any) => 
 				parseFloat(current.amount) < parseFloat(cheapest.amount) ? current : cheapest
 			);
@@ -844,9 +802,7 @@ export async function createShippoOrder(transaction: any) {
 		const isLabelReady = transactionResult.status === 'SUCCESS' && transactionResult.label_url;
 		
 		if (isLabelReady) {
-			console.log('✅ [SHIPPO ORDER] Étiquette prête immédiatement');
 		} else {
-			console.log('⏳ [SHIPPO ORDER] Étiquette en cours de traitement, statut:', transactionResult.status);
 		}
 
 		// Mettre à jour la transaction en base avec les infos Shippo
@@ -871,7 +827,6 @@ export async function createShippoOrder(transaction: any) {
 		};
 
 	} catch (error) {
-		console.error('❌ [SHIPPO ORDER] Erreur lors de la création:', error);
 		throw error;
 	}
 }
@@ -881,7 +836,6 @@ export async function createShippoOrder(transaction: any) {
  * Récupère les détails d'une commande depuis la base de données
  */
 async function getOrderDetails(orderId: string) {
-	console.log('📋 [SHIPPO ORDER] Récupération des détails de la commande:', orderId);
 	
 	const order = await prisma.order.findUnique({
 		where: { id: orderId },

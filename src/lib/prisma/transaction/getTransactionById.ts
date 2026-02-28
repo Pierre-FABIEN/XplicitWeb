@@ -13,7 +13,6 @@ export const getTransactionById = async (id: string) => {
 
 		return transaction;
 	} catch (error) {
-		console.error('Error retrieving transaction: ', error);
 	} finally {
 		// Déconnecte Prisma Client à la fin
 		await prisma.$disconnect();

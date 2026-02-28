@@ -107,14 +107,14 @@ export const blog = [
 		hiddenWord: `France Snowboard Series, XPLICITDRINK®, collaboration de co-branding, édition spéciale Wildberry, snowboard, culture board, événements de snowboard, boissons énergisantes, saveurs fruitées, expérience gustative, moins de sucre, jus de fruit.`
 	},
 	{
-		link: `XplicitDrink-Collaboration-avec-Metal-Boxe`,
+		link: `CustomYourCan-Collaboration-avec-Metal-Boxe`,
 		author: `Gérant - Lionel Garriga`,
-		title: `XplicitDrink & Metal Boxe : Une Collaboration Frappante dans le Monde des Sports de Combat`,
+		title: `CustomYourCan & Metal Boxe : Une Collaboration Frappante dans le Monde des Sports de Combat`,
 		date: `11.01.2024`,
 		subTitle: `Une fusion entre sport et énergie`,
 		content: `
-        <p>XplicitDrink est fier d'annoncer sa collaboration avec Metal Boxe, une marque de renom en Europe dans le monde des sports de combat, grâce à notre ambassadeur, le talentueux combattant MMA Kevin Simon Cesari (voir palmarès en pied d’article).</p>
-        <p>Cette collaboration unique a donné lieu à une édition spéciale de boissons énergisantes personnalisées, s'inspirant de l'iconique sac de frappe rouge et noir de Metal Boxe. C'est une fusion parfaite entre les valeurs sportives de Metal Boxe et l'innovation et la personnalisation caractéristiques d'XplicitDrink. Cette initiative est une célébration de la force, de la détermination et de la passion, visant à inspirer les athlètes et amateurs de sports de combat.</p>
+        <p>CustomYourCan est fier d'annoncer sa collaboration avec Metal Boxe, une marque de renom en Europe dans le monde des sports de combat, grâce à notre ambassadeur, le talentueux combattant MMA Kevin Simon Cesari (voir palmarès en pied d’article).</p>
+        <p>Cette collaboration unique a donné lieu à une édition spéciale de boissons énergisantes personnalisées, s'inspirant de l'iconique sac de frappe rouge et noir de Metal Boxe. C'est une fusion parfaite entre les valeurs sportives de Metal Boxe et l'innovation et la personnalisation caractéristiques d'CustomYourCan. Cette initiative est une célébration de la force, de la détermination et de la passion, visant à inspirer les athlètes et amateurs de sports de combat.</p>
         <h3>Kevin Simon Cesari, Sportif de haut niveau :</h3>
         <ul>
             <li>1er au Karate World Open</li>
@@ -126,8 +126,8 @@ export const blog = [
             <li>Combattant professionnel en MMA international, participant à des événements tels que YFC, European Beatdown, Hexagone MMA, CAGE WARRIORS</li>
         </ul>
     `,
-		resume: `XplicitDrink s'associe à Metal Boxe pour une édition spéciale de boissons énergisantes, symbolisant la force et la détermination dans les sports de combat.`,
-		hiddenWord: `XplicitDrink, Metal Boxe, sports de combat, boissons énergisantes personnalisées, Kevin Simon Cesari, MMA, Karate, full contact, jutsu fighting, édition spéciale, collaboration.`
+		resume: `CustomYourCan s'associe à Metal Boxe pour une édition spéciale de boissons énergisantes, symbolisant la force et la détermination dans les sports de combat.`,
+		hiddenWord: `CustomYourCan, Metal Boxe, sports de combat, boissons énergisantes personnalisées, Kevin Simon Cesari, MMA, Karate, full contact, jutsu fighting, édition spéciale, collaboration.`
 	},
 	{
 		link: `Découvrez-la-Tendance-de-la-Marque-Blanche-et-des-Recettes-Personnalisées`,
@@ -144,6 +144,6 @@ export const blog = [
 			<p> <b>Conclusion : </b>La marque blanche et la personnalisation dans le monde des boissons énergisantes ouvrent un univers de possibilités. Que vous soyez un amateur de saveurs classiques ou un explorateur de goûts exotiques, il y a toujours une recette personnalisée qui vous attend. Découvrez ces merveilles gustatives et réinventez votre façon de vous dynamiser!</p>
     `,
 		resume: `La marque blanche et la personnalisation dans le monde des boissons énergisantes ouvrent un univers de possibilités. Que vous soyez un amateur de saveurs classiques ou un explorateur de goûts exotiques, il y a toujours une recette personnalisée qui vous attend. Découvrez ces merveilles gustatives et réinventez votre façon de vous dynamiser!`,
-		hiddenWord: `XplicitDrink, Metal Boxe, sports de combat, boissons énergisantes personnalisées, Kevin Simon Cesari, MMA, Karate, full contact, jutsu fighting, édition spéciale, collaboration.`
+		hiddenWord: `CustomYourCan, Metal Boxe, sports de combat, boissons énergisantes personnalisées, Kevin Simon Cesari, MMA, Karate, full contact, jutsu fighting, édition spéciale, collaboration.`
 	}
 ];

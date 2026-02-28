@@ -36,7 +36,6 @@ export const actions: Actions = {
 
 			return message(form, 'Category created successfully');
 		} catch (error) {
-			console.error('Error creating category:', error);
 			return fail(500, { message: 'Category creation failed' });
 		}
 	}

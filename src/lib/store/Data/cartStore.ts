@@ -149,39 +149,12 @@ export const addToCart = (product: OrderItem) => {
 			currentCart.items = [];
 		}
 
-		const isProductCustom = Array.isArray(product.custom) && product.custom.length > 0;
-
-		const existingTypeConflict = currentCart.items.some((item) => {
-			const isItemCustom = Array.isArray(item.custom) && item.custom.length > 0;
-			return isItemCustom !== isProductCustom;
-		});
-
-		if (existingTypeConflict) {
-			console.error('Cannot mix custom and non-custom items in the same order');
-			toast.error('Impossible de mélanger produits custom et non-custom dans cette commande.');
-			return currentCart;
-		}
-
-		// 72-limit check
-		if (!isProductCustom) {
-			const totalNativeQuantity = currentCart.items
-				.filter((item) => !Array.isArray(item.custom) || item.custom.length === 0)
-				.reduce((sum, item) => sum + item.quantity, 0);
-
-			if (totalNativeQuantity + product.quantity > 72) {
-				console.error('Cannot add product: limit is 72 units for native orders.');
-				toast.error('Limite de 72 unités pour les commandes non personnalisées.');
-				return currentCart;
-			}
-		}
-
 		const totalQuantityForProduct = currentCart.items
 			.filter((item) => item.product.id === product.product.id)
 			.reduce((sum, item) => sum + item.quantity, 0);
 
 		const availableStock = product.product.stock - totalQuantityForProduct;
 		if (availableStock <= 0) {
-			console.error('Stock exceeded');
 			toast.error('Stock insuffisant.');
 			return currentCart;
 		}
@@ -270,7 +243,6 @@ export const updateCartItemQuantity = (productId: string, quantity: number, cust
 		);
 
 		if (itemIndex === -1) {
-			console.warn('Item not found in cart for Product ID:', productId);
 			return currentCart;
 		}
 
@@ -281,19 +253,7 @@ export const updateCartItemQuantity = (productId: string, quantity: number, cust
 			.reduce((sum, i) => sum + i.quantity, 0);
 
 		const maxAvailable = currentItem.product.stock - otherItemsQuantity;
-		let newQuantity = Math.min(quantity, maxAvailable);
-
-		// 72-limit logic if not custom
-		if (!currentItem.custom) {
-			const nativeItemsTotal = currentCart.items
-				.filter((i, idx) => !i.custom && idx !== itemIndex)
-				.reduce((sum, i) => sum + i.quantity, 0);
-
-			const maxNativeAllowed = 72;
-			const allowedForThisItem = maxNativeAllowed - nativeItemsTotal;
-
-			newQuantity = Math.min(newQuantity, allowedForThisItem);
-		}
+		const newQuantity = Math.min(quantity, maxAvailable);
 
 		currentItem.quantity = newQuantity;
 

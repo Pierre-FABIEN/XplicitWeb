@@ -58,24 +58,19 @@ export const actions: Actions = {
 		const form = await superValidate(formData, zod(totpSchema));
 
 		if (event.locals.session === null || event.locals.user === null) {
-			console.warn('Utilisateur non authentifié ou session inexistante');
 			return message(form, 'Not authenticated');
 		}
 		if (!event.locals.user.emailVerified) {
-			console.warn('Email non vérifié pour l’utilisateur:', event.locals.user.email);
 			return message(form, 'Email not verified');
 		}
 		if (event.locals.user.registered2FA && !event.locals.session.twoFactorVerified) {
-			console.warn('2FA déjà configurée pour l’utilisateur:', event.locals.user.id);
 			return message(form, 'Two-factor already set up');
 		}
 		if (!totpUpdateBucket.check(event.locals.user.id, 1)) {
-			console.warn('Trop de tentatives pour l’utilisateur:', event.locals.user.id);
 			return message(form, 'Too many requests');
 		}
 
 		if (!form.valid) {
-			console.warn('Échec de la validation du formulaire:', form.errors);
 			return message(form, 'Form validation failed');
 		}
 
@@ -84,7 +79,6 @@ export const actions: Actions = {
 		//console.log('Données reçues:', { encodedTOTPKey, code });
 
 		if (encodedTOTPKey.length !== 28) {
-			console.warn('Longueur de la clé encodée invalide:', encodedTOTPKey.length);
 			return message(form, 'Invalid encoded key length');
 		}
 
@@ -93,12 +87,10 @@ export const actions: Actions = {
 			key = decodeBase64(encodedTOTPKey);
 			//console.log('Clé décodée avec succès:', key);
 		} catch (error) {
-			console.error('Erreur lors du décodage de la clé:', error);
 			return message(form, 'Invalid encoded key format');
 		}
 
 		if (key.byteLength !== 20) {
-			console.warn('Longueur de la clé invalide:', key.byteLength);
 			return message(form, 'Invalid key length');
 		}
 
@@ -107,12 +99,10 @@ export const actions: Actions = {
 			const isValid = verifyTOTP(key, 30, 6, code);
 
 			if (!isValid) {
-				console.warn('Code TOTP invalide pour la clé:', key);
 				return message(form, 'Invalid TOTP code');
 			}
 			//console.log('Code TOTP valide.');
 		} catch (error) {
-			console.error('Erreur lors de la validation du code TOTP:', error);
 			return fail(500, { message: 'Internal server error', form });
 		}
 
@@ -130,7 +120,6 @@ export const actions: Actions = {
 			event.locals.user.isMfaEnabled = true;
 			event.locals.user.registered2FA = true;
 		} catch (error) {
-			console.error('Erreur lors de la mise à jour de la clé TOTP ou de la session:', error);
 			return fail(500, { message: 'Internal server error', form });
 		}
 

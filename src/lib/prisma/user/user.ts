@@ -240,10 +240,8 @@ export const getAllUsers = async () => {
 		return users;
 	} catch (error: unknown) {
 		if (error instanceof Error) {
-			console.error('Error fetching users:', error);
 			throw new Error('Could not fetch users');
 		} else {
-			console.error('Unknown error fetching users:', error);
 			throw new Error('An unknown error occurred');
 		}
 	} finally {
@@ -289,10 +287,8 @@ export const updateUserRole = async (id: string, role: Role) => {
 		return updatedUser;
 	} catch (error: unknown) {
 		if (error instanceof Error) {
-			console.error('Error updating user role:', error);
 			throw error;
 		} else {
-			console.error('Unknown error updating user role:', error);
 			throw new Error('An unknown error occurred during role update.');
 		}
 	} finally {

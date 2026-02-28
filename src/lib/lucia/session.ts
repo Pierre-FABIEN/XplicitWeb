@@ -58,7 +58,6 @@ export async function createSession(
 			oauthProvider: session.oauthProvider
 		};
 	} catch (error) {
-		console.error('Erreur lors de la création de la session :', error);
 		throw new Error('Erreur lors de la création de la session.');
 	}
 }
@@ -111,10 +110,8 @@ export async function validateSessionToken(token: string): Promise<SessionValida
 		return { session, user };
 	} catch (error: unknown) {
 		if (error instanceof Error) {
-			console.error('Erreur lors de la validation de la session :', error);
 			return { session: null, user: null };
 		} else {
-			console.error('Erreur inconnue lors de la validation de la session :', error);
 			return { session: null, user: null };
 		}
 	}
@@ -126,9 +123,7 @@ export async function invalidateSession(sessionId: string): Promise<void> {
 		await deleteSession(sessionId);
 	} catch (error: unknown) {
 		if (error instanceof Error) {
-			console.warn("Erreur lors de l'invalidation de la session :", error.message);
 		} else {
-			console.warn("Erreur inconnue lors de l'invalidation de la session :", error);
 		}
 	}
 }
@@ -143,7 +138,6 @@ export async function invalidateUserSessions(userId: string): Promise<void> {
 		await deleteSessionsByUserId(userId);
 	} catch (error: unknown) {
 		if (error instanceof Error) {
-			console.warn("Erreur lors de l'invalidation des sessions de l'utilisateur :", error.message);
 		} else {
 			console.warn(
 				"Erreur inconnue lors de l'invalidation des sessions de l'utilisateur : ",
@@ -215,7 +209,6 @@ export async function handleGoogleOAuth(
 	}
 
 	if (user === null) {
-		console.error("L'objet utilisateur est null après le traitement OAuth Google.");
 		throw new Error("Échec de la récupération ou de la création de l'utilisateur après OAuth.");
 	}
 

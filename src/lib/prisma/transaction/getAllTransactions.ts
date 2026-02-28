@@ -5,7 +5,6 @@ export const getAllTransactions = async () => {
 		const transactions = await prisma.transaction.findMany();
 		return transactions;
 	} catch (error) {
-		console.error('Error retrieving transactions: ', error);
 	} finally {
 		// Déconnecte Prisma Client à la fin
 		await prisma.$disconnect();

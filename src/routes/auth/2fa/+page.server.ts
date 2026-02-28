@@ -80,9 +80,7 @@ export const actions: Actions = {
 			// console.log('Vérification TOTP réussie.');
 		} catch (error: unknown) {
 			if (error instanceof Error) {
-				console.error('Erreur lors de la vérification TOTP :', error.message);
 			} else {
-				console.error('Erreur inconnue lors de la vérification TOTP :', error);
 			}
 			return fail(500, { message: 'Internal server error', form });
 		}

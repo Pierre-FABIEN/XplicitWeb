@@ -48,7 +48,6 @@ export const actions: Actions = {
 			});
 			return message(form, 'Category updated successfully');
 		} catch (error) {
-			console.error('Error updating category:', error);
 			return fail(500, { message: 'Category update failed' });
 		}
 	}

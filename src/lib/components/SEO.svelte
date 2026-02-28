@@ -66,8 +66,8 @@
 		},
 		description: seoConfig.site.description,
 		sameAs: [
-			"https://www.instagram.com/xplicitdrink/?hl=fr",
-			"https://www.facebook.com/xplicitdrink/?locale=fr_FR",
+			"https://www.instagram.com/customyourcan/?hl=fr",
+			"https://www.facebook.com/customyourcan/?locale=fr_FR",
 			"https://www.linkedin.com/company/grg-groupe-sarl/"
 		]
 	};

@@ -105,7 +105,6 @@ export const actions: Actions = {
 
 			return message(form, 'Address updated successfully');
 		} catch (error: any) {
-			console.error('❌ Error updating address:', error);
 
 			if (error.code === 'P2025') {
 				// Prisma Error P2025 -> Enregistrement non trouvé

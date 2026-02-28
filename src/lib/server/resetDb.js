@@ -112,14 +112,14 @@ export const blog = [
 		hiddenWord: `France Snowboard Series, XPLICITDRINK®, collaboration de co-branding, édition spéciale Wildberry, snowboard, culture board, événements de snowboard, boissons énergisantes, saveurs fruitées, expérience gustative, moins de sucre, jus de fruit.`
 	},
 	{
-		link: `XplicitDrink-Collaboration-avec-Metal-Boxe`,
+		link: `CustomYourCan-Collaboration-avec-Metal-Boxe`,
 		author: `Gérant - Lionel Garriga`,
-		title: `XplicitDrink & Metal Boxe : Une Collaboration Frappante dans le Monde des Sports de Combat`,
+		title: `CustomYourCan & Metal Boxe : Une Collaboration Frappante dans le Monde des Sports de Combat`,
 		date: `11.01.2024`,
 		subTitle: `Une fusion entre sport et énergie`,
 		content: `
-        <p>XplicitDrink est fier d'annoncer sa collaboration avec Metal Boxe, une marque de renom en Europe dans le monde des sports de combat, grâce à notre ambassadeur, le talentueux combattant MMA Kevin Simon Cesari (voir palmarès en pied d’article).</p>
-        <p>Cette collaboration unique a donné lieu à une édition spéciale de boissons énergisantes personnalisées, s'inspirant de l'iconique sac de frappe rouge et noir de Metal Boxe. C'est une fusion parfaite entre les valeurs sportives de Metal Boxe et l'innovation et la personnalisation caractéristiques d'XplicitDrink. Cette initiative est une célébration de la force, de la détermination et de la passion, visant à inspirer les athlètes et amateurs de sports de combat.</p>
+        <p>CustomYourCan est fier d'annoncer sa collaboration avec Metal Boxe, une marque de renom en Europe dans le monde des sports de combat, grâce à notre ambassadeur, le talentueux combattant MMA Kevin Simon Cesari (voir palmarès en pied d’article).</p>
+        <p>Cette collaboration unique a donné lieu à une édition spéciale de boissons énergisantes personnalisées, s'inspirant de l'iconique sac de frappe rouge et noir de Metal Boxe. C'est une fusion parfaite entre les valeurs sportives de Metal Boxe et l'innovation et la personnalisation caractéristiques d'CustomYourCan. Cette initiative est une célébration de la force, de la détermination et de la passion, visant à inspirer les athlètes et amateurs de sports de combat.</p>
         <h3>Kevin Simon Cesari, Sportif de haut niveau :</h3>
         <ul>
             <li>1er au Karate World Open</li>
@@ -131,8 +131,8 @@ export const blog = [
             <li>Combattant professionnel en MMA international, participant à des événements tels que YFC, European Beatdown, Hexagone MMA, CAGE WARRIORS</li>
         </ul>
     `,
-		resume: `XplicitDrink s'associe à Metal Boxe pour une édition spéciale de boissons énergisantes, symbolisant la force et la détermination dans les sports de combat.`,
-		hiddenWord: `XplicitDrink, Metal Boxe, sports de combat, boissons énergisantes personnalisées, Kevin Simon Cesari, MMA, Karate, full contact, jutsu fighting, édition spéciale, collaboration.`
+		resume: `CustomYourCan s'associe à Metal Boxe pour une édition spéciale de boissons énergisantes, symbolisant la force et la détermination dans les sports de combat.`,
+		hiddenWord: `CustomYourCan, Metal Boxe, sports de combat, boissons énergisantes personnalisées, Kevin Simon Cesari, MMA, Karate, full contact, jutsu fighting, édition spéciale, collaboration.`
 	},
 	{
 		link: `Découvrez-la-Tendance-de-la-Marque-Blanche-et-des-Recettes-Personnalisées`,
@@ -149,7 +149,7 @@ export const blog = [
 			<p> <b>Conclusion : </b>La marque blanche et la personnalisation dans le monde des boissons énergisantes ouvrent un univers de possibilités. Que vous soyez un amateur de saveurs classiques ou un explorateur de goûts exotiques, il y a toujours une recette personnalisée qui vous attend. Découvrez ces merveilles gustatives et réinventez votre façon de vous dynamiser!</p>
     `,
 		resume: `La marque blanche et la personnalisation dans le monde des boissons énergisantes ouvrent un univers de possibilités. Que vous soyez un amateur de saveurs classiques ou un explorateur de goûts exotiques, il y a toujours une recette personnalisée qui vous attend. Découvrez ces merveilles gustatives et réinventez votre façon de vous dynamiser!`,
-		hiddenWord: `XplicitDrink, Metal Boxe, sports de combat, boissons énergisantes personnalisées, Kevin Simon Cesari, MMA, Karate, full contact, jutsu fighting, édition spéciale, collaboration.`
+		hiddenWord: `CustomYourCan, Metal Boxe, sports de combat, boissons énergisantes personnalisées, Kevin Simon Cesari, MMA, Karate, full contact, jutsu fighting, édition spéciale, collaboration.`
 	}
 ];
 
@@ -226,7 +226,7 @@ async function main() {
 		// Création de l'utilisateur administrateur
 		const adminUser = await prisma.user.create({
 			data: {
-				email: 'xplicitdrink.dev@gmail.com',
+				email: 'customyourcan.dev@gmail.com',
 				username: 'Admin',
 				passwordHash: passwordHash,
 				emailVerified: true,
@@ -266,7 +266,7 @@ async function main() {
 					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
 				price: 0.9166666666666667,
 				stock: 100000,
-				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751910825/Xplicitdrink_Original_-_2026-min_hnctpa.png'],
+				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751910825/CustomYourCan_Original_-_2026-min_hnctpa.png'],
 				slug: 'original',
 				colorProduct: '#844c6d',
 				createdAt: '2024-12-19T19:40:36.809+00:00',
@@ -280,7 +280,7 @@ async function main() {
 					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
 				price: 0.9166666666666667,
 				stock: 100000,
-				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751910825/Xplicitdrink_-_Dragon_-_2026-min_bweo6l.png'],
+				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751910825/CustomYourCan_-_Dragon_-_2026-min_bweo6l.png'],
 				slug: 'dragon',
 				colorProduct: '#ec008c',
 				createdAt: '2024-12-19T19:41:01.519+00:00',
@@ -294,7 +294,7 @@ async function main() {
 					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
 				price: 0.9166666666666667,
 				stock: 100000,
-				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751910825/Xplicitdrink_-_Fresh_-_2026-min_ika4zh.png'],
+				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751910825/CustomYourCan_-_Fresh_-_2026-min_ika4zh.png'],
 				slug: 'fresh',
 				colorProduct: '#74c92b',
 				createdAt: '2024-12-19T19:41:42.780+00:00',
@@ -308,7 +308,7 @@ async function main() {
 					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
 				price: 0.9166666666666667,
 				stock: 100000,
-				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751910825/Xplicitdrink_-_Pulsar_-_2026-min_ej2tcu.png'],
+				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751910825/CustomYourCan_-_Pulsar_-_2026-min_ej2tcu.png'],
 				slug: 'pulsar',
 				colorProduct: '#f68712',
 				createdAt: '2024-12-19T19:42:04.914+00:00',
@@ -322,7 +322,7 @@ async function main() {
 					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
 				price: 0.9166666666666667,
 				stock: 100000,
-				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751911954/Xplicitdrink_-_Wild_-_2026-min_tzibxu.png'],
+				images: ['https://res.cloudinary.com/dedmxt8ta/image/upload/v1751911954/CustomYourCan_-_Wild_-_2026-min_tzibxu.png'],
 				slug: 'wild',
 				colorProduct: '#00adef',
 				createdAt: '2024-12-19T19:42:04.914+00:00',
@@ -371,14 +371,14 @@ async function main() {
 		// console.log('Auteur créé:', author);
 
 		// Création d'une catégorie de blog pour les articles XPLICITDRINK
-		const xplicitCategory = await prisma.blogCategory.create({
+		const customYourCanCategory = await prisma.blogCategory.create({
 			data: {
 				name: 'XPLICITDRINK',
 				description: 'Articles sur XPLICITDRINK et les boissons énergisantes.'
 			}
 		});
 
-		// console.log('Catégorie créée:', xplicitCategory);
+		// console.log('Catégorie créée:', customYourCanCategory);
 
 		// Insertion des articles de blog depuis le fichier blog.ts
 		// console.log('Insertion des articles de blog depuis blog.ts...');
@@ -394,7 +394,7 @@ async function main() {
 						connect: { id: adminUser.id }
 					},
 					category: {
-						connect: { id: xplicitCategory.id }
+						connect: { id: customYourCanCategory.id }
 					},
 					createdAt: new Date(),
 					updatedAt: new Date()
@@ -407,7 +407,6 @@ async function main() {
 		// console.log(`${blog.length} articles de blog insérés avec succès.`);
 
 	} catch (error) {
-		console.error('Erreur lors du nettoyage et du peuplement :', error);
 	} finally {
 		await prisma.$disconnect();
 	}

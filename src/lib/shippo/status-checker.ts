@@ -10,7 +10,6 @@ import { prisma } from '$lib/server/prisma';
  * Vérifie toutes les transactions avec des étiquettes Shippo en attente
  */
 export async function checkPendingShippoLabels() {
-	console.log('🔍 [SHIPPO CHECK] Vérification des étiquettes en attente...');
 
 	try {
 		const shippoClient = createShippoClientFromEnv();
@@ -31,13 +30,11 @@ export async function checkPendingShippoLabels() {
 			}
 		});
 
-		console.log(`📋 [SHIPPO CHECK] ${pendingTransactions.length} transactions en attente`);
 
 		for (const transaction of pendingTransactions) {
 			if (!transaction.shippoTransactionId) continue;
 
 			try {
-				console.log(`🔍 [SHIPPO CHECK] Vérification transaction: ${transaction.shippoTransactionId}`);
 				
 				const shippoTransaction = await shippoClient.getTransaction(transaction.shippoTransactionId);
 				
@@ -66,7 +63,6 @@ export async function checkPendingShippoLabels() {
 						trackingNumber: shippoTransaction.tracking_number
 					});
 				} else if (shippoTransaction.status === 'ERROR') {
-					console.log(`❌ [SHIPPO CHECK] Erreur dans la transaction Shippo: ${transaction.shippoTransactionId}`);
 					
 					// Marquer comme erreur dans la base
 					await prisma.transaction.update({
@@ -79,14 +75,11 @@ export async function checkPendingShippoLabels() {
 				}
 
 			} catch (error) {
-				console.error(`❌ [SHIPPO CHECK] Erreur lors de la vérification de ${transaction.shippoTransactionId}:`, error);
 			}
 		}
 
-		console.log('✅ [SHIPPO CHECK] Vérification terminée');
 
 	} catch (error) {
-		console.error('❌ [SHIPPO CHECK] Erreur générale:', error);
 	}
 }
 
@@ -94,7 +87,6 @@ export async function checkPendingShippoLabels() {
  * Vérifie une transaction spécifique
  */
 export async function checkSpecificShippoLabel(transactionId: string) {
-	console.log(`🔍 [SHIPPO CHECK] Vérification spécifique: ${transactionId}`);
 
 	try {
 		const shippoClient = createShippoClientFromEnv();
@@ -119,7 +111,6 @@ export async function checkSpecificShippoLabel(transactionId: string) {
 		};
 
 	} catch (error) {
-		console.error(`❌ [SHIPPO CHECK] Erreur:`, error);
 		throw error;
 	}
 }

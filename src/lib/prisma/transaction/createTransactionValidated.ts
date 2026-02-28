@@ -85,6 +85,5 @@ export const createTransactionValidated = async (transactionValidated, userId, o
 			// console.log(`✅ Order ${orderId} deleted successfully.`);
 		});
 	} catch (error) {
-		console.error(`⚠️ Failed to process transaction ${transactionValidated.id}:`, error);
 	}
 };

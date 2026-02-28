@@ -8,7 +8,6 @@ export const getUserAddresses = async (userId: string) => {
 			where: { userId }
 		});
 	} catch (error) {
-		console.error('Error fetching user addresses:', error);
 		throw error;
 	}
 };
@@ -20,7 +19,6 @@ export const deleteAddress = async (addressId: string) => {
 			where: { id: addressId }
 		});
 	} catch (error) {
-		console.error('Error deleting address:', error);
 		throw error;
 	}
 };
@@ -32,7 +30,6 @@ export const getAddressById = async (addressId: string) => {
 			where: { id: addressId }
 		});
 	} catch (error) {
-		console.error('Error fetching address by ID:', error);
 		throw error;
 	}
 };
@@ -44,7 +41,6 @@ export const updateAddress = async (id: string, data: Omit<UpdateAddressSchema, 
 			data // ✅ Exclut `id` de la mise à jour
 		});
 	} catch (error) {
-		console.error('❌ Error updating address:', error);
 		throw error;
 	}
 };
@@ -54,7 +50,6 @@ export const createAddress = async (data: Omit<UpdateAddressSchema, 'id'> & { us
 	try {
 		return await prisma.address.create({ data });
 	} catch (error) {
-		console.error('Error creating address:', error);
 		throw error;
 	}
 };

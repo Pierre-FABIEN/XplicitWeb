@@ -18,7 +18,6 @@ export const updateUserSecurity = async (
 			data: dataToUpdate
 		});
 	} catch (error) {
-		console.error('Error updating user security:', error);
 		throw error;
 	}
 };

@@ -45,7 +45,6 @@ export const actions: Actions = {
 
 			return message(form, 'User deleted successfully');
 		} catch (error) {
-			console.error('Error deleting user:', error);
 			return { error: 'Failed to delete user' };
 		}
 	}

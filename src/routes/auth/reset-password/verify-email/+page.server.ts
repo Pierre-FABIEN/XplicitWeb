@@ -15,7 +15,7 @@ export const load = async (event: RequestEvent) => {
 	const { session } = await validatePasswordResetSessionRequest(event);
 	// // console.log(
 	// 	session,
-	// 	'uhguy C:/Web/XplicitWeb/src/routes/auth/reset-password/verify-email/+page.server.ts'
+	// 	'uhguy C:/Web/CustomYourCanWeb/src/routes/auth/reset-password/verify-email/+page.server.ts'
 	// );
 	if (session === null) {
 		// console.log('Session is null, redirecting to /auth/forgot-password');

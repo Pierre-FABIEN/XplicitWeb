@@ -8,11 +8,9 @@ import type { RequestHandler } from './$types';
 import { createShippoClientForProject } from '$lib/shippo';
 
 export const POST: RequestHandler = async ({ request }) => {
-	console.log('📍 [API SHIPPO] Demande de points relais reçue');
 
 	try {
 		const body = await request.json();
-		console.log('📥 [API SHIPPO] Données reçues:', body);
 
 		const {
 			to_country_code,
@@ -46,12 +44,10 @@ export const POST: RequestHandler = async ({ request }) => {
 		// Dans un vrai projet, vous devriez intégrer avec l'API spécifique du transporteur
 		const servicePoints = generateServicePoints(carriers, to_postal_code, to_country_code, body.client_address);
 
-		console.log('✅ [API SHIPPO] Points relais générés:', servicePoints.length);
 
 		return json(servicePoints);
 
 	} catch (error) {
-		console.error('❌ [API SHIPPO] Erreur:', error);
 		
 		return json({ 
 			error: 'Erreur lors de la récupération des points relais',

@@ -7,13 +7,11 @@ import type { RequestHandler } from './$types';
 import { checkPendingShippoLabels, checkSpecificShippoLabel } from '$lib/shippo/status-checker';
 
 export const POST: RequestHandler = async ({ request }) => {
-	console.log('🔍 [API SHIPPO] Vérification du statut des étiquettes');
 
 	try {
 		const { action, transactionId } = await request.json();
 
 		if (action === 'check_all') {
-			console.log('📋 [API SHIPPO] Vérification de toutes les étiquettes en attente');
 			await checkPendingShippoLabels();
 			
 			return json({
@@ -24,7 +22,6 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		if (action === 'check_specific' && transactionId) {
-			console.log(`🔍 [API SHIPPO] Vérification spécifique: ${transactionId}`);
 			const result = await checkSpecificShippoLabel(transactionId);
 			
 			return json({
@@ -40,7 +37,6 @@ export const POST: RequestHandler = async ({ request }) => {
 		}, { status: 400 });
 
 	} catch (error) {
-		console.error('❌ [API SHIPPO] Erreur lors de la vérification:', error);
 		
 		return json({
 			success: false,

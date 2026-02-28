@@ -45,7 +45,6 @@ export const load: PageServerLoad = async ({ params }) => {
 			IupdateProductSchema
 		};
 	} catch (error) {
-		console.error('Error loading product:', error);
 		return fail(500, { message: 'An error occurred while loading the product' });
 	}
 };

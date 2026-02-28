@@ -26,9 +26,6 @@
 	
 	let { data } = $props();
 
-	// Options de quantité pour les articles non-personnalisés
-	let quantityOptions = $state([24, 48, 72]);
-
 	// Options de quantité pour les articles personnalisés
 	let customQuantityOptions = $state([
 		{ label: '24 packs de 24 canettes (576 unités)', value: 576 },
@@ -37,21 +34,6 @@
 		{ label: '1 palette : 120 packs (2 880 unités)', value: 2880 },
 		{ label: '3 palettes : 360 packs (8 640 unités)', value: 8640 }
 	]);
-
-	// Calculer le total des quantités pour les commandes non-personnalisées
-	let totalNonCustomQuantity = $derived(
-		$cartStore.items
-			.filter(item => !item.custom || (Array.isArray(item.custom) && item.custom.length === 0))
-			.reduce((acc, item) => acc + item.quantity, 0)
-	);
-
-	// Fonction pour vérifier si on peut ajouter une quantité
-	function canAddQuantity(newQuantity: number, currentQuantity: number, isCustom: boolean): boolean {
-		if (isCustom) return true; // Pas de limite pour les personnalisées
-		
-		const otherItemsQuantity = totalNonCustomQuantity - currentQuantity;
-		return (otherItemsQuantity + newQuantity) <= 72;
-	}
 
 	// Fonction pour calculer le prix des canettes personnalisées
 	function getCustomCanPrice(quantity: number): number {
@@ -124,19 +106,8 @@
 		
 		// Ne recharger que si le panier ou l'adresse a vraiment changé
 		if ((cartChanged || addressChanged) && currentAddressId && !hasCustomItems && currentCartItemsCount > 0) {
-			console.log('🔄 [EFFECT] Rechargement des options de livraison:', {
-				timestamp: new Date().toISOString(),
-				reason: cartChanged ? 'Changement du panier' : 'Changement d\'adresse',
-				previousCartItemsCount,
-				currentCartItemsCount,
-				previousAddressId,
-				currentAddressId
-			});
-			// Recharger les options de livraison quand le panier ou l'adresse change
 			fetchShippoShippingOptions();
 		} else if (currentAddressId && !hasCustomItems && currentCartItemsCount > 0 && previousCartItemsCount === 0) {
-			// Cas initial : première fois qu'on a une adresse et des items
-			console.log('🔄 [EFFECT] Chargement initial des options de livraison');
 			fetchShippoShippingOptions();
 		}
 	});
@@ -160,34 +131,9 @@
 		validators: zodClient(OrderSchema),
 		id: 'createPayment',
 		resetForm: true,
-		onUpdate: ({ form }) => {
-			console.log('🔄 [SUPERFORM] onUpdate appelé:', {
-				timestamp: new Date().toISOString(),
-				valid: form.valid,
-				data: form.data,
-				errors: form.errors,
-				message: form.message
-			});
-			if (form.valid) {
-				console.log('✅ [SUPERFORM] Formulaire de paiement validé:', form.data);
-			} else {
-				console.log('❌ [SUPERFORM] Erreurs de validation:', form.errors);
-			}
-		},
-		onSubmit: ({ cancel }) => {
-			console.log('🚀 [SUPERFORM] onSubmit appelé:', {
-				timestamp: new Date().toISOString(),
-				cancel: cancel
-			});
-		},
-		onResult: ({ result }) => {
-			console.log('📡 [SUPERFORM] onResult appelé:', {
-				timestamp: new Date().toISOString(),
-				result: result,
-				type: result.type,
-				status: result.status
-			});
-		}
+		onUpdate: () => {},
+		onSubmit: () => {},
+		onResult: () => {}
 	});
 
 	const { form: createPaymentData, enhance: createPaymentEnhance } = createPayment;
@@ -202,15 +148,7 @@
 				// Géocodage dynamique de l'adresse
 				getCoordinatesFromAddress(selectedAddress).then(clientCoordinates => {
 					centerCoordinates = clientCoordinates;
-					console.log('📍 [FRONTEND] Centrage carte sur adresse client:', {
-						timestamp: new Date().toISOString(),
-						address: selectedAddress.city,
-						postal: selectedAddress.zip,
-						coordinates: centerCoordinates
-					});
-				}).catch(error => {
-					console.error('❌ [FRONTEND] Erreur géocodage:', error);
-					// Fallback vers Montauban
+				}).catch(() => {
 					centerCoordinates = [1.3542, 44.0167];
 				});
 			}
@@ -285,17 +223,10 @@
 				const data = await response.json();
 				if (data && data.length > 0) {
 					const coords: [number, number] = [parseFloat(data[0].lon), parseFloat(data[0].lat)];
-					console.log('📍 [FRONTEND] Géocodage réussi:', {
-						timestamp: new Date().toISOString(),
-						address: `${address.city} ${address.zip}`,
-						coordinates: coords,
-						osm_result: data[0].display_name
-					});
 					return coords;
 				}
 			}
-		} catch (error) {
-			console.warn('⚠️ [FRONTEND] Géocodage échoué, utilisation du fallback:', error);
+		} catch {
 		}
 
 		// Fallback : coordonnées approximatives basées sur le code postal
@@ -376,21 +307,6 @@
 			const totalWeight = computeTotalWeight();
 			const totalQuantity = computeTotalQuantity();
 
-			console.log('🚀 [FRONTEND SHIPPO] Demande d\'options de livraison:', {
-				timestamp: new Date().toISOString(),
-				address: {
-					country: selectedAddress.stateLetter,
-					postal: selectedAddress.zip,
-					city: selectedAddress.city
-				},
-				cart: {
-					items_count: $cartStore.items.length,
-					total_weight: totalWeight,
-					total_quantity: totalQuantity,
-					has_custom_items: hasCustomItems
-				}
-			});
-
 			// Préparer la requête pour Shippo
 			const requestBody = {
 				from_country_code: 'FR',                        // Expéditeur (toujours France)
@@ -414,71 +330,24 @@
 				}
 			};
 
-			console.log('📤 [FRONTEND SHIPPO] Payload envoyé à l\'API:', {
-				timestamp: new Date().toISOString(),
-				requestBody
-			});
-
 			const res = await fetch('/api/shippo/shipping-options', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(requestBody)
 			});
 
-			console.log('📡 [FRONTEND SHIPPO] Réponse API reçue:', {
-				timestamp: new Date().toISOString(),
-				status: res.status,
-				statusText: res.statusText,
-				ok: res.ok
-			});
-
 			if (!res.ok) {
 				const errorText = await res.text().catch(() => 'Erreur inconnue');
-				console.error('❌ [FRONTEND SHIPPO] Erreur API:', {
-					timestamp: new Date().toISOString(),
-					status: res.status,
-					error: errorText
-				});
 				throw new Error(`Erreur ${res.status}: ${errorText}`);
 			}
 
 			const result = await res.json();
-			
-			console.log('✅ [FRONTEND SHIPPO] Données reçues:', {
-				timestamp: new Date().toISOString(),
-				options_count: result.data?.length || 0,
-				meta: result.meta,
-				filtering: result.filtering,
-				options: result.data?.map(opt => ({
-					id: opt.id,
-					carrier: opt.carrierCode,
-					type: opt.type,
-					price: opt.price,
-					product: opt.productName
-				}))
-			});
-			
 			shippingOptions = result.data || [];
 
 			if (!shippingOptions.length) {
-				console.warn('⚠️ [FRONTEND SHIPPO] Aucune option de livraison trouvée');
 				toast.error("Aucune option de livraison n'a été trouvée.");
-			} else {
-				console.log('🎯 [FRONTEND SHIPPO] Options de livraison chargées:', {
-					timestamp: new Date().toISOString(),
-					count: shippingOptions.length,
-					types: {
-						service_point: shippingOptions.filter(o => o.type === 'service_point').length,
-						home_delivery: shippingOptions.filter(o => o.type === 'home_delivery').length
-					}
-				});
 			}
-		} catch (err) {
-			console.error('❌ [FRONTEND SHIPPO] Erreur API Shippo:', {
-				timestamp: new Date().toISOString(),
-				error: err,
-				message: err instanceof Error ? err.message : 'Erreur inconnue'
-			});
+		} catch {
 			toast.error('Impossible de récupérer les options de livraison.');
 		}
 	}
@@ -487,18 +356,6 @@
 	let selectedCarrierCode = '';
 
 	function chooseShippingOption(chosenOption: any) {
-		console.log('🎯 [FRONTEND] Option de livraison sélectionnée:', {
-			timestamp: new Date().toISOString(),
-			option: {
-				id: chosenOption.id,
-				carrier: chosenOption.carrierCode,
-				type: chosenOption.type,
-				price: chosenOption.price,
-				product: chosenOption.productName
-			},
-			rawOption: chosenOption // Log complet pour debug
-		});
-
 		selectedShippingOption = chosenOption.id; // Nouvelle structure : option.id au lieu de option.code
 		selectedShippingCarrier = chosenOption.carrierCode; // Récupérer le carrier
 
@@ -513,24 +370,12 @@
 
 		const carrierCode = chosenOption?.carrierCode; // Nouvelle structure : option.carrierCode
 		// Vérifier si c'est un point relais
-		const isServicePoint = chosenOption?.type === 'service_point'; // Nouvelle structure : option.type
+		const isServicePoint = chosenOption?.type === 'service_point';
 
-		console.log('🔄 [FRONTEND] Traitement de l\'option:', {
-			timestamp: new Date().toISOString(),
-			is_service_point: isServicePoint,
-			carrier_code: carrierCode,
-			shipping_cost: shippingCost
-		});
-
-		// ✅ TOUJOURS réinitialiser le point relais sélectionné lors du changement d'option
+		// Réinitialiser le point relais sélectionné lors du changement d'option
 		selectedPoint = null;
 
 		if (isServicePoint && carrierCode) {
-			console.log('📍 [FRONTEND] Option point relais - récupération des points:', {
-				timestamp: new Date().toISOString(),
-				carrier: carrierCode
-			});
-			
 			// Stocker le code du transporteur pour validation
 			selectedCarrierCode = carrierCode;
 			// On affiche la carte et on récupère les points relais
@@ -539,10 +384,6 @@
 			servicePoints = [];
 			fetchServicePoints(carrierCode);
 		} else {
-			console.log('🏠 [FRONTEND] Option livraison domicile:', {
-				timestamp: new Date().toISOString()
-			});
-			
 			// Si ce n'est pas un point relais, on masque la carte et on reset les données du point
 			showMap = false;
 			selectedPoint = null;
@@ -560,16 +401,7 @@
 		}
 
 		try {
-			isLoadingServicePoints = true; // ✅ Début du chargement
-			
-			console.log('📍 [FRONTEND SHIPPO] Demande de points relais:', {
-				timestamp: new Date().toISOString(),
-				carrier: carrierCode,
-				address: {
-					country: selectedAddress.stateLetter,
-					postal: selectedAddress.zip
-				}
-			});
+			isLoadingServicePoints = true;
 			
 			const res = await fetch('/api/shippo/service-points', {
 				method: 'POST',
@@ -587,34 +419,18 @@
 				})
 			});
 
-			console.log('📡 [FRONTEND SHIPPO] Réponse points relais:', {
-				timestamp: new Date().toISOString(),
-				status: res.status,
-				ok: res.ok
-			});
-
 			if (!res.ok) {
 				const errorText = await res.text().catch(() => 'Erreur inconnue');
-				console.error('❌ [FRONTEND SHIPPO] Erreur points relais:', errorText);
 				throw new Error('Erreur de récupération des points relais');
 			}
 			
 			const data = await res.json();
-
-			// Stocker les points relais reçus
 			servicePoints = data;
-			
-			console.log('✅ [FRONTEND SHIPPO] Points relais reçus:', {
-				timestamp: new Date().toISOString(),
-				count: servicePoints.length,
-				carrier: carrierCode
-			});
 
 			if (!servicePoints.length) {
 				toast.error('Aucun point relais trouvé pour ce transporteur.');
 			}
-		} catch (err) {
-			console.error('❌ [FRONTEND SHIPPO] Erreur fetchServicePoints:', err);
+		} catch {
 			toast.error('Impossible de récupérer les points relais.');
 		} finally {
 			isLoadingServicePoints = false; // ✅ Fin du chargement
@@ -635,14 +451,7 @@
 	}
 
 	function changeQuantity(productId: string, quantity: number, customId?: string) {
-		console.log('🔄 changeQuantity appelée:', { productId, quantity, customId });
-		console.log('📦 Avant mise à jour - Store:', $cartStore.items);
-		
 		updateCartItemQuantity(productId, quantity, customId);
-		
-		console.log('📦 Après mise à jour - Store:', $cartStore.items);
-		console.log('💰 Nouveau sous-total:', $cartStore.subtotal);
-		console.log('🧾 Nouvelle TVA:', $cartStore.tax);
 		
 		// Recharger les options de livraison après changement de quantité
 		if (selectedAddressId && !hasCustomItems) {
@@ -653,63 +462,29 @@
 
 
 
-	function handleCheckout(event: Event) {
-		console.log('🚀 [SUPERFORM] handleCheckout appelé:', {
-			timestamp: new Date().toISOString(),
-			event: event.type,
-			target: event.target,
-			selectedAddressId,
-			selectedShippingOption,
-			showMap,
-			selectedPoint,
-			hasCustomItems,
-			shippingCost,
-			createPaymentData: $createPaymentData
-		});
-
-		// Validation avant soumission
+	function handleCheckout(_event: Event) {
 		if (!selectedAddressId) {
-			console.log('❌ [SUPERFORM] Validation échouée: Pas d\'adresse sélectionnée');
 			toast.error('Veuillez choisir une adresse.');
 			return false;
 		}
-		// Pour les commandes personnalisées, on accepte 'no_shipping' comme option valide
 		if (!selectedShippingOption && !hasCustomItems) {
-			console.log('❌ [SUPERFORM] Validation échouée: Pas d\'option de livraison sélectionnée');
 			toast.error('Veuillez choisir un mode de livraison.');
 			return false;
 		}
-
-		// Vérification si un point relais est requis
 		if (showMap && !selectedPoint && !hasCustomItems) {
-			console.log('❌ [SUPERFORM] Validation échouée: Point relais requis mais non sélectionné');
 			toast.error('Veuillez sélectionner un point relais.');
 			return false;
 		}
 
-		// Mise à jour des données du superform
 		$createPaymentData.shippingCost = shippingCost.toString();
 		$createPaymentData.shippingOption = selectedShippingOption;
 		$createPaymentData.shippingCarrier = selectedShippingCarrier || '';
 		
-		// Conversion des coordonnées en strings si nécessaire
 		if (selectedPoint) {
 			$createPaymentData.servicePointLatitude = selectedPoint.latitude.toString();
 			$createPaymentData.servicePointLongitude = selectedPoint.longitude.toString();
 		}
 
-		console.log('✅ [SUPERFORM] Validation OK, données mises à jour:', {
-			shippingCost: $createPaymentData.shippingCost,
-			shippingOption: $createPaymentData.shippingOption,
-			orderId: $createPaymentData.orderId,
-			addressId: $createPaymentData.addressId,
-			servicePointLatitude: $createPaymentData.servicePointLatitude,
-			servicePointLongitude: $createPaymentData.servicePointLongitude,
-			selectedPoint: selectedPoint
-		});
-
-		// Si tout est OK, on peut procéder au checkout
-		console.log('✅ [SUPERFORM] Validation OK, soumission du formulaire...');
 		return true;
 	}
 
@@ -766,10 +541,7 @@
 						{hasCustomItems}
 						{shippingCost}
 						{selectedShippingOption}
-						{quantityOptions}
 						{customQuantityOptions}
-						{totalNonCustomQuantity}
-						{canAddQuantity}
 						{getCustomCanPrice}
 						onRemoveFromCart={handleRemoveFromCart}
 						onChangeQuantity={changeQuantity}
@@ -782,14 +554,7 @@
 									method="POST"
 									action="?/checkout"
 									use:createPaymentEnhance
-									onsubmit={(e) => {
-										console.log('🎯 [FORM] Formulaire soumis:', {
-											timestamp: new Date().toISOString(),
-											event: e,
-											formData: new FormData(e.target as HTMLFormElement)
-										});
-										return handleCheckout(e);
-									}}
+									onsubmit={(e) => handleCheckout(e)}
 								>
 									<input type="hidden" name="orderId" bind:value={$createPaymentData.orderId} />
 									<input type="hidden" name="addressId" bind:value={$createPaymentData.addressId} />

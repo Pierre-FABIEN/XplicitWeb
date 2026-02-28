@@ -5,7 +5,6 @@ export const getAllcategories = async () => {
 		const categories = await prisma.category.findMany();
 		return categories;
 	} catch (error) {
-		console.error('Error fetching categories:', error);
 		throw new Error('Could not fetch categories');
 	}
 };
@@ -51,7 +50,6 @@ export const updateCategory = async (data: { id: string; name: string }) => {
 		// console.log('Category updated successfully:', updatedCategory);
 		return updatedCategory;
 	} catch (error) {
-		console.error('Error updating category:', error);
 		throw error;
 	}
 };

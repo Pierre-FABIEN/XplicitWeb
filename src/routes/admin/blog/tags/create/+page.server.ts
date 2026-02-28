@@ -28,7 +28,6 @@ export const actions: Actions = {
 
 			return message(form, 'Tag created successfully');
 		} catch (error) {
-			console.error('Error creating Tag:', error);
 			return fail(500, { message: 'Tag creation failed' });
 		}
 	}

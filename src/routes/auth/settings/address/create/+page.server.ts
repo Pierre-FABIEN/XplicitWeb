@@ -84,7 +84,6 @@ export const actions: Actions = {
 
 			return message(form, 'Address created successfully');
 		} catch (error) {
-			console.error('Error creating address:', error);
 			return fail(500, { message: 'Address creation failed' });
 		}
 	}

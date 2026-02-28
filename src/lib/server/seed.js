@@ -4,7 +4,6 @@ import { faker } from '@faker-js/faker';
 const prisma = new PrismaClient();
 
 async function main() {
-	console.log('Début du peuplement de la base de données...');
 
 	try {
 		// Supprimer les données existantes dans le bon ordre
@@ -22,7 +21,6 @@ async function main() {
 			prisma.agence.deleteMany(),
 			prisma.director.deleteMany()
 		]);
-		console.log('Toutes les données existantes ont été supprimées.');
 
 		// Création des directeurs
 		const directors = await createEntities(5, () =>
@@ -35,7 +33,6 @@ async function main() {
 				}
 			})
 		);
-		console.log(`${directors.length} directeurs créés.`);
 
 		// Création des agences
 		const agencies = await createEntities(directors.length, (i) =>
@@ -50,7 +47,6 @@ async function main() {
 				}
 			})
 		);
-		console.log(`${agencies.length} agences créées.`);
 
 		// Création des produits
 		const products = await createEntities(agencies.length, (i) =>
@@ -63,7 +59,6 @@ async function main() {
 				}
 			})
 		);
-		console.log(`${products.length} produits créés.`);
 
 		// Création des chats
 		const chats = await createEntities(3, () =>
@@ -76,7 +71,6 @@ async function main() {
 				}
 			})
 		);
-		console.log(`${chats.length} chats créés.`);
 
 		// Création des catégories
 		const categories = await createEntities(5, () =>
@@ -87,7 +81,6 @@ async function main() {
 				}
 			})
 		);
-		console.log(`${categories.length} catégories créées.`);
 
 		// Création des tags
 		const tags = await createEntities(10, () =>
@@ -97,7 +90,6 @@ async function main() {
 				}
 			})
 		);
-		console.log(`${tags.length} tags créés.`);
 
 		// Création des auteurs
 		const authors = await createEntities(5, () =>
@@ -107,7 +99,6 @@ async function main() {
 				}
 			})
 		);
-		console.log(`${authors.length} auteurs créés.`);
 
 		// Création des articles
 		const posts = await createEntities(10, () =>
@@ -122,7 +113,6 @@ async function main() {
 				}
 			})
 		);
-		console.log(`${posts.length} articles créés.`);
 
 		// Création des commentaires
 		const comments = await createEntities(posts.length * 3, (i) =>
@@ -134,7 +124,6 @@ async function main() {
 				}
 			})
 		);
-		console.log(`${comments.length} commentaires créés.`);
 
 		// Création des relations Post <-> Tag via PostTag
 		const postTags = await createEntities(posts.length * 2, (i) =>
@@ -145,11 +134,8 @@ async function main() {
 				}
 			})
 		);
-		console.log(`${postTags.length} relations Post-Tag créées.`);
 
-		console.log('Peuplement terminé avec succès !');
 	} catch (error) {
-		console.error('Erreur lors du peuplement :', error);
 	} finally {
 		await prisma.$disconnect();
 	}

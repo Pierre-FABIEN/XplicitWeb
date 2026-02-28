@@ -7,16 +7,12 @@ function log(level: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR', context: string, ...arg
 	
 	switch (level) {
 		case 'ERROR':
-			console.error(prefix, ...args);
 			break;
 		case 'WARN':
-			console.warn(prefix, ...args);
 			break;
 		case 'INFO':
-			console.info(prefix, ...args);
 			break;
 		case 'DEBUG':
-			console.debug(prefix, ...args);
 			break;
 	}
 }

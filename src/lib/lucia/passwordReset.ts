@@ -144,7 +144,7 @@ export async function sendPasswordResetEmail(email: string, code: string): Promi
 
 	try {
 		const mailOptions = {
-			from: '"Xplicit Drink Website" <xplicitdrink.dev@gmail.com>', // Expéditeur
+			from: '"CustomYourCan Website" <customyourcan.dev@gmail.com>', // Expéditeur
 			to: email, // Destinataire
 			subject: 'Password Reset Request', // Objet de l'email
 			text: `Your password reset code is: ${code}`, // Corps texte brut (fallback)
@@ -152,7 +152,7 @@ export async function sendPasswordResetEmail(email: string, code: string): Promi
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Xplicit Drink - Password Reset</title>
+  <title>CustomYourCan - Password Reset</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
@@ -202,7 +202,7 @@ export async function sendPasswordResetEmail(email: string, code: string): Promi
     <tr>
       <td align="center" style="padding: 20px;">
         <!-- Logo -->
-        <img src="https://example.com/logo.png" alt="Xplicit Drink Logo" />
+        <img src="https://example.com/logo.png" alt="CustomYourCan Logo" />
 
         <!-- Contenu principal -->
         <div class="container">
@@ -213,7 +213,7 @@ export async function sendPasswordResetEmail(email: string, code: string): Promi
           
           <div class="footer">
             <p>If you did not request this, please ignore this email.</p>
-            <p>— The Xplicit Drink Team</p>
+            <p>— The CustomYourCan Team</p>
           </div>
         </div>
       </td>
@@ -228,7 +228,6 @@ export async function sendPasswordResetEmail(email: string, code: string): Promi
 
 		// console.log(`Password reset email sent to ${email}: ${info.response}`);
 	} catch (error) {
-		console.error('Failed to send password reset email:', error);
 		throw new Error('Email sending failed');
 	}
 }

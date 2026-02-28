@@ -60,7 +60,6 @@ export const getAllProducts = async () => {
 		});
 		return products;
 	} catch (error) {
-		console.error('Error fetching products:', error);
 		throw new Error('Could not fetch products');
 	}
 };

@@ -7,15 +7,15 @@
 export const SHIPPO_CONFIG = {
 	// Configuration de l'expéditeur
 	SENDER: {
-		name: process.env.SHIPPO_SENDER_NAME || 'XplicitWeb',
-		company: process.env.SHIPPO_SENDER_COMPANY || 'XplicitWeb',
+		name: process.env.SHIPPO_SENDER_NAME || 'CustomYourCanWeb',
+		company: process.env.SHIPPO_SENDER_COMPANY || 'CustomYourCanWeb',
 		street1: process.env.SHIPPO_SENDER_STREET || '123 Rue de la Paix',
 		city: process.env.SHIPPO_SENDER_CITY || 'Montauban',
 		state: process.env.SHIPPO_SENDER_STATE || 'Occitanie',
 		zip: process.env.SHIPPO_SENDER_POSTAL_CODE || '82000',
 		country: process.env.SHIPPO_SENDER_COUNTRY || 'FR',
 		phone: process.env.SHIPPO_SENDER_PHONE || '+33123456789',
-		email: process.env.SHIPPO_SENDER_EMAIL || 'contact@xplicitweb.com'
+		email: process.env.SHIPPO_SENDER_EMAIL || 'contact@customyourcan.com'
 	},
 
 	// Configuration du colis par défaut
@@ -61,13 +61,9 @@ export function validateShippoConfiguration(): boolean {
 	];
 
 	const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
-	
 	if (missingVars.length > 0) {
-		console.error('❌ Variables d\'environnement Shippo manquantes:', missingVars);
 		return false;
 	}
-
-	console.log('✅ Configuration Shippo validée');
 	return true;
 }
 
@@ -75,9 +71,7 @@ export function validateShippoConfiguration(): boolean {
  * Configure Shippo pour l'environnement actuel
  */
 export function configureShippoForEnvironment() {
-	console.log('🔧 Configuration Shippo pour l\'environnement:', process.env.NODE_ENV || 'development');
-	
-	const config = {
+	return {
 		apiToken: process.env.SHIPPO_API_TOKEN,
 		sender: SHIPPO_CONFIG.SENDER,
 		defaultPackage: SHIPPO_CONFIG.DEFAULT_PACKAGE,
@@ -85,14 +79,4 @@ export function configureShippoForEnvironment() {
 		shippingOptions: SHIPPO_CONFIG.SHIPPING_OPTIONS,
 		servicePoints: SHIPPO_CONFIG.SERVICE_POINTS
 	};
-
-	console.log('📋 Configuration chargée:', {
-		hasApiToken: !!config.apiToken,
-		senderCity: config.sender.city,
-		defaultDimensions: `${config.defaultPackage.length}x${config.defaultPackage.width}x${config.defaultPackage.height}cm`,
-		preferredCarriers: config.preferredCarriers.length,
-		maxOptions: config.shippingOptions.max_options
-	});
-
-	return config;
 }

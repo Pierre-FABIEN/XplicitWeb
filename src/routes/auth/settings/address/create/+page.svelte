@@ -66,7 +66,6 @@
 				addressSuggestions = []; // Aucun résultat
 			}
 		} catch (error) {
-			console.error('Error fetching address suggestions:', error);
 			addressSuggestions = [];
 		}
 	}

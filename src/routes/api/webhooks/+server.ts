@@ -11,7 +11,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 
 function deduceWeightBracket(order: any): number {
 	if (!order || !order.items || !Array.isArray(order.items)) {
-		console.warn("⚠️ Impossible de calculer le poids : 'order.items' est invalide.");
 		return 3; // Valeur par défaut pour éviter que tout crashe
 	}
 
@@ -69,16 +68,12 @@ function getPackageDimensions(weight: number): {length: number, width: number, h
  * Version simplifiée sans la complexité Sendcloud
  */
 async function getShippingMethodData(shippingOption: string, weightBracket: number, order: any, carrierFromOrder?: string) {
-	console.log(`\n🔍 === GÉNÉRATION MÉTHODE D'EXPÉDITION SHIPPO ===`);
-	console.log(`📋 Paramètres:`, { shippingOption, weightBracket, carrierFromOrder });
 	
 	// Utiliser le carrier depuis la commande si disponible, sinon le deviner
 	const carrier = carrierFromOrder || getCarrierFromShippingOption(shippingOption);
-	console.log('🚚 Carrier déterminé:', carrier, carrierFromOrder ? '(depuis la commande)' : '(devine depuis l\'option)');
 	
 	// Déterminer les dimensions selon le poids
 	const dimensions = getPackageDimensions(weightBracket);
-	console.log('📦 Dimensions déterminées:', dimensions);
 	
 	const dynamicMethod = {
 		id: Date.now(), // ID simple
@@ -95,7 +90,6 @@ async function getShippingMethodData(shippingOption: string, weightBracket: numb
 		service: 'standard' // Service par défaut
 	};
 	
-	console.log('🎯 Méthode d\'expédition Shippo générée:', dynamicMethod);
 	return dynamicMethod;
 }
 
@@ -105,34 +99,14 @@ async function getShippingMethodData(shippingOption: string, weightBracket: numb
  * 2) On appelle Shippo hors transaction
  */
 async function handleCheckoutSession(session: Stripe.Checkout.Session) {
-	console.log('\n🚀 === DÉBUT TRAITEMENT WEBHOOK CHECKOUT ===');
-	console.log('📋 Session ID:', session.id);
-	console.log('💰 Montant:', session.amount_total);
-	console.log('💳 Statut:', session.payment_status);
 
-	// Récupérer l'orderId depuis les métadonnées
-	console.log('🔍 [WEBHOOK] Métadonnées de la session:', {
-		metadata: session.metadata,
-		hasMetadata: !!session.metadata,
-		metadataKeys: session.metadata ? Object.keys(session.metadata) : []
-	});
-	
 	const orderId = session.metadata?.orderId || session.metadata?.order_id;
 	if (!orderId) {
-		console.error('❌ OrderId manquant dans les métadonnées de la session');
-		console.log('📋 [WEBHOOK] Session complète:', {
-			id: session.id,
-			metadata: session.metadata,
-			customer_details: session.customer_details,
-			payment_status: session.payment_status
-		});
 		return;
 	}
 
-	console.log('📦 Order ID:', orderId);
 
 	// Récupérer les détails de la commande
-	console.log('🔍 [WEBHOOK] Recherche de la commande:', orderId);
 	const order = await prisma.order.findUnique({
 				where: { id: orderId },
 		include: {
@@ -147,14 +121,11 @@ async function handleCheckoutSession(session: Stripe.Checkout.Session) {
 			});
 			
 			if (!order) {
-		console.error('❌ Commande non trouvée:', orderId);
-		console.log('🔍 [WEBHOOK] Vérification des commandes existantes...');
 		const allOrders = await prisma.order.findMany({
 			select: { id: true, status: true, createdAt: true },
 			orderBy: { createdAt: 'desc' },
 			take: 5
 		});
-		console.log('📋 [WEBHOOK] Dernières commandes:', allOrders);
 		return;
 	}
 
@@ -167,42 +138,14 @@ async function handleCheckoutSession(session: Stripe.Checkout.Session) {
 
 	const shippingData = orderWithShipping.cursor?.firstBatch?.[0] || {};
 
-		console.log('📋 Commande trouvée:', {
-		id: order.id,
-		itemsCount: order.items.length,
-		total: order.total,
-		shippingOption: shippingData.shippingOption,
-		shippingCarrier: shippingData.shippingCarrier
-	});
-	
-	// Logs détaillés pour le point de retrait
-	console.log('📍 [WEBHOOK] Données point de retrait de la commande:', {
-		servicePointId: order.servicePointId || '(vide/null)',
-		servicePointPostNumber: order.servicePointPostNumber || '(vide/null)',
-		servicePointType: order.servicePointType || '(vide/null)',
-		servicePointExtraRefCab: order.servicePointExtraRefCab || '(vide/null)',
-		servicePointExtraShopRef: order.servicePointExtraShopRef || '(vide/null)',
-		hasServicePoint: !!(order.servicePointId && order.servicePointId !== '' && order.servicePointId !== 'null'),
-		isHomeDelivery: !order.servicePointId || order.servicePointId === '' || order.servicePointId === 'null'
-	});
-
 	// Calculer le poids et générer les données de méthode d'expédition
 			const weightBracket = deduceWeightBracket(order);
-	console.log('⚖️ Poids bracket calculé:', weightBracket);
 
 	// Utiliser le carrier depuis les métadonnées Stripe ou depuis la commande
 	const carrierFromStripe = session.metadata?.shipping_carrier;
 	const carrierFromOrder = shippingData.shippingCarrier;
 	const finalCarrier = carrierFromStripe || carrierFromOrder || 'colissimo';
-	
-	console.log('🚚 Carrier final:', {
-		fromStripe: carrierFromStripe,
-		fromOrder: carrierFromOrder,
-		final: finalCarrier
-	});
-	
 	const shippingMethodData = await getShippingMethodData(order.shippingOption || 'default', weightBracket, order, finalCarrier);
-			console.log('📋 Données de méthode d\'expédition:', shippingMethodData);
 
 	// Préparer les données de transaction
 			const transactionData = {
@@ -260,69 +203,29 @@ async function handleCheckoutSession(session: Stripe.Checkout.Session) {
 		}))
 			};
 
-			console.log('📝 Données de transaction préparées:', {
-				stripePaymentId: transactionData.stripePaymentId,
-				amount: transactionData.amount,
-				currency: transactionData.currency,
-				shippingOption: transactionData.shippingOption,
-				shippingCost: transactionData.shippingCost,
-				shippingMethodId: transactionData.shippingMethodId,
-				shippingMethodName: transactionData.shippingMethodName,
-		package_dimensions: `${transactionData.package_length}x${transactionData.package_width}x${transactionData.package_height}cm`,
-		package_weight: `${transactionData.package_weight}kg`,
-				products_count: transactionData.products.length
-			});
-		
-		console.log('📍 [WEBHOOK] Données point de retrait dans transaction:', {
-			servicePointId: transactionData.servicePointId || '(vide/null)',
-			servicePointPostNumber: transactionData.servicePointPostNumber || '(vide/null)',
-			servicePointType: transactionData.servicePointType || '(vide/null)',
-			hasServicePoint: !!(transactionData.servicePointId && transactionData.servicePointId !== '' && transactionData.servicePointId !== 'null'),
-			isHomeDelivery: !transactionData.servicePointId || transactionData.servicePointId === '' || transactionData.servicePointId === 'null',
-			willUsePickupPoint: !!(transactionData.servicePointId && transactionData.servicePointId !== '' && transactionData.servicePointId !== 'null')
-		});
-
 	// Créer la transaction en base
-			console.log('💾 Création de la transaction en base...');
 	const createdTransaction = await prisma.transaction.create({
 				data: transactionData
 			});
 
-			console.log('✅ Transaction créée avec succès:', {
-		id: createdTransaction.id,
-		stripePaymentId: createdTransaction.stripePaymentId,
-		amount: createdTransaction.amount,
-		status: createdTransaction.status
-	});
-
 	// Si le paiement est réussi, créer la commande et l'étiquette Shippo
 	if (session.payment_status === 'paid') {
-		console.log('🎉 Transaction en base créée avec succès:', createdTransaction.id);
-		console.log('📦 Début des appels Shippo...');
 		
 		try {
 			// Créer directement l'étiquette Shippo avec les données de la transaction
-			console.log('🔄 Création de l\'étiquette Shippo...');
 			const shippoOrderResult = await createShippoLabel(createdTransaction);
-			console.log('✅ Étiquette Shippo créée avec succès:', shippoOrderResult);
 
 		} catch (error) {
-			console.error('❌ Erreur lors de la création Shippo:', error);
 		}
 
 		// Réinitialiser le panier
 		try {
-			console.log('🛒 Réinitialisation du panier...');
 			resetCart();
-			console.log('✅ Panier réinitialisé');
 		} catch (error) {
-			console.error('❌ Erreur lors de la réinitialisation du panier:', error);
 		}
 	} else {
-		console.log('⚠️ Statut de paiement non "paid", pas d\'appel Shippo. Statut:', createdTransaction?.status);
 	}
 
-	console.log('🏁 === FIN TRAITEMENT WEBHOOK CHECKOUT ===\n');
 }
 
 export const POST = async ({ request }) => {
@@ -334,11 +237,9 @@ export const POST = async ({ request }) => {
 	try {
 		event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET || '');
 	} catch (err) {
-		console.error('❌ Erreur de signature webhook:', err);
 		return json({ error: 'Invalid signature' }, { status: 400 });
 	}
 
-	console.log('📨 Webhook reçu:', event.type);
 
 	try {
 		switch (event.type) {
@@ -348,20 +249,16 @@ export const POST = async ({ request }) => {
 				break;
 
 			case 'payment_intent.succeeded':
-				console.log('💳 Paiement réussi:', event.data.object.id);
 				break;
 
 			case 'payment_intent.payment_failed':
-				console.log('❌ Échec du paiement:', event.data.object.id);
 				break;
 
 			default:
-				console.log(`⚠️ Unhandled event type: ${event.type}`);
 		}
 
 		return json({ received: true });
 	} catch (error) {
-		console.error('❌ Erreur lors du traitement du webhook:', error);
 		return json({ error: 'Webhook processing failed' }, { status: 500 });
 	}
 };

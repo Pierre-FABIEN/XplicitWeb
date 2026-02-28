@@ -48,16 +48,16 @@
 			const doc = new jsPDF();
 
 			// Charger le logo
-			const logoBase64 = await getBase64Image('/Logo-xplicit.png');
+			const logoBase64 = await getBase64Image('/Logo-customYourCan.png');
 
 			// ------------------------------
 			// 📌 Définition des valeurs
 			// ------------------------------
-			const companyName = 'Xplicit Web';
+			const companyName = 'CustomYourCan Web';
 			const companyAddress = '123 Rue des Affaires';
 			const companyCity = '75000 Paris, France';
 			const companyPhone = '+33 1 23 45 67 89';
-			const companyEmail = 'contact@xplicitweb.com';
+			const companyEmail = 'contact@customyourcan.com';
 			const companyVAT = 'FR123456789';
 
 			const customerName = transaction.customer_details_name || 'N/A';
@@ -186,7 +186,7 @@
 			// Sauvegarde du PDF
 			const customerFullName = customerName.replace(/\s+/g, '_'); // Remplacer les espaces par des underscores
 			const dateFormatted = new Date(transaction.createdAt).toISOString().split('T')[0]; // Format YYYY-MM-DD
-			const filename = `XplicitDrink_Facture_${dateFormatted}_${customerFullName}.pdf`;
+			const filename = `CustomYourCan_Facture_${dateFormatted}_${customerFullName}.pdf`;
 			doc.save(filename);
 
 		} catch (error) {
@@ -205,7 +205,6 @@
 				goto('/auth/settings/factures');
 			}
 		}).catch((error) => {
-			console.error('Erreur lors de la génération automatique:', error);
 		});
 	});
 </script>

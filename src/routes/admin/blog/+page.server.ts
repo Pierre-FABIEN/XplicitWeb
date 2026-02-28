@@ -67,7 +67,6 @@ export const actions: Actions = {
 			// console.log('Deleted category:', deletedPost);
 			return message(form, 'Post deleted successfully');
 		} catch (error) {
-			console.error('Error deleting category:', error);
 			return fail(500, { message: 'Post deletion failed' });
 		}
 	},
@@ -98,7 +97,6 @@ export const actions: Actions = {
 			// console.log('Deleted tag:', deletedTag);
 			return message(form, 'Tag deleted successfully');
 		} catch (error) {
-			console.error('Error deleting tag:', error);
 			return fail(500, { message: 'Tag deletion failed' });
 		}
 	},
@@ -129,7 +127,6 @@ export const actions: Actions = {
 			// console.log('Deleted category:', deletedCategory);
 			return message(form, 'Category deleted successfully');
 		} catch (error) {
-			console.error('Error deleting category:', error);
 			return fail(500, { message: 'Category deletion failed' });
 		}
 	}

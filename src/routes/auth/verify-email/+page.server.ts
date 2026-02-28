@@ -22,7 +22,6 @@ import { getUserByEmailPrisma } from '$lib/prisma/user/user';
 const bucket = new ExpiringTokenBucket<number>(5, 60 * 30);
 
 function log(...args: unknown[]) {
-	console.log('[verify]', ...args);
 }
 
 export const load = async (event) => {

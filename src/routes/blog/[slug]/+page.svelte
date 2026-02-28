@@ -19,7 +19,7 @@
 	type="article"
 	publishedTime={data.post?.createdAt ? new Date(data.post.createdAt).toISOString() : undefined}
 	modifiedTime={data.post?.updatedAt ? new Date(data.post.updatedAt).toISOString() : undefined}
-	author={data.post?.author?.name || 'XplicitWeb'}
+	author={data.post?.author?.name || 'CustomYourCanWeb'}
 	section={data.post?.category?.name || 'Blog'}
 	tags={seoTags}
 />

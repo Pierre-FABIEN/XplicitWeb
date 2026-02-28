@@ -91,7 +91,6 @@ export const actions: Actions = {
 			parsedData = JSON.parse(jsonData.toString());
 			// console.log('Parsed JSON Data:', parsedData);
 		} catch (error) {
-			console.error('Error parsing JSON data:', error);
 			return fail(400, { message: 'Invalid JSON data' });
 		}
 
@@ -195,7 +194,6 @@ export const actions: Actions = {
 			// console.log('User and addresses updated successfully');
 			return message(form, 'User and addresses updated successfully');
 		} catch (error) {
-			console.error('Error updating user and addresses:', error);
 			return fail(500, { message: 'User and addresses update failed' });
 		}
 	}

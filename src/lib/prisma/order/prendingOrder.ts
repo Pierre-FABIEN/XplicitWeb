@@ -171,7 +171,6 @@ export async function updateOrderItems(orderId: string, incomingItems: any[]) {
 
 		return updatedOrderWithItems;
 	} catch (error) {
-		console.error('Error while updating order items (non-destructive):', error);
 		throw error;
 	}
 }
@@ -199,10 +198,8 @@ async function maybeDeleteImageOnCloudinary(imageUrl: string) {
 		if (result.result === 'ok') {
 			// console.log(`Image ${publicId} deleted successfully.`);
 		} else {
-			console.error(`Failed to delete image ${publicId}:`, result);
 		}
 	} catch (err) {
-		console.error(`Error deleting image: ${imageUrl}`, err);
 	}
 }
 

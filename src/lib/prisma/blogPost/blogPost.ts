@@ -18,7 +18,6 @@ export const getAllPosts = async () => {
 
 		return posts;
 	} catch (error) {
-		console.error('Error retrieving posts:', error);
 	} finally {
 		await prisma.$disconnect();
 	}
@@ -35,7 +34,6 @@ export const getPostBySlug = async (slug: string) => {
 		});
 		return post;
 	} catch (error) {
-		console.error('Error retrieving post:', error);
 	} finally {
 		await prisma.$disconnect();
 	}
@@ -86,7 +84,6 @@ export const updatePost = async (data: {
 			return post;
 		});
 	} catch (error) {
-		console.error('Error updating post:', error);
 		throw error;
 	} finally {
 		await prisma.$disconnect();
@@ -104,7 +101,6 @@ export const getPostById = async (id: string) => {
 		});
 		return post;
 	} catch (error) {
-		console.error('Error retrieving post:', error);
 	} finally {
 		await prisma.$disconnect();
 	}
@@ -153,7 +149,6 @@ export const createPost = async (
 
 		return post;
 	} catch (error) {
-		console.error('Error creating post:', error);
 		throw error;
 	} finally {
 		// Note : Dans un environnement serveur (et surtout en serverless), il est généralement
@@ -182,7 +177,6 @@ export const deletePost = async (id: string) => {
 		// console.log('Post deleted successfully:', deletedPost);
 		return deletedPost;
 	} catch (error) {
-		console.error('Error deleting post:', error);
 		throw error;
 	} finally {
 		// Dans un environnement serveur, il est préférable de gérer la connexion Prisma globalement
@@ -198,7 +192,6 @@ export const getCategoryById = async (id: string) => {
 			where: { id }
 		});
 	} catch (error) {
-		console.error('Error retrieving category by ID:', error);
 		throw error;
 	}
 };
@@ -213,7 +206,6 @@ export const createCategory = async (name?: string, description?: string) => {
 			}
 		});
 	} catch (error) {
-		console.error('Error creating category:', error);
 		throw error;
 	}
 };
@@ -226,7 +218,6 @@ export const updateCategory = async (id: string, data: { name?: string; descript
 			data
 		});
 	} catch (error) {
-		console.error('Error updating category:', error);
 		throw error;
 	}
 };
@@ -248,7 +239,6 @@ export const deleteCategory = async (id: string) => {
 		});
 		return 'Category deleted successfully';
 	} catch (error) {
-		console.error('Error deleting category:', error);
 		throw error;
 	}
 };
@@ -262,7 +252,6 @@ export const getAllCategoriesPosts = async () => {
 			}
 		});
 	} catch (error) {
-		console.error('Error retrieving categories with posts:', error);
 		throw error;
 	}
 };
@@ -275,7 +264,6 @@ export const getTagById = async (id: string) => {
 			where: { id }
 		});
 	} catch (error) {
-		console.error('Error retrieving tag by ID:', error);
 		throw error;
 	}
 };
@@ -289,7 +277,6 @@ export const createTag = async (name: string) => {
 			}
 		});
 	} catch (error) {
-		console.error('Error creating tag:', error);
 		throw error;
 	}
 };
@@ -302,7 +289,6 @@ export const updateTag = async (id: string, data: { name?: string }) => {
 			data
 		});
 	} catch (error) {
-		console.error('Error updating tag:', error);
 		throw error;
 	}
 };
@@ -323,7 +309,6 @@ export const deleteTag = async (id: string) => {
 		});
 		return 'Tag deleted successfully';
 	} catch (error) {
-		console.error('Error deleting tag:', error);
 		throw error;
 	}
 };
@@ -341,7 +326,6 @@ export const getAllTagsPosts = async () => {
 			}
 		});
 	} catch (error) {
-		console.error('Error retrieving tags with posts:', error);
 		throw error;
 	}
 };

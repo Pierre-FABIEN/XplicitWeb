@@ -56,12 +56,6 @@
 	/*  Valeur dérivée et réactive du store mode  */
 	let currentMode = $derived(modeStore); // ✅ pas de $
 
-	/*  true si aucune personnalisation dans le panier  */
-	let isNativeOrder = $state(false);
-
-	/*  Options de quantité (simplifiées) */
-	let quantityOptions = $state([24, 48, 72]);
-
 	/*  Options de quantité pour les articles personnalisés */
 	let customQuantityOptions = $state([
 		{ label: '24 packs de 24 canettes (576 unités)', value: 576 },
@@ -71,30 +65,11 @@
 		{ label: '3 palettes : 360 packs (8 640 unités)', value: 8640 }
 	]);
 
-	// Calculer le total des quantités pour les commandes non-personnalisées
-	let totalNonCustomQuantity = $derived(
-		$cart.items
-			.filter(item => !item.custom || (Array.isArray(item.custom) && item.custom.length === 0))
-			.reduce((acc, item) => acc + item.quantity, 0)
-	);
-
-	// Fonction pour vérifier si on peut ajouter une quantité
-	function canAddQuantity(newQuantity: number, currentQuantity: number, isCustom: boolean): boolean {
-		if (isCustom) return true; // Pas de limite pour les personnalisées
-		
-		const otherItemsQuantity = totalNonCustomQuantity - currentQuantity;
-		return (otherItemsQuantity + newQuantity) <= 72;
-	}
-
 	/* ------------------------------------------------------------------
 	   RÉACTIONS
 	------------------------------------------------------------------ */
 	$effect(() => {
 		user = data?.user ?? null;
-	});
-
-	$effect(() => {
-		isNativeOrder = $cart.items.every((i) => !i.custom || (Array.isArray(i.custom) && i.custom.length === 0));
 	});
 
 	/* ------------------------------------------------------------------
@@ -151,13 +126,7 @@
 					<div class="p-4">
 						<h2 class="text-2xl font-bold mb-4">Votre panier</h2>
 
-						{#if isNativeOrder}
-							<p class="mb-4">
-								Pour les commandes non-custom, les quantités sont fixées à 3 packs de 24 maximum.
-							</p>
-						{/if}
-
-						{#if $cart && $cart.items && $cart.items.length > 0}
+					{#if $cart && $cart.items && $cart.items.length > 0}
 							<div class="max-h-[500px] overflow-y-auto">
 								{#each $cart.items as item (item.id)}
 									<div
@@ -174,58 +143,28 @@
 										/>
 
 										<div class="flex-1 mx-4">
-											<h3 class="text-lg font-semibold">
-												{item.product.name}
-												{#if item.custom && Array.isArray(item.custom) && item.custom.length > 0}
-													<span class="text-sm font-normal text-gray-500">Custom</span>
-												{/if}
-											</h3>
-											<p class="text-gray-600">
-												{#if item.custom && Array.isArray(item.custom) && item.custom.length > 0}
-													{getCustomCanPrice(item.quantity).toFixed(2)}€ l'unité
-												{:else}
-													{item.product.price.toFixed(2)}€
-												{/if}
-											</p>
+										<h3 class="text-lg font-semibold">
+											{item.product.name}
+										</h3>
+										<p class="text-gray-600">
+											{getCustomCanPrice(item.quantity).toFixed(2)}€ l'unité
+										</p>
 
-											{#if item.custom && Array.isArray(item.custom) && item.custom.length > 0}
-												<!-- Custom items: Use predefined quantity options -->
-												<div class="flex gap-2 flex-wrap">
-													{#each customQuantityOptions as option}
-														<button
-															class="px-3 py-1 border rounded text-sm {item.quantity === option.value ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'}"
-															onclick={() => changeQuantity(item.product.id, option.value, item.custom?.[0]?.id)}
-														>
-															{option.value}
-														</button>
-													{/each}
-												</div>
-											{:else}
-												<!-- Non-custom items: Use buttons with quantity limit -->
-												<div class="flex gap-2">
-													{#each quantityOptions as option}
-														<button
-															class="px-3 py-1 border rounded text-sm {item.quantity === option ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'} {!canAddQuantity(option, item.quantity, false) ? 'opacity-50 cursor-not-allowed' : ''}"
-															onclick={() => canAddQuantity(option, item.quantity, false) && changeQuantity(item.product.id, option)}
-															disabled={!canAddQuantity(option, item.quantity, false)}
-														>
-															{option}
-														</button>
-													{/each}
-												</div>
-												{#if totalNonCustomQuantity > 72}
-													<p class="text-xs text-red-500 mt-1">Limite de 72 unités atteinte pour les commandes non-personnalisées</p>
-												{/if}
-											{/if}
+									<div class="flex gap-2 flex-wrap">
+										{#each customQuantityOptions as option}
+											<button
+												class="px-3 py-1 border rounded text-sm {item.quantity === option.value ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600'}"
+												onclick={() => changeQuantity(item.product.id, option.value, item.custom?.[0]?.id)}
+											>
+												{option.value}
+											</button>
+										{/each}
+									</div>
 										</div>
 										<div class="flex flex-col items-end">
-											<p class="text-lg font-semibold">
-												{#if item.custom && Array.isArray(item.custom) && item.custom.length > 0}
-													{(getCustomCanPrice(item.quantity) * item.quantity).toFixed(2)}€
-												{:else}
-													{(item.price * item.quantity).toFixed(2)}€
-												{/if}
-											</p>
+									<p class="text-lg font-semibold">
+											{(getCustomCanPrice(item.quantity) * item.quantity).toFixed(2)}€
+										</p>
 											<button
 												onclick={() => handleRemoveFromCart(item.product.id, item.custom?.[0]?.id)}
 												class="text-red-600 hover:text-red-800"
