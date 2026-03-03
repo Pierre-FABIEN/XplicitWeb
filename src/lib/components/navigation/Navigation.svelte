@@ -23,9 +23,8 @@
 	let strokeColor = $derived(mode.current === 'light' ? '#00021a' : '#00c2ff');
 
 	/* ── Helpers ──────────────────────────────────────────────────────────── */
-	// Rechargement complet pour éviter "canceled" / "Failed to fetch" (redirection www, SW, etc.)
-	function navigateAndClose(href: string) {
-		drawerOpen = false;
+	// Rechargement complet (évite "canceled" / "Failed to fetch")
+	function goTo(href: string) {
 		window.location.href = href;
 	}
 </script>
@@ -52,10 +51,10 @@
 					{#each links as { href, label }}
 						<a
 							{href}
-							rel="external"
+							role="button"
 							onclick={(e) => {
 								e.preventDefault();
-								navigateAndClose(href);
+								goTo(href);
 							}}
 							style={`-webkit-text-stroke-color:${strokeColor};`}
 							class="fontStyle block uppercase tracking-wide w-full px-4 py-2"
@@ -74,13 +73,17 @@
 			</Drawer.Content>
 		</Drawer.Root>
 
-		<!-- ─── Links desktop : rechargement complet pour éviter requêtes annulées -->
+		<!-- ─── Links desktop -->
 		<ul class="hidden md:flex">
 			{#each links as { href, label }}
 				<li>
 					<a
 						{href}
-						rel="external"
+						role="button"
+						onclick={(e) => {
+							e.preventDefault();
+							goTo(href);
+						}}
 						class="fontStyle flex items-center justify-center rounded-xl h-10 px-5 font-medium
 					   transition hover:-translate-y-[1px] hover:bg-white/10"
 					>
