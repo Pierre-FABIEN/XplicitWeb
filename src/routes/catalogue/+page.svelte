@@ -3,52 +3,29 @@
 	import '@fontsource-variable/raleway';
 	import * as Card from '$shadcn/card/index.js';
 	import * as Carousel from '$shadcn/carousel/index.js';
-	import Button from '$lib/components/shadcn/ui/button/button.svelte';
-	import { toast } from 'svelte-sonner';
 	import { fly } from 'svelte/transition';
+	import { onMount } from 'svelte';
 	import { textureStore } from '$lib/store/scene3DStore';
-	import { addToCart } from '$lib/store/Data/cartStore';
-	import gsap from 'gsap'; // <-- Import GSAP
+	import gsap from 'gsap';
+	import DOMPurify from 'dompurify';
 	import SEO from '$lib/components/SEO.svelte';
 
 	// --- Svelte 5 Runes ---
-	// Access props from the parent
 	let { data } = $props();
 
-	/**
-	 * @function addCart
-	 * @param {string} productId - The product ID to add to the cart
-	 * @param {number} quantity - The quantity of the product to add to the cart
-	 * @description Checks if user is logged in, then adds the product to the cart.
-	 */
-	function addCart(productId: string, quantity: number) {
-		// If user is not logged in, show an error toast
-		if (data.user === null) {
-			toast.error('Veuillez vous connecter pour ajouter au panier.');
-		} else {
-			// Find the product by its ID
-			const item = data.Products.find((product) => product.id === productId);
-			if (!item) {
-				console.error(`Produit introuvable pour l'id: ${productId}`);
-				return;
-			}
-			// Create an item to add to the cart
-			const result = {
-				id: crypto.randomUUID(),
-				quantity: quantity,
-				price: item.price,
-				product: {
-					id: item.id,
-					name: item.name,
-					price: item.price,
-					images: item.images[0],
-					stock: item.stock
-				}
-			};
-			// Add the product to the cart
-			addToCart(result);
-			//console.log('Produit ajouté au panier :', result);
-		}
+	let mounted = $state(false);
+	onMount(() => {
+		mounted = true;
+	});
+
+	/** Strip HTML tags for SSR / initial render (safe plain text). */
+	function stripTags(html: string): string {
+		return html.replace(/<[^>]*>/g, '').trim();
+	}
+
+	/** Sanitize HTML for safe display (client-only). */
+	function sanitizeDescription(html: string): string {
+		return typeof window !== 'undefined' ? DOMPurify.sanitize(html || '') : stripTags(html || '');
 	}
 
 	// This $state boolean will ensure our GSAP animation only runs once
@@ -85,16 +62,16 @@
   The carousel is wrapped in a parent div that uses the "fly" transition.
   We also add a .cardStagger class to each Card.Root for GSAP to target.
 -->
-<div class="w-[100vw] h-[200px] absolute left-0 top-0 ccc">
-	<div transition:fly={{ y: -300, duration: 600 }} class="w-[100vw] h-[200px] ccc">
+<div class="w-[100vw] min-h-[320px] absolute left-0 top-0 ccc overflow-visible">
+	<div transition:fly={{ y: -300, duration: 600 }} class="w-[100vw] min-h-[320px] ccc overflow-visible">
 		<Carousel.Root
 			opts={{
 				align: 'start'
 			}}
 			orientation="horizontal"
-			class="w-[100%] ccc wrapperCarousel"
+			class="w-[100%] ccc wrapperCarousel overflow-visible"
 		>
-			<Carousel.Content class="w-[100vw] h-[200px]">
+			<Carousel.Content class="w-[100vw] min-h-[320px]">
 				{#each data.Products as product (product.id)}
 					<Carousel.Item class="p-5 md:basis-[400px]">
 						<Card.Root
@@ -103,7 +80,7 @@
 							onmouseenter={() => textureStore.set(product.images[0])}
 						>
 							<Card.Content
-								class=" h-[160px] flex flex-col items-center justify-center space-y-4 ccs"
+								class="flex flex-col items-center justify-center space-y-3 ccs"
 							>
 								<h3
 									class="titleHome text-xl font-semibold"
@@ -112,66 +89,15 @@
 									{product.name}
 								</h3>
 
-								<!-- <p class="text-sm text-left">
-									{product.description}
-								</p> -->
-
-								<div class="flex items-center justify-center gap-4">
-									<div
-										class="price ccc"
-										onclick={() => addCart(product.id, 24)}
-										onkeydown={(e) =>
-											(e.key === 'Enter' || e.key === ' ') && addCart(product.id, 24)}
-										role="button"
-										tabindex="0"
-									>
-										<div class="price-number">
-											{Math.floor(product.price * 24)}€
-											<sup class="price-cents">
-												{String(Math.round(((product.price * 24) % 1) * 100)).padStart(2, '0')}
-											</sup>
-											<span class="price-quantity">
-												<sup>x</sup>24
-											</span>
-										</div>
+								{#if product.description}
+									<div class="product-description text-sm text-left text-white/90">
+										{#if mounted}
+											{@html sanitizeDescription(product.description)}
+										{:else}
+											{stripTags(product.description)}
+										{/if}
 									</div>
-									<div
-										class="price"
-										onclick={() => addCart(product.id, 48)}
-										onkeydown={(e) =>
-											(e.key === 'Enter' || e.key === ' ') && addCart(product.id, 48)}
-										role="button"
-										tabindex="0"
-									>
-										<div class="price-number">
-											{Math.floor(product.price * 48)}€
-											<sup class="price-cents">
-												{String(Math.round(((product.price * 48) % 1) * 100)).padStart(2, '0')}
-											</sup>
-											<span class="price-quantity">
-												<sup>x</sup>48
-											</span>
-										</div>
-									</div>
-									<div
-										class="price"
-										onclick={() => addCart(product.id, 72)}
-										onkeydown={(e) =>
-											(e.key === 'Enter' || e.key === ' ') && addCart(product.id, 72)}
-										role="button"
-										tabindex="0"
-									>
-										<div class="price-number">
-											{Math.floor(product.price * 72)}€
-											<sup class="price-cents">
-												{String(Math.round(((product.price * 72) % 1) * 100)).padStart(2, '0')}
-											</sup>
-											<span class="price-quantity">
-												<sup>x</sup>72
-											</span>
-										</div>
-									</div>
-								</div>
+								{/if}
 							</Card.Content>
 						</Card.Root>
 					</Carousel.Item>
@@ -199,54 +125,16 @@
 		font-family: 'Raleway Variable', sans-serif;
 	}
 
-	.price {
-		cursor: pointer;
-		position: relative;
-		width: 100px;
-		height: 60px;
-		.price-number {
-			position: absolute;
-			color: white;
-			text-decoration: none;
-			transform: scale(1);
-			transition: transform 0.5s ease-in-out;
-			font-family: 'Open Sans Variable', sans-serif;
-			font-style: italic;
-			text-align: left;
-			-webkit-text-stroke: 1px white;
-			text-align: center;
-			font-size: 30px;
-			text-transform: black;
-			font-weight: 900;
-			color: black;
-			z-index: 1;
-			top: 15px;
+	.product-description {
+		font-family: 'Raleway Variable', sans-serif;
+		line-height: 1.4;
+		max-width: 100%;
+		padding: 0 0.5rem;
+	}
 
-			&:hover {
-				transform: scale(1.2);
-
-				sup {
-					transform: scale(0.5);
-				}
-			}
-
-			.price-quantity {
-				font-size: 25px;
-				position: absolute;
-				left: 20px;
-				top: -17px;
-				transform: rotate(-10deg);
-				z-index: -1;
-				color: white;
-
-				sup {
-					font-size: 20px;
-				}
-			}
-
-			.price-cents {
-				left: -7px !important;
-			}
-		}
+	.product-description :global(p),
+	.product-description :global(ul),
+	.product-description :global(ol) {
+		margin: 0.25em 0;
 	}
 </style>

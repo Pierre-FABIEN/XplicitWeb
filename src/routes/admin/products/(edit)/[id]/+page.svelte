@@ -8,10 +8,11 @@
 	import { Button } from '$shadcn/button';
 	import Checkbox from '$shadcn/checkbox/checkbox.svelte';
 	import { Label } from '$shadcn/label';
-	import { Textarea } from '$shadcn/textarea';
 
 	import { updateProductSchema } from '$lib/schema/products/productSchema.js';
 	import { toast } from 'svelte-sonner';
+	import Editor from '@tinymce/tinymce-svelte';
+	import { PUBLIC_TINYMCE_API_KEY } from '$env/static/public';
 
 	let { data } = $props();
 
@@ -67,6 +68,18 @@
 			toast.success($updateProductMessage);
 		}
 	});
+
+	// Configuration de l'éditeur TinyMCE (description produit)
+	let editorConfig = {
+		telemetry: false,
+		branding: false,
+		license_key: 'gpl',
+		plugins: [
+			'advlist autolink lists link image charmap anchor searchreplace visualblocks code fullscreen insertdatetime media table preview help wordcount'
+		],
+		toolbar:
+			'undo redo | blocks | bold italic forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help'
+	};
 </script>
 
 <div class="ccc w-[100%]">
@@ -112,7 +125,12 @@
 						<Form.Field name="description" form={updateProduct}>
 							<Form.Control>
 								<Form.Label>Description</Form.Label>
-								<Textarea name="description" bind:value={$updateProductData.description} />
+								<Editor
+									conf={editorConfig}
+									scriptSrc="/tinymce/tinymce.min.js"
+									apiKey={PUBLIC_TINYMCE_API_KEY}
+									bind:value={$updateProductData.description}
+								/>
 							</Form.Control>
 							<Form.FieldErrors />
 						</Form.Field>
@@ -226,6 +244,7 @@
 
 			<input type="hidden" name="_id" bind:value={$updateProductData._id} />
 			<input type="hidden" name="categoryId" bind:value={$updateProductData.categoryId} />
+			<input type="hidden" name="description" bind:value={$updateProductData.description} />
 			<input type="hidden" name="existingImages" value={JSON.stringify(existingImages)} />
 
 			<Button type="submit">Save changes</Button>

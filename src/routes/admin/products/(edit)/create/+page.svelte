@@ -4,12 +4,13 @@
 	import { Button } from '$shadcn/button';
 	import Checkbox from '$shadcn/checkbox/checkbox.svelte';
 	import { Label } from '$shadcn/label';
-	import { Textarea } from '$shadcn/textarea';
 	import { filesFieldProxy, superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { createProductSchema } from '$lib/schema/products/productSchema';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
+	import Editor from '@tinymce/tinymce-svelte';
+	import { PUBLIC_TINYMCE_API_KEY } from '$env/static/public';
 
 	let { data } = $props();
 
@@ -62,6 +63,18 @@
 			toast.success($createProductMessage);
 		}
 	});
+
+	// Configuration de l'éditeur TinyMCE (description produit)
+	let editorConfig = {
+		telemetry: false,
+		branding: false,
+		license_key: 'gpl',
+		plugins: [
+			'advlist autolink lists link image charmap anchor searchreplace visualblocks code fullscreen insertdatetime media table preview help wordcount'
+		],
+		toolbar:
+			'undo redo | blocks | bold italic forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help'
+	};
 </script>
 
 <div class="ccc w-[100%]">
@@ -109,7 +122,12 @@
 						<Form.Field name="description" form={createProduct}>
 							<Form.Control>
 								<Form.Label>Description</Form.Label>
-								<Textarea name="description" bind:value={$createProductData.description} />
+								<Editor
+									conf={editorConfig}
+									scriptSrc="/tinymce/tinymce.min.js"
+									apiKey={PUBLIC_TINYMCE_API_KEY}
+									bind:value={$createProductData.description}
+								/>
 							</Form.Control>
 							<Form.FieldErrors />
 						</Form.Field>
@@ -210,6 +228,7 @@
 			</div>
 
 			<input type="hidden" name="categoryId" bind:value={$createProductData.categoryId} />
+			<input type="hidden" name="description" bind:value={$createProductData.description} />
 
 			<Button type="submit">Save changes</Button>
 		</form>
