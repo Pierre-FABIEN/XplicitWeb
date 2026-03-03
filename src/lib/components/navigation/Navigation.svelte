@@ -50,8 +50,8 @@
 		if (typeof window === 'undefined') return;
 		// Différer pour éviter qu’un re-render Svelte (drawer, etc.) n’annule la navigation
 		setTimeout(() => {
-			window.location.href = href;
-		}, 0);
+			window.location.assign(href);
+		}, 50);
 	}
 
 	function handleNavClick(e: MouseEvent, href: string, label: string) {
