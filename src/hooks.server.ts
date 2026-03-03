@@ -264,7 +264,20 @@ const authHandle: Handle = async ({ event, resolve }) => {
 };
 
 /* -------------------------------------------------------------------------- */
+/*  Log requêtes navigation (diagnostic Vercel)                                 */
+/* -------------------------------------------------------------------------- */
+
+const NAV_LOG = true; // passer à false après diagnostic
+
+const navLogHandle: Handle = async ({ event, resolve }) => {
+	if (NAV_LOG && event.request.headers.get('sec-fetch-dest') === 'document') {
+		console.warn('[Nav]', event.url.pathname, event.url.href, event.request.method);
+	}
+	return resolve(event);
+};
+
+/* -------------------------------------------------------------------------- */
 /*  Chaîne finale                                                             */
 /* -------------------------------------------------------------------------- */
 
-export const handle: Handle = sequence(devtoolsGuard, cookieGuard, rateLimit, authHandle);
+export const handle: Handle = sequence(navLogHandle, devtoolsGuard, cookieGuard, rateLimit, authHandle);

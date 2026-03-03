@@ -2,11 +2,23 @@
 	/* ── Deps ─────────────────────────────────────────────────────────────── */
 	import Cart from '$lib/components/cart/Cart.svelte';
 	import Options from '$lib/components/navigation/Options.svelte';
-	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 	import * as Drawer from '$shadcn/drawer';
 	import { Button, buttonVariants } from '$shadcn/button';
 	import { Menu } from 'lucide-svelte';
 	import { mode } from 'mode-watcher';
+
+	const NAV_DEBUG = true; // passer à false après diagnostic sur Vercel
+
+	onMount(() => {
+		if (NAV_DEBUG && typeof console !== 'undefined') {
+			console.warn('[Nav] composant monté', {
+				href: window.location.href,
+				pathname: window.location.pathname,
+				origin: window.location.origin
+			});
+		}
+	});
 
 	/* ── Data  ────────────────────────────────────────────────────────────── */
 	let { data } = $props();
@@ -24,9 +36,35 @@
 	let strokeColor = $derived(mode.current === 'light' ? '#00021a' : '#00c2ff');
 
 	/* ── Helpers ──────────────────────────────────────────────────────────── */
-	function navigateAndClose(href: string) {
-		goto(href); // 2) navigation kit
-		drawerOpen = false; // 1) ferme le sheet
+
+	function goTo(href: string) {
+		const fullUrl = typeof window !== 'undefined' ? new URL(href, window.location.origin).href : href;
+		if (NAV_DEBUG && typeof console !== 'undefined') {
+			console.warn('[Nav] goTo appelé', {
+				href,
+				fullUrl,
+				currentOrigin: typeof window !== 'undefined' ? window.location.origin : '',
+				pathname: typeof window !== 'undefined' ? window.location.pathname : ''
+			});
+		}
+		if (typeof window === 'undefined') return;
+		const form = document.createElement('form');
+		form.method = 'GET';
+		form.action = href;
+		document.body.appendChild(form);
+		if (NAV_DEBUG && typeof console !== 'undefined') {
+			console.warn('[Nav] formulaire soumis vers', form.action);
+		}
+		form.submit();
+	}
+
+	function handleNavClick(e: MouseEvent, href: string, label: string) {
+		e.preventDefault();
+		if (NAV_DEBUG && typeof console !== 'undefined') {
+			console.warn('[Nav] clic sur lien', { label, href });
+		}
+		drawerOpen = false;
+		goTo(href);
 	}
 </script>
 
@@ -52,7 +90,8 @@
 					{#each links as { href, label }}
 						<a
 							{href}
-							onclick={() => navigateAndClose(href)}
+							role="button"
+							onclick={(e) => handleNavClick(e, href, label)}
 							style={`-webkit-text-stroke-color:${strokeColor};`}
 							class="fontStyle block uppercase tracking-wide w-full px-4 py-2"
 						>
@@ -76,6 +115,8 @@
 				<li>
 					<a
 						{href}
+						role="button"
+						onclick={(e) => handleNavClick(e, href, label)}
 						class="fontStyle flex items-center justify-center rounded-xl h-10 px-5 font-medium
 					   transition hover:-translate-y-[1px] hover:bg-white/10"
 					>
