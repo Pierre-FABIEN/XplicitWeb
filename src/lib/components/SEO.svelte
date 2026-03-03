@@ -44,8 +44,10 @@
 	const finalImage = $derived(image || (pageKey ? seoConfig.pages[pageKey].image : seoConfig.defaults.image));
 	const finalAuthor = $derived(author || seoConfig.site.author);
 	
-	// Construire l'URL canonique
-	const canonicalUrl = $derived(url || `${seoConfig.site.url}${$page.url.pathname}`);
+	// Construire l'URL canonique (éviter double slash entre base et pathname)
+	const baseUrl = $derived(seoConfig.site.url.replace(/\/$/, ''));
+	const pathPart = $derived($page.url.pathname.replace(/^\//, '') || '');
+	const canonicalUrl = $derived(url || (pathPart ? `${baseUrl}/${pathPart}` : baseUrl));
 	
 	// Construire le titre complet
 	const fullTitle = $derived(finalTitle === seoConfig.defaults.title ? finalTitle : `${finalTitle} | ${seoConfig.site.name}`);

@@ -2,7 +2,6 @@
 	/* ── Deps ─────────────────────────────────────────────────────────────── */
 	import Cart from '$lib/components/cart/Cart.svelte';
 	import Options from '$lib/components/navigation/Options.svelte';
-	import { goto } from '$app/navigation';
 	import * as Drawer from '$shadcn/drawer';
 	import { Button, buttonVariants } from '$shadcn/button';
 	import { Menu } from 'lucide-svelte';
@@ -24,9 +23,10 @@
 	let strokeColor = $derived(mode.current === 'light' ? '#00021a' : '#00c2ff');
 
 	/* ── Helpers ──────────────────────────────────────────────────────────── */
+	// Rechargement complet pour éviter "canceled" / "Failed to fetch" (redirection www, SW, etc.)
 	function navigateAndClose(href: string) {
-		goto(href); // 2) navigation kit
-		drawerOpen = false; // 1) ferme le sheet
+		drawerOpen = false;
+		window.location.href = href;
 	}
 </script>
 
@@ -52,7 +52,11 @@
 					{#each links as { href, label }}
 						<a
 							{href}
-							onclick={() => navigateAndClose(href)}
+							rel="external"
+							onclick={(e) => {
+								e.preventDefault();
+								navigateAndClose(href);
+							}}
 							style={`-webkit-text-stroke-color:${strokeColor};`}
 							class="fontStyle block uppercase tracking-wide w-full px-4 py-2"
 						>
@@ -70,12 +74,13 @@
 			</Drawer.Content>
 		</Drawer.Root>
 
-		<!-- ─── Links desktop -->
+		<!-- ─── Links desktop : rechargement complet pour éviter requêtes annulées -->
 		<ul class="hidden md:flex">
 			{#each links as { href, label }}
 				<li>
 					<a
 						{href}
+						rel="external"
 						class="fontStyle flex items-center justify-center rounded-xl h-10 px-5 font-medium
 					   transition hover:-translate-y-[1px] hover:bg-white/10"
 					>
