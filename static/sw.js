@@ -1,8 +1,4 @@
 self.addEventListener('install', (event) => {
-	//console.log('Service Worker installé.');
-});
-
-self.addEventListener('fetch', (event) => {
-	//console.log('Requête interceptée :', event.request.url);
-	// Vous pouvez ajouter des logiques de mise en cache ou d'autres comportements ici.
+	// Service Worker installé — ne pas intercepter fetch pour laisser passer
+	// les requêtes SvelteKit (__data.json, _app) et éviter "Failed to fetch" sur Vercel.
 });
