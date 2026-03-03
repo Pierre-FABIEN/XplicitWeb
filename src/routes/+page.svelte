@@ -46,21 +46,21 @@
 			class="firstline {animateLines ? 'hovered' : ''}"
 			transition:fly={{ x: -88, duration: 100 }}
 		>
-			Customise ta
+			Custom 
 		</span>
 
 		<span
 			class="secondline {animateLines ? 'hovered' : ''}"
 			transition:fly={{ x: -88, duration: 100 }}
 		>
-			canette et
+			your
 		</span>
 
 		<span
 			class="thirdline {animateLines ? 'hovered' : ''}"
 			transition:fly={{ x: -88, duration: 200 }}
 		>
-			commande la
+			can
 		</span>
 	</h1>
 	<button
@@ -109,7 +109,7 @@
 			width: 400px !important;
 		}
 		.thirdline {
-			font-size: 40px !important;
+			font-size: 50px !important;
 			width: 400px !important;
 		}
 	}
@@ -134,7 +134,7 @@
 			left: 50px !important;
 		}
 		.thirdline {
-			font-size: 30px !important;
+			font-size: 40px !important;
 			width: 300px !important;
 			top: 65px !important;
 		}
@@ -189,7 +189,7 @@
 		left: 100px;
 	}
 	.thirdline {
-		font-size: 56px;
+		font-size: 65px;
 		width: 500px;
 		top: 130px;
 	}

@@ -24,12 +24,15 @@ const config = {
 			workbox: {
 				// les options pour workbox
 				swSrc: '/sw.js',
+				// Ne pas cacher les requêtes SvelteKit (navigation, __data.json, _app)
+				// pour éviter "Failed to fetch" lors de la navigation sur Vercel
 				runtimeCaching: [
 					{
-						urlPattern: /^https?.*/,
-						handler: 'NetworkFirst',
+						// Uniquement les assets statiques (images, fonts, css)
+						urlPattern: /\.(?:css|png|jpg|jpeg|gif|ico|woff2?|svg|webp|avif)(\?.*)?$/i,
+						handler: 'CacheFirst',
 						options: {
-							cacheName: 'http-cache'
+							cacheName: 'static-assets'
 						}
 					}
 				]
