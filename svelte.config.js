@@ -11,6 +11,9 @@ const config = {
 	
 	plugins: [
 		VitePWA({
+			// Désactivé : le SW intercepte les chunks _app/immutable/*.js et provoque
+			// "Failed to fetch" en navigation (surtout après déploiement, hashes changés).
+			disable: true,
 			manifest: {
 				// les options pour votre manifeste
 				name: 'Mon App SvelteKit PWA',
