@@ -48,14 +48,10 @@
 			});
 		}
 		if (typeof window === 'undefined') return;
-		const form = document.createElement('form');
-		form.method = 'GET';
-		form.action = href;
-		document.body.appendChild(form);
-		if (NAV_DEBUG && typeof console !== 'undefined') {
-			console.warn('[Nav] formulaire soumis vers', form.action);
-		}
-		form.submit();
+		// Différer pour éviter qu’un re-render Svelte (drawer, etc.) n’annule la navigation
+		setTimeout(() => {
+			window.location.href = href;
+		}, 0);
 	}
 
 	function handleNavClick(e: MouseEvent, href: string, label: string) {
