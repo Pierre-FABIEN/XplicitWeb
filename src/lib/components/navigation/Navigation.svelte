@@ -2,6 +2,7 @@
 	/* ── Deps ─────────────────────────────────────────────────────────────── */
 	import Cart from '$lib/components/cart/Cart.svelte';
 	import Options from '$lib/components/navigation/Options.svelte';
+	import { goto } from '$app/navigation';
 	import * as Drawer from '$shadcn/drawer';
 	import { Button, buttonVariants } from '$shadcn/button';
 	import { Menu } from 'lucide-svelte';
@@ -13,7 +14,7 @@
 	const links = [
 		{ href: '/', label: 'Accueil' },
 		{ href: '/atelier', label: "L'atelier" },
-		{ href: '/catalogue', label: "Catalogue" },
+		{ href: '/catalogue', label: 'Catalogue' },
 		{ href: '/blog', label: 'Blog' },
 		{ href: '/contact', label: 'Contact' }
 	];
@@ -23,9 +24,9 @@
 	let strokeColor = $derived(mode.current === 'light' ? '#00021a' : '#00c2ff');
 
 	/* ── Helpers ──────────────────────────────────────────────────────────── */
-	// Rechargement complet (évite "canceled" / "Failed to fetch")
-	function goTo(href: string) {
-		window.location.href = href;
+	function navigateAndClose(href: string) {
+		goto(href); // 2) navigation kit
+		drawerOpen = false; // 1) ferme le sheet
 	}
 </script>
 
@@ -51,11 +52,7 @@
 					{#each links as { href, label }}
 						<a
 							{href}
-							role="button"
-							onclick={(e) => {
-								e.preventDefault();
-								goTo(href);
-							}}
+							onclick={() => navigateAndClose(href)}
 							style={`-webkit-text-stroke-color:${strokeColor};`}
 							class="fontStyle block uppercase tracking-wide w-full px-4 py-2"
 						>
@@ -79,11 +76,6 @@
 				<li>
 					<a
 						{href}
-						role="button"
-						onclick={(e) => {
-							e.preventDefault();
-							goTo(href);
-						}}
 						class="fontStyle flex items-center justify-center rounded-xl h-10 px-5 font-medium
 					   transition hover:-translate-y-[1px] hover:bg-white/10"
 					>
