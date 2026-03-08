@@ -14,8 +14,7 @@
 		console.warn('[Nav] composant monté', {
 			href: window.location.href,
 			pathname: window.location.pathname,
-			origin: window.location.origin,
-			userAgent: navigator.userAgent.slice(0, 80)
+			origin: window.location.origin
 		});
 	});
 
@@ -36,41 +35,25 @@
 
 	/* ── Helpers ──────────────────────────────────────────────────────────── */
 
-	// NOTE : on NE fait plus e.preventDefault() ni window.location.assign.
-	// data-sveltekit-reload sur le <a> dit à SvelteKit de ne pas intercepter le lien :
-	// le navigateur gère la navigation nativement (rechargement complet de page).
-	// Cela évite complètement le conflit SvelteKit client-side + window.location.assign.
+	// DIAGNOSTIC CONFIRMÉ (logs du 08/03/2026) :
+	// Svelte 5 appelle e.preventDefault() en interne APRÈS le retour du handler
+	// pour tout <a> géré via délégation d'événements. La navigation native est
+	// donc TOUJOURS bloquée — il faut appeler window.location.assign() nous-mêmes.
+	//
+	// data-sveltekit-reload sur le <a> empêche SvelteKit de démarrer sa propre
+	// navigation client-side (qui aurait fetchĂ __data.json et conflité).
 	function handleNavClick(e: MouseEvent, href: string, label: string) {
-		console.warn('[Nav] STEP 1 - handleNavClick début', {
-			label,
-			href,
-			defaultPrevented: e.defaultPrevented,
-			currentURL: window.location.href
-		});
+		// Prévenir explicitement pour contrôler 100% de la navigation
+		e.preventDefault();
 
-		// Fermer le drawer mobile sans bloquer la navigation
+		if (NAV_DEBUG) {
+			console.warn('[Nav] clic → navigation vers', { label, href });
+		}
+
 		drawerOpen = false;
 
-		console.warn('[Nav] STEP 2 - drawerOpen = false, navigation laissée au navigateur via data-sveltekit-reload');
-
-		// On laisse le clic se propager normalement : data-sveltekit-reload sur le <a>
-		// fait que SvelteKit ne va PAS tenter de navigation client-side.
-		// Le navigateur navigue vers href comme un lien normal (rechargement complet).
-
-		// Vérification de sécurité après 300ms : si on est toujours sur cette page,
-		// c'est que data-sveltekit-reload n'a pas fonctionné — on force via assign.
-		const currentURL = window.location.href;
-		setTimeout(() => {
-			if (window.location.href === currentURL) {
-				console.error('[Nav] STEP 3 FALLBACK - toujours sur la même page après 300ms, force window.location.assign', {
-					href,
-					currentURL: window.location.href
-				});
-				window.location.assign(href);
-			} else {
-				console.warn('[Nav] STEP 3 OK - navigation réussie', { newURL: window.location.href });
-			}
-		}, 300);
+		// Navigation directe et immédiate — pas de setTimeout
+		window.location.assign(href);
 	}
 </script>
 
