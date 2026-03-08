@@ -13,7 +13,7 @@
 	let animateLines = $state(false); // Contrôle de l'animation des lignes
 
 	function handleClick() {
-		goto('/atelier');
+		window.location.assign('/atelier');
 	}
 
 	let strokeColor = $state('black');

@@ -1,19 +1,12 @@
 {
+	"functions": {
+		"api/**": {
+			"maxDuration": 30
+		}
+	},
 	"headers": [
 		{
-			"source": "/atelier",
-			"headers": [{ "key": "Cache-Control", "value": "no-store, must-revalidate" }]
-		},
-		{
-			"source": "/catalogue",
-			"headers": [{ "key": "Cache-Control", "value": "no-store, must-revalidate" }]
-		},
-		{
-			"source": "/blog",
-			"headers": [{ "key": "Cache-Control", "value": "no-store, must-revalidate" }]
-		},
-		{
-			"source": "/contact",
+			"source": "/(.*)",
 			"headers": [{ "key": "Cache-Control", "value": "no-store, must-revalidate" }]
 		}
 	]

@@ -270,8 +270,12 @@ const authHandle: Handle = async ({ event, resolve }) => {
 const NAV_LOG = true; // passer à false après diagnostic
 
 const navLogHandle: Handle = async ({ event, resolve }) => {
-	if (NAV_LOG && event.request.headers.get('sec-fetch-dest') === 'document') {
-		console.warn('[Nav]', event.url.pathname, event.url.href, event.request.method);
+	const dest = event.request.headers.get('sec-fetch-dest');
+	if (NAV_LOG) {
+		// Logguer les requêtes de pages ET les requêtes __data.json pour le diagnostic
+		if (dest === 'document' || event.url.pathname.includes('__data.json')) {
+			console.warn('[Nav]', event.url.pathname, event.url.search, event.request.method, dest ?? 'no-dest');
+		}
 	}
 	return resolve(event);
 };
