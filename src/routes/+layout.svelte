@@ -85,9 +85,26 @@
 <svelte:head>
 	<link rel="icon" href="/favicon.png" />
 	<meta name="viewport" content="width=device-width" />
-	<link rel="manifest" href="/pwa/manifest.webmanifest" />
-	<meta name="theme-color" content="#4285f4" />
+	<!-- Supprime tout ancien service worker (+ ses caches) encore enregistré dans le navigateur. -->
+	<!-- Ne pas remettre le lien manifest tant que le PWA est désactivé. -->
 </svelte:head>
+
+<svelte:window
+	onload={() => {
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker.getRegistrations().then((registrations) => {
+				for (const reg of registrations) {
+					reg.unregister();
+				}
+			});
+			caches.keys().then((names) => {
+				for (const name of names) {
+					caches.delete(name);
+				}
+			});
+		}
+	}}
+/>
 
 {#if !$firstLoadComplete}
 	<!-- <Loader /> -->
