@@ -8,7 +8,12 @@ import cloudinary from '$lib/server/cloudinary';
 export const load = (async () => {
 	const IcreateCustomSchema = await superValidate(zod(createCustomSchema));
 
-	const products = await getAllProducts();
+	let products: Awaited<ReturnType<typeof getAllProducts>> = [];
+	try {
+		products = await getAllProducts();
+	} catch (err) {
+		console.error('[atelier] getAllProducts failed:', err);
+	}
 
 	return {
 		IcreateCustomSchema,

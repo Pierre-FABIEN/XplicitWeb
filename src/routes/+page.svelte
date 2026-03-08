@@ -2,7 +2,6 @@
 	import '@fontsource-variable/open-sans';
 	import '@fontsource-variable/raleway';
 	import { fly } from 'svelte/transition';
-	import { goto } from '$app/navigation';
 	import { mode } from 'mode-watcher';
 	import { Power } from 'lucide-svelte';
 	import { updateCameraPosition } from '$lib/store/scene3DStore';
@@ -74,6 +73,7 @@
 			class="buttonStart rcc"
 			style="color: {strokeColor}; --stroke-color: {strokeColor};"
 			href="/atelier"
+			data-sveltekit-reload
 		>
 			Commencer
 			<span>

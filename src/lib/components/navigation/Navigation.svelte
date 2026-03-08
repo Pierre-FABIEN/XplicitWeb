@@ -37,30 +37,16 @@
 
 	/* ── Helpers ──────────────────────────────────────────────────────────── */
 
-	function goTo(href: string) {
-		const fullUrl = typeof window !== 'undefined' ? new URL(href, window.location.origin).href : href;
-		if (NAV_DEBUG && typeof console !== 'undefined') {
-			console.warn('[Nav] goTo appelé', {
-				href,
-				fullUrl,
-				currentOrigin: typeof window !== 'undefined' ? window.location.origin : '',
-				pathname: typeof window !== 'undefined' ? window.location.pathname : ''
-			});
-		}
-		if (typeof window === 'undefined') return;
-		// Différer pour éviter qu’un re-render Svelte (drawer, etc.) n’annule la navigation
-		setTimeout(() => {
-			window.location.assign(href);
-		}, 50);
-	}
-
 	function handleNavClick(e: MouseEvent, href: string, label: string) {
 		e.preventDefault();
 		if (NAV_DEBUG && typeof console !== 'undefined') {
 			console.warn('[Nav] clic sur lien', { label, href });
 		}
 		drawerOpen = false;
-		goTo(href);
+		// Appel direct sans délai — le setTimeout(50ms) causait une double navigation :
+		// SvelteKit interceptait le <a> et démarrait sa propre navigation client-side,
+		// puis 50ms plus tard window.location.assign annulait tout en cascade.
+		window.location.assign(href);
 	}
 </script>
 
@@ -86,6 +72,7 @@
 					{#each links as { href, label }}
 						<a
 							{href}
+							data-sveltekit-reload
 							role="button"
 							onclick={(e) => handleNavClick(e, href, label)}
 							style={`-webkit-text-stroke-color:${strokeColor};`}
@@ -111,6 +98,7 @@
 				<li>
 					<a
 						{href}
+						data-sveltekit-reload
 						role="button"
 						onclick={(e) => handleNavClick(e, href, label)}
 						class="fontStyle flex items-center justify-center rounded-xl h-10 px-5 font-medium
