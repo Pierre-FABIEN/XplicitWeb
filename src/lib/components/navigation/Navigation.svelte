@@ -8,16 +8,15 @@
 	import { Menu } from 'lucide-svelte';
 	import { mode } from 'mode-watcher';
 
-	const NAV_DEBUG = true; // passer à false après diagnostic sur Vercel
+	const NAV_DEBUG = true;
 
 	onMount(() => {
-		if (NAV_DEBUG && typeof console !== 'undefined') {
-			console.warn('[Nav] composant monté', {
-				href: window.location.href,
-				pathname: window.location.pathname,
-				origin: window.location.origin
-			});
-		}
+		console.warn('[Nav] composant monté', {
+			href: window.location.href,
+			pathname: window.location.pathname,
+			origin: window.location.origin,
+			userAgent: navigator.userAgent.slice(0, 80)
+		});
 	});
 
 	/* ── Data  ────────────────────────────────────────────────────────────── */
@@ -32,21 +31,46 @@
 	];
 
 	/* ── State ────────────────────────────────────────────────────────────── */
-	let drawerOpen = $state(false); // bound to Drawer.Root
+	let drawerOpen = $state(false);
 	let strokeColor = $derived(mode.current === 'light' ? '#00021a' : '#00c2ff');
 
 	/* ── Helpers ──────────────────────────────────────────────────────────── */
 
+	// NOTE : on NE fait plus e.preventDefault() ni window.location.assign.
+	// data-sveltekit-reload sur le <a> dit à SvelteKit de ne pas intercepter le lien :
+	// le navigateur gère la navigation nativement (rechargement complet de page).
+	// Cela évite complètement le conflit SvelteKit client-side + window.location.assign.
 	function handleNavClick(e: MouseEvent, href: string, label: string) {
-		e.preventDefault();
-		if (NAV_DEBUG && typeof console !== 'undefined') {
-			console.warn('[Nav] clic sur lien', { label, href });
-		}
+		console.warn('[Nav] STEP 1 - handleNavClick début', {
+			label,
+			href,
+			defaultPrevented: e.defaultPrevented,
+			currentURL: window.location.href
+		});
+
+		// Fermer le drawer mobile sans bloquer la navigation
 		drawerOpen = false;
-		// Appel direct sans délai — le setTimeout(50ms) causait une double navigation :
-		// SvelteKit interceptait le <a> et démarrait sa propre navigation client-side,
-		// puis 50ms plus tard window.location.assign annulait tout en cascade.
-		window.location.assign(href);
+
+		console.warn('[Nav] STEP 2 - drawerOpen = false, navigation laissée au navigateur via data-sveltekit-reload');
+
+		// On laisse le clic se propager normalement : data-sveltekit-reload sur le <a>
+		// fait que SvelteKit ne va PAS tenter de navigation client-side.
+		// Le navigateur navigue vers href comme un lien normal (rechargement complet).
+
+		// Vérification de sécurité après 300ms : si on est toujours sur cette page,
+		// c'est que data-sveltekit-reload n'a pas fonctionné — on force via assign.
+		const currentURL = window.location.href;
+		setTimeout(() => {
+			if (window.location.href === currentURL) {
+				console.error('[Nav] STEP 3 FALLBACK - toujours sur la même page après 300ms, force window.location.assign', {
+					href,
+					currentURL: window.location.href
+				});
+				window.location.assign(href);
+			} else {
+				console.warn('[Nav] STEP 3 OK - navigation réussie', { newURL: window.location.href });
+			}
+		}, 300);
 	}
 </script>
 

@@ -271,13 +271,44 @@ const NAV_LOG = true; // passer à false après diagnostic
 
 const navLogHandle: Handle = async ({ event, resolve }) => {
 	const dest = event.request.headers.get('sec-fetch-dest');
-	if (NAV_LOG) {
-		// Logguer les requêtes de pages ET les requêtes __data.json pour le diagnostic
-		if (dest === 'document' || event.url.pathname.includes('__data.json')) {
-			console.warn('[Nav]', event.url.pathname, event.url.search, event.request.method, dest ?? 'no-dest');
-		}
+	const isDataReq = event.url.pathname.includes('__data.json');
+	const isDocument = dest === 'document';
+
+	if (NAV_LOG && (isDocument || isDataReq)) {
+		console.warn('[hooks/nav] REQUETE REÇUE', {
+			path: event.url.pathname,
+			search: event.url.search || '(aucun)',
+			method: event.request.method,
+			dest: dest ?? 'no-dest',
+			type: isDataReq ? '__data.json (SvelteKit client-side nav)' : 'document (rechargement complet)',
+			referer: event.request.headers.get('referer') ?? 'aucun',
+			accept: event.request.headers.get('accept')?.slice(0, 60) ?? 'aucun'
+		});
 	}
-	return resolve(event);
+
+	const t0 = Date.now();
+	let response: Response;
+	try {
+		response = await resolve(event);
+	} catch (err) {
+		console.error('[hooks/nav] ERREUR pendant resolve', {
+			path: event.url.pathname,
+			error: err instanceof Error ? err.message : String(err),
+			stack: err instanceof Error ? err.stack?.slice(0, 300) : undefined
+		});
+		throw err;
+	}
+
+	if (NAV_LOG && (isDocument || isDataReq)) {
+		console.warn('[hooks/nav] REPONSE', {
+			path: event.url.pathname,
+			status: response.status,
+			duration: `${Date.now() - t0}ms`,
+			contentType: response.headers.get('content-type') ?? 'aucun'
+		});
+	}
+
+	return response;
 };
 
 /* -------------------------------------------------------------------------- */

@@ -16,8 +16,17 @@
 	import { addToCart } from '$lib/store/Data/cartStore.js';
 	import { fly } from 'svelte/transition';
 	import SEO from '$lib/components/SEO.svelte';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
+
+	onMount(() => {
+		console.warn('[atelier/page] MONTE - page atelier chargée avec succès', {
+			url: window.location.href,
+			nbProducts: data.products?.length ?? 'undefined',
+			hasForm: !!data.IcreateCustomSchema
+		});
+	});
 
 	// Configuration superForm
 	const createCustom = superForm(data.IcreateCustomSchema, {

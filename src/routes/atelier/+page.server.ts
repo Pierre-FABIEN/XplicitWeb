@@ -5,15 +5,33 @@ import { fail, message, superValidate } from 'sveltekit-superforms';
 import { createCustomSchema } from '$lib/schema/products/customSchema';
 import cloudinary from '$lib/server/cloudinary';
 
-export const load = (async () => {
-	const IcreateCustomSchema = await superValidate(zod(createCustomSchema));
+export const load = (async ({ request }) => {
+	console.warn('[atelier/load] DEBUT - requête reçue', {
+		url: request.url,
+		method: request.method,
+		accept: request.headers.get('accept'),
+		fetchDest: request.headers.get('sec-fetch-dest')
+	});
+
+	let IcreateCustomSchema;
+	try {
+		IcreateCustomSchema = await superValidate(zod(createCustomSchema));
+		console.warn('[atelier/load] superValidate OK');
+	} catch (err) {
+		console.error('[atelier/load] superValidate ERREUR:', err);
+		throw err;
+	}
 
 	let products: Awaited<ReturnType<typeof getAllProducts>> = [];
 	try {
+		console.warn('[atelier/load] getAllProducts début...');
 		products = await getAllProducts();
+		console.warn('[atelier/load] getAllProducts OK - nb produits:', products.length);
 	} catch (err) {
-		console.error('[atelier] getAllProducts failed:', err);
+		console.error('[atelier/load] getAllProducts ERREUR (page rendue avec liste vide):', err);
 	}
+
+	console.warn('[atelier/load] FIN - retourne', { nbProducts: products.length });
 
 	return {
 		IcreateCustomSchema,
@@ -48,7 +66,7 @@ export const actions: Actions = {
 						{
 							folder: 'client',
 							public_id: `product_${productId}_${image.name.split('.')[0]}`,
-							tags: [`user_${locals.userId}`],
+							tags: [`user_${locals.user?.id ?? 'unknown'}`],
 							type: 'upload', // Assure que l'image est accessible publiquement
 							access_mode: 'public' // Définit le mode d'accès comme public
 						}
