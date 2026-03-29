@@ -2,21 +2,11 @@
 	/* ── Deps ─────────────────────────────────────────────────────────────── */
 	import Cart from '$lib/components/cart/Cart.svelte';
 	import Options from '$lib/components/navigation/Options.svelte';
-	import { onMount } from 'svelte';
 	import * as Drawer from '$shadcn/drawer';
 	import { Button, buttonVariants } from '$shadcn/button';
 	import { Menu } from 'lucide-svelte';
 	import { mode } from 'mode-watcher';
-
-	const NAV_DEBUG = true;
-
-	onMount(() => {
-		console.warn('[Nav] composant monté', {
-			href: window.location.href,
-			pathname: window.location.pathname,
-			origin: window.location.origin
-		});
-	});
+	import { goto } from '$app/navigation';
 
 	/* ── Data  ────────────────────────────────────────────────────────────── */
 	let { data } = $props();
@@ -34,26 +24,9 @@
 	let strokeColor = $derived(mode.current === 'light' ? '#00021a' : '#00c2ff');
 
 	/* ── Helpers ──────────────────────────────────────────────────────────── */
-
-	// DIAGNOSTIC CONFIRMÉ (logs du 08/03/2026) :
-	// Svelte 5 appelle e.preventDefault() en interne APRÈS le retour du handler
-	// pour tout <a> géré via délégation d'événements. La navigation native est
-	// donc TOUJOURS bloquée — il faut appeler window.location.assign() nous-mêmes.
-	//
-	// data-sveltekit-reload sur le <a> empêche SvelteKit de démarrer sa propre
-	// navigation client-side (qui aurait fetchĂ __data.json et conflité).
-	function handleNavClick(e: MouseEvent, href: string, label: string) {
-		// Prévenir explicitement pour contrôler 100% de la navigation
-		e.preventDefault();
-
-		if (NAV_DEBUG) {
-			console.warn('[Nav] clic → navigation vers', { label, href });
-		}
-
+	function handleDrawerNav(href: string) {
 		drawerOpen = false;
-
-		// Navigation directe et immédiate — pas de setTimeout
-		window.location.assign(href);
+		goto(href);
 	}
 </script>
 
@@ -79,9 +52,7 @@
 					{#each links as { href, label }}
 						<a
 							{href}
-							data-sveltekit-reload
-							role="button"
-							onclick={(e) => handleNavClick(e, href, label)}
+							onclick={(e) => { e.preventDefault(); handleDrawerNav(href); }}
 							style={`-webkit-text-stroke-color:${strokeColor};`}
 							class="fontStyle block uppercase tracking-wide w-full px-4 py-2"
 						>
@@ -105,9 +76,6 @@
 				<li>
 					<a
 						{href}
-						data-sveltekit-reload
-						role="button"
-						onclick={(e) => handleNavClick(e, href, label)}
 						class="fontStyle flex items-center justify-center rounded-xl h-10 px-5 font-medium
 					   transition hover:-translate-y-[1px] hover:bg-white/10"
 					>
