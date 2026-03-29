@@ -5,12 +5,14 @@ import type { HandleClientError } from '@sveltejs/kit';
 /* ─────────────────────────────────────────────────────────────────────────── */
 
 /* Intercepte les fetches __data.json pour déclencher un rechargement complet
-   dès le premier échec réseau, sans attendre la logique de récupération interne
-   de SvelteKit qui laisse la page bloquée. */
+   dès le premier échec réseau. Le flag évite que les tentatives successives de
+   SvelteKit s'annulent mutuellement (bug : 6 assignations location.href en
+   cascade qui se cancellent toutes). */
+let _navFallbackInProgress = false;
+
 const originalFetch = window.fetch;
 window.fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
 	const url = input instanceof Request ? input.url : String(input);
-	const method = init?.method ?? (input instanceof Request ? input.method : 'GET');
 
 	try {
 		return await originalFetch(input, init);
@@ -19,11 +21,11 @@ window.fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
 		const isNavFetch = url.includes('__data.json');
 		const isNetworkError = errMsg === 'Failed to fetch' || errMsg === 'Load failed';
 
-		if (isNavFetch && isNetworkError) {
-			// Extraire le chemin cible depuis l'URL __data.json
-			// ex: /atelier/__data.json?... → /atelier
+		if (isNavFetch && isNetworkError && !_navFallbackInProgress) {
+			_navFallbackInProgress = true;
+			// Extraire le chemin cible : /atelier/__data.json?... → /atelier
 			const targetPath = new URL(url).pathname.replace(/\/__data\.json$/, '') || '/';
-			console.warn('[hooks.client] fetch __data.json échoué — rechargement vers', targetPath);
+			console.warn('[hooks.client] nav fallback →', targetPath);
 			window.location.href = targetPath;
 		}
 
