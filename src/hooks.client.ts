@@ -123,13 +123,24 @@ window.fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
 };
 
 export const handleError: HandleClientError = async ({ error, event, status, message }) => {
+	const errMsg = error instanceof Error ? error.message : String(error);
+	const isNetworkAbort = errMsg === 'Failed to fetch' || errMsg === 'Load failed';
+
 	console.error('[hooks.client/handleError]', {
 		url: event.url.href,
 		status,
 		message,
-		error: error instanceof Error ? error.message : error,
+		error: errMsg,
+		type: isNetworkAbort ? 'RÉSEAU/ABORT (fetch annulé — SW ? gel JS ? Vercel ?)' : 'ERREUR APP',
 		stack: error instanceof Error ? error.stack?.slice(0, 400) : undefined
 	});
+
+	// "Failed to fetch" sur une nav client-side = SvelteKit va déclencher un rechargement
+	// complet en fallback. On ne remonte pas de message d'erreur pour ne pas afficher
+	// un écran d'erreur avant que ce fallback se produise.
+	if (isNetworkAbort) {
+		return { message: '' };
+	}
 
 	return {
 		message: message ?? "Une erreur inattendue s'est produite."
