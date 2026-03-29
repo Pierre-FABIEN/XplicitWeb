@@ -35,12 +35,16 @@ function log(level: LogLevel, context: string, ...args: unknown[]) {
 	
 	switch (level) {
 		case 'ERROR':
+			console.error(prefix, ...args);
 			break;
 		case 'WARN':
+			console.warn(prefix, ...args);
 			break;
 		case 'INFO':
+			console.info(prefix, ...args);
 			break;
 		case 'DEBUG':
+			console.debug(prefix, ...args);
 			break;
 	}
 }
@@ -264,66 +268,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 };
 
 /* -------------------------------------------------------------------------- */
-/*  Log requêtes navigation (diagnostic Vercel)                                 */
-/* -------------------------------------------------------------------------- */
-
-const NAV_LOG = true; // passer à false après diagnostic
-
-const navLogHandle: Handle = async ({ event, resolve }) => {
-	const dest = event.request.headers.get('sec-fetch-dest');
-	const site = event.request.headers.get('sec-fetch-site');
-	const mode = event.request.headers.get('sec-fetch-mode');
-	const isDataReq = event.url.pathname.includes('__data.json');
-	const isDocument = dest === 'document';
-	const isNav = isDocument || isDataReq;
-
-	if (NAV_LOG && isNav) {
-		console.warn('[hooks/nav] REQUETE REÇUE', {
-			path: event.url.pathname,
-			search: event.url.search || '(aucun)',
-			method: event.request.method,
-			dest: dest ?? 'no-dest',
-			site: site ?? 'no-site',     // same-origin | cross-site | none — CLEF pour détecter un problème de domaine
-			mode: mode ?? 'no-mode',
-			type: isDataReq ? '__data.json (nav client SvelteKit)' : 'document (rechargement complet)',
-			origin: event.request.headers.get('origin') ?? 'aucun',
-			referer: event.request.headers.get('referer') ?? 'aucun',
-			host: event.request.headers.get('host') ?? 'aucun',
-			cookie: event.request.headers.get('cookie') ? '(présent)' : '(absent)',
-			accept: event.request.headers.get('accept')?.slice(0, 80) ?? 'aucun'
-		});
-	}
-
-	const t0 = Date.now();
-	let response: Response;
-	try {
-		response = await resolve(event);
-	} catch (err) {
-		console.error('[hooks/nav] ERREUR pendant resolve', {
-			path: event.url.pathname,
-			error: err instanceof Error ? err.message : String(err),
-			stack: err instanceof Error ? err.stack?.slice(0, 300) : undefined
-		});
-		throw err;
-	}
-
-	if (NAV_LOG && isNav) {
-		const location = response.headers.get('location');
-		console.warn('[hooks/nav] REPONSE', {
-			path: event.url.pathname,
-			status: response.status,
-			duration: `${Date.now() - t0}ms`,
-			contentType: response.headers.get('content-type') ?? 'aucun',
-			// Si status 3xx, logguer la destination — utile pour détecter des boucles de redirection
-			...(location ? { redirectVers: location } : {})
-		});
-	}
-
-	return response;
-};
-
-/* -------------------------------------------------------------------------- */
 /*  Chaîne finale                                                             */
 /* -------------------------------------------------------------------------- */
 
-export const handle: Handle = sequence(navLogHandle, devtoolsGuard, cookieGuard, rateLimit, authHandle);
+export const handle: Handle = sequence(devtoolsGuard, cookieGuard, rateLimit, authHandle);
