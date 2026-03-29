@@ -2,7 +2,7 @@
 	/* ── Deps ─────────────────────────────────────────────────────────────── */
 	import Cart from '$lib/components/cart/Cart.svelte';
 	import Options from '$lib/components/navigation/Options.svelte';
-	import { goto } from '$app/navigation';
+
 	import * as Drawer from '$shadcn/drawer';
 	import { Button, buttonVariants } from '$shadcn/button';
 	import { Menu } from 'lucide-svelte';
@@ -24,9 +24,8 @@
 	let strokeColor = $derived(mode.current === 'light' ? '#00021a' : '#00c2ff');
 
 	/* ── Helpers ──────────────────────────────────────────────────────────── */
-	function navigateAndClose(href: string) {
-		goto(href); // 2) navigation kit
-		drawerOpen = false; // 1) ferme le sheet
+	function closeDrawer() {
+		drawerOpen = false;
 	}
 </script>
 
@@ -49,16 +48,17 @@
 			<!-- Content (bottom-sheet) -->
 			<Drawer.Content class="pb-8 pt-6 md:hidden">
 				<ul class="my-6 flex flex-col gap-4 text-lg font-medium">
-					{#each links as { href, label }}
-						<a
-							{href}
-							onclick={() => navigateAndClose(href)}
-							style={`-webkit-text-stroke-color:${strokeColor};`}
-							class="fontStyle block uppercase tracking-wide w-full px-4 py-2"
-						>
-							{label}
-						</a>
-					{/each}
+				{#each links as { href, label }}
+					<a
+						{href}
+						rel="external"
+						onclick={closeDrawer}
+						style={`-webkit-text-stroke-color:${strokeColor};`}
+						class="fontStyle block uppercase tracking-wide w-full px-4 py-2"
+					>
+						{label}
+					</a>
+				{/each}
 				</ul>
 
 				<Drawer.Footer class="mt-6 flex justify-center gap-4">
@@ -72,17 +72,18 @@
 
 		<!-- ─── Links desktop -->
 		<ul class="hidden md:flex">
-			{#each links as { href, label }}
-				<li>
-					<a
-						{href}
-						class="fontStyle flex items-center justify-center rounded-xl h-10 px-5 font-medium
-					   transition hover:-translate-y-[1px] hover:bg-white/10"
-					>
-						{label}
-					</a>
-				</li>
-			{/each}
+		{#each links as { href, label }}
+			<li>
+				<a
+					{href}
+					rel="external"
+					class="fontStyle flex items-center justify-center rounded-xl h-10 px-5 font-medium
+				   transition hover:-translate-y-[1px] hover:bg-white/10"
+				>
+					{label}
+				</a>
+			</li>
+		{/each}
 		</ul>
 
 		<!-- Utilitaires desktop -->

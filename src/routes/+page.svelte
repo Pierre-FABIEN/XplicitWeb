@@ -11,10 +11,6 @@
 
 	let animateLines = $state(false); // Contrôle de l'animation des lignes
 
-	function handleClick() {
-		window.location.assign('/atelier');
-	}
-
 	let strokeColor = $state('black');
 
 	$effect(() => {
@@ -62,25 +58,20 @@
 			can
 		</span>
 	</h1>
-	<button
-		class="ccc buttonHome"
+	<a
+		class="ccc buttonHome buttonStart rcc"
+		style="color: {strokeColor}; --stroke-color: {strokeColor};"
+		href="/atelier"
+		rel="external"
 		transition:fly={{ x: -88, duration: 500 }}
-		onclick={handleClick}
 		onmouseenter={onHoverButton}
 		onmouseleave={onHoverButton}
 	>
-		<a
-			class="buttonStart rcc"
-			style="color: {strokeColor}; --stroke-color: {strokeColor};"
-			href="/atelier"
-			data-sveltekit-reload
-		>
-			Commencer
-			<span>
-				<Power class="ml-10" />
-			</span>
-		</a>
-	</button>
+		Commencer
+		<span>
+			<Power class="ml-10" />
+		</span>
+	</a>
 </div>
 
 <style lang="scss">
@@ -199,23 +190,20 @@
 		border-radius: 16px;
 		transform: translateX(33px);
 
-		a {
-			font-family: 'Open Sans Variable', sans-serif;
-			text-align: left;
-			color: black;
-			text-transform: uppercase;
-			font-size: 22px;
+		font-family: 'Open Sans Variable', sans-serif;
+		text-align: left;
+		color: black;
+		text-transform: uppercase;
+		font-size: 22px;
 
-			span {
-				transform: translateY(35px);
-				transition: all 0.4s ease-in-out;
-			}
+		span {
+			transform: translateY(35px);
+			transition: all 0.4s ease-in-out;
 		}
+
 		&:hover {
-			a {
-				span {
-					transform: translateY(0px);
-				}
+			span {
+				transform: translateY(0px);
 			}
 		}
 	}
