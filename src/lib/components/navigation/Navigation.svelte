@@ -2,6 +2,7 @@
 	/* ── Deps ─────────────────────────────────────────────────────────────── */
 	import Cart from '$lib/components/cart/Cart.svelte';
 	import Options from '$lib/components/navigation/Options.svelte';
+	import { goto } from '$app/navigation';
 	import * as Drawer from '$shadcn/drawer';
 	import { Button, buttonVariants } from '$shadcn/button';
 	import { Menu } from 'lucide-svelte';
@@ -19,8 +20,14 @@
 	];
 
 	/* ── State ────────────────────────────────────────────────────────────── */
-	let drawerOpen = $state(false);
+	let drawerOpen = $state(false); // bound to Drawer.Root
 	let strokeColor = $derived(mode.current === 'light' ? '#00021a' : '#00c2ff');
+
+	/* ── Helpers ──────────────────────────────────────────────────────────── */
+	function navigateAndClose(href: string) {
+		goto(href); // 2) navigation kit
+		drawerOpen = false; // 1) ferme le sheet
+	}
 </script>
 
 <!-- Barre desktop + burger mobile --------------------------------------- -->
@@ -31,6 +38,7 @@
 	>
 		<!-- ─── Drawer mobile -->
 		<Drawer.Root bind:open={drawerOpen}>
+			<!-- Trigger (burger) -->
 			<Drawer.Trigger
 				aria-label="Open navigation"
 				class={buttonVariants({ variant: 'ghost', size: 'icon' }) + ' md:hidden'}
@@ -38,13 +46,13 @@
 				<Menu size="24" />
 			</Drawer.Trigger>
 
+			<!-- Content (bottom-sheet) -->
 			<Drawer.Content class="pb-8 pt-6 md:hidden">
 				<ul class="my-6 flex flex-col gap-4 text-lg font-medium">
 					{#each links as { href, label }}
 						<a
 							{href}
-							data-sveltekit-reload
-							onclick={() => (drawerOpen = false)}
+							onclick={() => navigateAndClose(href)}
 							style={`-webkit-text-stroke-color:${strokeColor};`}
 							class="fontStyle block uppercase tracking-wide w-full px-4 py-2"
 						>
@@ -54,21 +62,20 @@
 				</ul>
 
 				<Drawer.Footer class="mt-6 flex justify-center gap-4">
-					<Button size="sm" href="/auth/login" data-sveltekit-reload
-						onclick={() => (drawerOpen = false)}>Se connecter</Button
+					<Button size="sm" href="/auth/login" onclick={() => (drawerOpen = false)}
+						>Se connecter</Button
 					>
 					<Button size="sm" variant="outline" onclick={() => (drawerOpen = false)}>Fermer</Button>
 				</Drawer.Footer>
 			</Drawer.Content>
 		</Drawer.Root>
 
-		<!-- ─── Links desktop : navigation 100% native navigateur -->
+		<!-- ─── Links desktop -->
 		<ul class="hidden md:flex">
 			{#each links as { href, label }}
 				<li>
 					<a
 						{href}
-						data-sveltekit-reload
 						class="fontStyle flex items-center justify-center rounded-xl h-10 px-5 font-medium
 					   transition hover:-translate-y-[1px] hover:bg-white/10"
 					>
