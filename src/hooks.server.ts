@@ -271,18 +271,26 @@ const NAV_LOG = true; // passer à false après diagnostic
 
 const navLogHandle: Handle = async ({ event, resolve }) => {
 	const dest = event.request.headers.get('sec-fetch-dest');
+	const site = event.request.headers.get('sec-fetch-site');
+	const mode = event.request.headers.get('sec-fetch-mode');
 	const isDataReq = event.url.pathname.includes('__data.json');
 	const isDocument = dest === 'document';
+	const isNav = isDocument || isDataReq;
 
-	if (NAV_LOG && (isDocument || isDataReq)) {
+	if (NAV_LOG && isNav) {
 		console.warn('[hooks/nav] REQUETE REÇUE', {
 			path: event.url.pathname,
 			search: event.url.search || '(aucun)',
 			method: event.request.method,
 			dest: dest ?? 'no-dest',
-			type: isDataReq ? '__data.json (SvelteKit client-side nav)' : 'document (rechargement complet)',
+			site: site ?? 'no-site',     // same-origin | cross-site | none — CLEF pour détecter un problème de domaine
+			mode: mode ?? 'no-mode',
+			type: isDataReq ? '__data.json (nav client SvelteKit)' : 'document (rechargement complet)',
+			origin: event.request.headers.get('origin') ?? 'aucun',
 			referer: event.request.headers.get('referer') ?? 'aucun',
-			accept: event.request.headers.get('accept')?.slice(0, 60) ?? 'aucun'
+			host: event.request.headers.get('host') ?? 'aucun',
+			cookie: event.request.headers.get('cookie') ? '(présent)' : '(absent)',
+			accept: event.request.headers.get('accept')?.slice(0, 80) ?? 'aucun'
 		});
 	}
 
@@ -299,12 +307,15 @@ const navLogHandle: Handle = async ({ event, resolve }) => {
 		throw err;
 	}
 
-	if (NAV_LOG && (isDocument || isDataReq)) {
+	if (NAV_LOG && isNav) {
+		const location = response.headers.get('location');
 		console.warn('[hooks/nav] REPONSE', {
 			path: event.url.pathname,
 			status: response.status,
 			duration: `${Date.now() - t0}ms`,
-			contentType: response.headers.get('content-type') ?? 'aucun'
+			contentType: response.headers.get('content-type') ?? 'aucun',
+			// Si status 3xx, logguer la destination — utile pour détecter des boucles de redirection
+			...(location ? { redirectVers: location } : {})
 		});
 	}
 
