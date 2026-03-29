@@ -16,12 +16,31 @@
 		setRessourceToValide
 	} from '$lib/store/initialLoaderStore';
 	import { page } from '$app/stores';
+	import { beforeNavigate, afterNavigate } from '$app/navigation';
 
 	import { setCart } from '$lib/store/Data/cartStore';
 	import { startSync } from '$lib/store/Data/cartSync';
 	import Threltre from '$lib/components/threlte/Threltre.svelte';
 	import BackgroundCanvas from '$lib/components/BackgroundCanvas.svelte';
 	import SmoothScrollBarStore from '$lib/store/SmoothScrollBarStore';
+
+	// ── DIAGNOSTIC NAVIGATION ──────────────────────────────────────────────────
+	beforeNavigate(({ from, to, type, cancel }) => {
+		console.error('[layout/beforeNavigate]', {
+			type,
+			from: from?.url?.pathname ?? '(aucun)',
+			to: to?.url?.pathname ?? '(aucun — navigation EXTERNE ou annulée)',
+			willCancel: false
+		});
+	});
+
+	afterNavigate(({ from, to, type }) => {
+		console.error('[layout/afterNavigate] ✅ NAVIGATION TERMINÉE', {
+			type,
+			from: from?.url?.pathname ?? '(aucun)',
+			to: to?.url?.pathname ?? '(aucun)'
+		});
+	});
 
 	let { children, data } = $props();
 	let cartInitialized = $state(false);

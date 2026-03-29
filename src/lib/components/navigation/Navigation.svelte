@@ -23,10 +23,32 @@
 	let drawerOpen = $state(false);
 	let strokeColor = $derived(mode.current === 'light' ? '#00021a' : '#00c2ff');
 
-	/* ── Helpers ──────────────────────────────────────────────────────────── */
-	function handleDrawerNav(href: string) {
+	/* ── Navigation + diagnostic ──────────────────────────────────────────── */
+	async function goTo(e: MouseEvent, href: string) {
+		e.preventDefault();
 		drawerOpen = false;
-		goto(href);
+
+		const urlBefore = window.location.href;
+		console.error('[Nav] ① CLIC sur', href, '| URL actuelle:', urlBefore);
+
+		try {
+			await goto(href);
+			console.error('[Nav] ② goto() résolu | URL maintenant:', window.location.href);
+		} catch (err) {
+			console.error('[Nav] ② goto() ERREUR:', err, '→ fallback window.location');
+			window.location.href = href;
+			return;
+		}
+
+		// Vérifie 800ms après si l'URL a réellement changé
+		setTimeout(() => {
+			const urlAfter = window.location.href;
+			if (urlAfter === urlBefore) {
+				console.error('[Nav] ③ ❌ URL INCHANGÉE 800ms après goto() — navigation bloquée !');
+			} else {
+				console.error('[Nav] ③ ✅ URL changée vers', urlAfter);
+			}
+		}, 800);
 	}
 </script>
 
@@ -38,7 +60,6 @@
 	>
 		<!-- ─── Drawer mobile -->
 		<Drawer.Root bind:open={drawerOpen}>
-			<!-- Trigger (burger) -->
 			<Drawer.Trigger
 				aria-label="Open navigation"
 				class={buttonVariants({ variant: 'ghost', size: 'icon' }) + ' md:hidden'}
@@ -46,13 +67,12 @@
 				<Menu size="24" />
 			</Drawer.Trigger>
 
-			<!-- Content (bottom-sheet) -->
 			<Drawer.Content class="pb-8 pt-6 md:hidden">
 				<ul class="my-6 flex flex-col gap-4 text-lg font-medium">
 					{#each links as { href, label }}
 						<a
 							{href}
-							onclick={(e) => { e.preventDefault(); handleDrawerNav(href); }}
+							onclick={(e) => goTo(e, href)}
 							style={`-webkit-text-stroke-color:${strokeColor};`}
 							class="fontStyle block uppercase tracking-wide w-full px-4 py-2"
 						>
@@ -62,7 +82,7 @@
 				</ul>
 
 				<Drawer.Footer class="mt-6 flex justify-center gap-4">
-					<Button size="sm" href="/auth/login" onclick={() => (drawerOpen = false)}
+					<Button size="sm" href="/auth/login" onclick={(e) => goTo(e, '/auth/login')}
 						>Se connecter</Button
 					>
 					<Button size="sm" variant="outline" onclick={() => (drawerOpen = false)}>Fermer</Button>
@@ -76,6 +96,7 @@
 				<li>
 					<a
 						{href}
+						onclick={(e) => goTo(e, href)}
 						class="fontStyle flex items-center justify-center rounded-xl h-10 px-5 font-medium
 					   transition hover:-translate-y-[1px] hover:bg-white/10"
 					>
